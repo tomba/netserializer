@@ -1,0 +1,33 @@
+NetSerializer - A fast, simple serializer for .Net
+
+NetSerializer is a simple and very fast serializer for .Net languages. It is
+the fastest serializer I have found for my use cases.
+
+- Excellent for network serialization
+- Supports classes, structs, enums
+- No versioning or other extra information is serialized, only pure data
+- No type IDs for primitive types, structs or sealed classes, so less data to be sent
+- No dynamic type lookup for primitive types, structs or sealed classes, so deserialization is faster
+- No extra attributes needed (like DataContract/Member)
+
+Usage is simple. The types to be serialized need to be marked with the standard
+[Serializable].  You can also use [NonSerialized] for fields you don't want to
+serialize.
+
+Then you need to initialize NetSerializer by giving it a list of types you will
+be serializing. NetSerializer will scan through the given types, and create
+(de)serializers for found types.
+
+Initialization:
+
+	NetSerializer.Serializer.Initialize(types);
+
+Serializing:
+
+	NetSerializer.Serializer.Serialize(stream, ob);
+
+Deserializing:
+
+	(YourType)NetSerializer.Serializer.Deserialize(stream);
+
+
