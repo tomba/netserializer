@@ -269,5 +269,41 @@ namespace NetSerializer
 
 			value = new string(arr);
 		}
+
+		public static void WritePrimitive(Stream stream, byte[] value)
+		{
+			if (value == null)
+			{
+				WritePrimitive(stream, 0xffffffffU);
+				return;
+			}
+
+			WritePrimitive(stream, (uint)value.Length);
+
+			stream.Write(value, 0, value.Length);
+		}
+
+		public static void ReadPrimitive(Stream stream, out byte[] value)
+		{
+			uint len;
+			ReadPrimitive(stream, out len);
+
+			if (len == 0xffffffffU)
+			{
+				value = null;
+				return;
+			}
+
+			value = new byte[len];
+			int l = 0;
+
+			while (l < len)
+			{
+				int r = stream.Read(value, l, (int)len - l);
+				if (r == 0)
+					throw new Exception();
+				l += r;
+			}
+		}
 	}
 }
