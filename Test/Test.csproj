@@ -57,6 +57,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PBNetTest.cs" />
     <Compile Include="PBMemStreamTest.cs" />
     <Compile Include="MemStreamTest.cs" />
     <Compile Include="Messages.cs" />

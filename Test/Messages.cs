@@ -9,6 +9,9 @@ namespace Test
 {
 	[Serializable]
 	[ProtoContract]
+	[ProtoInclude(1, typeof(Message))]
+	[ProtoInclude(2, typeof(LongMessage))]
+	[ProtoInclude(3, typeof(SimpleMessage))]
 	abstract class MessageBase
 	{
 		public abstract void Compare(MessageBase msg);
@@ -45,6 +48,16 @@ namespace Test
 
 			return arr;
 		}
+
+		public static MessageBase[] CreateLongMessages(int numMessages)
+		{
+			var arr = new MessageBase[numMessages];
+
+			for (int i = 0; i < numMessages; ++i)
+				arr[i] = new LongMessage(s_rand);
+
+			return arr;
+		}
 	}
 
 	[Serializable]
@@ -67,6 +80,34 @@ namespace Test
 		{
 			var m = (SimpleMessage)msg;
 			A(m_val == m.m_val);
+		}
+	}
+
+	[Serializable]
+	[ProtoContract]
+	class LongMessage : MessageBase
+	{
+		[ProtoMember(1)]
+		short m_val;
+		[ProtoMember(2)]
+		ulong[] m_arr;
+
+		public LongMessage()
+		{
+		}
+
+		public LongMessage(Random r)
+		{
+			m_val = (short)r.Next();
+			m_arr = new ulong[r.Next(10000, 100000)];
+		}
+
+		public override void Compare(MessageBase msg)
+		{
+			var m = (LongMessage)msg;
+			A(m_val == m.m_val);
+			for (int i = 0; i < m_arr.Length; ++i)
+				A(m_arr[i] == m.m_arr[i]);
 		}
 	}
 

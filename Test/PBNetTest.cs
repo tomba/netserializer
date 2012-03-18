@@ -5,13 +5,13 @@ using System.Text;
 using System.Threading;
 using System.Net.Sockets;
 using System.Net;
-using NetSerializer;
 using System.Diagnostics;
 using System.IO;
+using ProtoBuf;
 
 namespace Test
 {
-	class NetTest : ITest
+	class PBNetTest : ITest
 	{
 		MessageBase[] m_sent;
 		MessageBase[] m_received;
@@ -63,7 +63,7 @@ namespace Test
 			using (var bufStream = new BufferedStream(stream))
 			{
 				for (int i = 0; i < m_received.Length; ++i)
-					m_received[i] = (MessageBase)Serializer.Deserialize(bufStream);
+					m_received[i] = Serializer.DeserializeWithLengthPrefix<MessageBase>(bufStream, PrefixStyle.Base128);
 			}
 
 			listener.Stop();
@@ -80,7 +80,7 @@ namespace Test
 				m_ev.WaitOne();
 
 				for (int i = 0; i < m_sent.Length; ++i)
-					Serializer.Serialize(bufStream, m_sent[i]);
+					Serializer.SerializeWithLengthPrefix<MessageBase>(bufStream, m_sent[i], PrefixStyle.Base128);
 			}
 
 			c.Close();

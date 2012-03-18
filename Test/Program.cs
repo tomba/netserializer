@@ -25,16 +25,27 @@ namespace Test
 
 			Serializer.Initialize(types);
 
-			int numMessages = 1111111;
+			int numMessages = 111;
 
-			var msgs = MessageBase.CreateMessages(numMessages).ToArray();
+			//var msgs = MessageBase.CreateMessages(numMessages).ToArray();
 			//var msgs = MessageBase.CreateSimpleMessages(numMessages).ToArray();
+
+			var msgs = MessageBase.CreateLongMessages(numMessages).ToArray();
+			RunTests("LongMessages", msgs);
+
+			//Console.WriteLine("Press enter to quit");
+			//Console.ReadLine();
+		}
+
+		static void RunTests(string name, MessageBase[] msgs)
+		{
+			Console.WriteLine("== {0}, {1} ==", name, msgs.Length);
 
 			Test(new MemStreamTest(), msgs);
 			Test(new PBMemStreamTest(), msgs);
 
-			//Console.WriteLine("Press enter to quit");
-			//Console.ReadLine();
+			Test(new NetTest(), msgs);
+			Test(new PBNetTest(), msgs);
 		}
 
 		static void Test(ITest test, MessageBase[] msgs)
@@ -61,7 +72,7 @@ namespace Test
 			c1 = GC.CollectionCount(1) - c1;
 			c2 = GC.CollectionCount(2) - c2;
 
-			Console.WriteLine("Time {0} ms. GC {1}, {2}, {3}", sw.ElapsedMilliseconds, c0, c1, c2);
+			Console.WriteLine("{0} ms. GC {1}, {2}, {3}", sw.ElapsedMilliseconds, c0, c1, c2);
 
 			test.Cleanup();
 

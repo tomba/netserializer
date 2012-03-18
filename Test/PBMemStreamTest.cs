@@ -24,14 +24,14 @@ namespace Test
 
 			m_stream.Position = 0;
 
-			foreach (Message msg in msgs)
+			foreach (var msg in msgs)
 				Serializer.SerializeWithLengthPrefix(m_stream, msg, PrefixStyle.Base128);
 
 			m_stream.Flush();
 			m_stream.Position = 0;
 
 			for (int i = 0; i < numMessages; ++i)
-				m_received[i] = Serializer.DeserializeWithLengthPrefix<Message>(m_stream, PrefixStyle.Base128);
+				m_received[i] = Serializer.DeserializeWithLengthPrefix<MessageBase>(m_stream, PrefixStyle.Base128);
 
 			return m_received;
 		}
