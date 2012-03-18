@@ -72,7 +72,8 @@ as with MemStreamTest, so is the size of the data.
 
 SimpleMessage class contains a single short field. Message class contains
 fields for all primitive types and some additional fields. LongMessage class
-contains a long array of ulongs. See the source for details.
+contains two long arrays, one byte[] and the other int[]. See the source for
+details.
 
 == 2000000 SimpleMessages ==
                      |  time (ms) |    GC coll. |   size (B) |    
@@ -88,15 +89,21 @@ PBMemStreamTest      |       4306 |  89  31   3 |   72008225 |
 NetTest              |       1590 |  29  19   1 |          0 |
 PBNetTest            |       3888 |  71  27   1 |          0 |
 
-== 1000 LongMessages ==
+== 500 LongMessages ==
                      |  time (ms) |    GC coll. |   size (B) |    
-MemStreamTest        |       1827 |   1   1   1 |   54122492 |
-PBMemStreamTest      |       4831 | 159   6   3 |  108243834 |
-NetTest              |       1174 |   1   1   1 |          0 |
-PBNetTest            |       3430 | 158   5   2 |          0 |
+MemStreamTest        |       2793 |   5   3   1 |  165473359 |
+PBMemStreamTest      |       3522 |  40   9   4 |  191774211 |
+NetTest              |       1554 |   5   3   1 |          0 |
+PBNetTest            |       2697 |  26  10   4 |          0 |
 
 As can be seen from the tests, NetSerializer is clearly faster and has smaller
-memory footprint in all cases. Especially the LongMessage tests show the memory
-efficiency of NetSerializer: only 1 collection happened while serializing 54MB
-of data.
+memory footprint in all cases. The SimpleMessage and LongMessage tests show
+clearly the memory efficiency of NetSerializer: only few collections happened
+while serializing the data.
+
+The speed of the serializer depends, of course, very much on the data being
+serialized. For some particular payloads it may well be that protobuf-net is
+faster than NetSerializer. However, I believe that those cases can always be
+optimized and in the end NetSerializer will be faster, due to the minimalistic
+design of NetSerializer.
 

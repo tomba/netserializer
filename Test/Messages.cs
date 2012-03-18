@@ -90,7 +90,7 @@ namespace Test
 		[ProtoMember(1)]
 		byte[] m_byteArr;
 		[ProtoMember(2)]
-		long[] m_longArr;
+		int[] m_intArr;
 
 		public LongMessage()
 		{
@@ -101,9 +101,9 @@ namespace Test
 			m_byteArr = new byte[r.Next(10000, 100000)];
 			r.NextBytes(m_byteArr);
 
-			m_longArr = new long[r.Next(10000, 100000)];
-			for (int i = 0; i < m_longArr.Length; ++i)
-				m_longArr[i] = r.Next();
+			m_intArr = new int[r.Next(10000, 100000)];
+			for (int i = 0; i < m_intArr.Length; ++i)
+				m_intArr[i] = r.Next();
 		}
 
 		public override void Compare(MessageBase msg)
@@ -113,8 +113,8 @@ namespace Test
 			for (int i = 0; i < m_byteArr.Length; ++i)
 				A(m_byteArr[i] == m.m_byteArr[i]);
 
-			for (int i = 0; i < m_longArr.Length; ++i)
-				A(m_longArr[i] == m.m_longArr[i]);
+			for (int i = 0; i < m_intArr.Length; ++i)
+				A(m_intArr[i] == m.m_intArr[i]);
 		}
 	}
 

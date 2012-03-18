@@ -26,6 +26,7 @@ namespace Test
 			Serializer.Initialize(types);
 
 			MessageBase[] msgs;
+
 			msgs = MessageBase.CreateSimpleMessages(2000000).ToArray();
 			RunTests("SimpleMessages", msgs);
 
