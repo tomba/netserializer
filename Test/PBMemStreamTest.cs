@@ -36,9 +36,6 @@ namespace Test
 			return m_received;
 		}
 
-		public void Cleanup()
-		{
-			Console.WriteLine("MemoryStream size {0}", m_stream.Position);
-		}
+		public long Size { get { return m_stream.Position; } }
 	}
 }

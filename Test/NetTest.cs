@@ -48,10 +48,7 @@ namespace Test
 			return m_received;
 		}
 
-		public void Cleanup()
-		{
-
-		}
+		public long Size { get { return 0; } }
 
 		void ServerMain()
 		{

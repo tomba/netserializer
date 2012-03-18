@@ -12,7 +12,7 @@ namespace Test
 	{
 		void Prepare(int numMessages);
 		MessageBase[] Test(MessageBase[] msgs);
-		void Cleanup();
+		long Size { get; }
 	}
 
 	class Program
@@ -27,7 +27,7 @@ namespace Test
 
 			MessageBase[] msgs;
 
-			msgs = MessageBase.CreateSimpleMessages(1000000).ToArray();
+			msgs = MessageBase.CreateSimpleMessages(2000000).ToArray();
 			RunTests("SimpleMessages", msgs);
 
 			msgs = MessageBase.CreateMessages(300000).ToArray();
@@ -44,6 +44,10 @@ namespace Test
 		{
 			Console.WriteLine("== {0}, {1} ==", name, msgs.Length);
 
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
+			GC.Collect();
+
 			Test(new MemStreamTest(), msgs);
 			Test(new PBMemStreamTest(), msgs);
 
@@ -53,7 +57,7 @@ namespace Test
 
 		static void Test(ITest test, MessageBase[] msgs)
 		{
-			Console.WriteLine(test.GetType().Name);
+			Console.Write("{0,-20}", test.GetType().Name);
 
 			test.Prepare(msgs.Length);
 
@@ -75,9 +79,7 @@ namespace Test
 			c1 = GC.CollectionCount(1) - c1;
 			c2 = GC.CollectionCount(2) - c2;
 
-			Console.WriteLine("{0} ms. GC {1}, {2}, {3}", sw.ElapsedMilliseconds, c0, c1, c2);
-
-			test.Cleanup();
+			Console.WriteLine(" | {0,10} | {1,3} {2,3} {3,3} | {4,10} |", sw.ElapsedMilliseconds, c0, c1, c2, test.Size);
 
 			for (int i = 0; i < msgs.Length; ++i)
 			{
