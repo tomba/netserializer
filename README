@@ -3,20 +3,40 @@ NetSerializer - A fast, simple serializer for .Net
 NetSerializer is a simple and very fast serializer for .Net languages. It is
 the fastest serializer I have found for my use cases.
 
+The main pros of NetSerializer are:
+
 - Excellent for network serialization
 - Supports classes, structs, enums
 - No versioning or other extra information is serialized, only pure data
-- No type IDs for primitive types, structs or sealed classes, so less data to be sent
-- No dynamic type lookup for primitive types, structs or sealed classes, so deserialization is faster
+- No type IDs for primitive types, structs or sealed classes, so less data to
+  be sent
+- No dynamic type lookup for primitive types, structs or sealed classes, so
+  deserialization is faster
 - No extra attributes needed (like DataContract/Member)
+- Thread safe without locks
+- The data is written and read directly from the stream, without the need for
+  large buffers
+
+The simpleness of NetSerializer has a drawback which must be considered by the
+user: no versioning or other meta information is sent, which means that the
+sender and the receiver have to have the same versions of the types being
+serialized.  This means that it's a bad idea to save the serialized data for
+longer periods of time, as a version upgrade could make the data
+non-deserializable.  For this reason I think the best (and perhaps only) use
+for NetSerializer is for sending data over network, between a client and a
+server which have verified version compatibility when the connection is made.
+
+
+Usage
 
 Usage is simple. The types to be serialized need to be marked with the standard
 [Serializable].  You can also use [NonSerialized] for fields you don't want to
-serialize.
+serialize. Nothing else needs to be done for the types to be serialized.
 
 Then you need to initialize NetSerializer by giving it a list of types you will
-be serializing. NetSerializer will scan through the given types, and create
-(de)serializers for found types.
+be serializing. NetSerializer will scan through the given types, and
+recursively all the types used by the given types, and create serializers and
+deserializers.
 
 Initialization:
 
@@ -30,4 +50,53 @@ Deserializing:
 
 	(YourType)NetSerializer.Serializer.Deserialize(stream);
 
+
+Performance
+
+Below is a performance comparison between NetSerializer and protobuf-net.
+Protobuf-net is a fast Protocol Buffers (from Google) compatible serializer,
+which was the best serializer I could find out there when I considered the
+serializer for my use case.
+
+The table lists the time it takes to serialize and deserialize the data, the
+number of GC collections (per generation) that happened during serialization
+and deserialization, and the size of the serialized data. The performance test
+can be found from the sources.
+
+MemStreamTest (and PBMemStreamTest for protobuf-net) serializes the dataset to
+a memory stream and then deserializes it. NetTest (and PBNetTest) serializes
+the dataset into a NetworkStream, sent over local TCP socket to a reader thread
+which deserializes the data. Note: the size field is 0 for NetTest because
+measuring the size is not as easy with a socket, but as the dataset is the same
+as with MemStreamTest, so is the size of the data.
+
+SimpleMessage class contains a single short field. Message class contains
+fields for all primitive types and some additional fields. LongMessage class
+contains a long array of ulongs. See the source for details.
+
+== 2000000 SimpleMessages ==
+                     |  time (ms) |    GC coll. |   size (B) |    
+MemStreamTest        |        837 |   4   2   0 |    7496110 |
+PBMemStreamTest      |       3852 | 182  18   2 |   20492059 |
+NetTest              |       1179 |   4   3   0 |          0 |
+PBNetTest            |      11421 | 222  66   1 |          0 |
+
+== 300000 Messages ==
+                     |  time (ms) |    GC coll. |   size (B) |    
+MemStreamTest        |       2201 |  28  19   1 |   49264372 |
+PBMemStreamTest      |       4306 |  89  31   3 |   72008225 |
+NetTest              |       1590 |  29  19   1 |          0 |
+PBNetTest            |       3888 |  71  27   1 |          0 |
+
+== 1000 LongMessages ==
+                     |  time (ms) |    GC coll. |   size (B) |    
+MemStreamTest        |       1827 |   1   1   1 |   54122492 |
+PBMemStreamTest      |       4831 | 159   6   3 |  108243834 |
+NetTest              |       1174 |   1   1   1 |          0 |
+PBNetTest            |       3430 | 158   5   2 |          0 |
+
+As can be seen from the tests, NetSerializer is clearly faster and has smaller
+memory footprint in all cases. Especially the LongMessage tests show the memory
+efficiency of NetSerializer: only 1 collection happened while serializing 54MB
+of data.
 
