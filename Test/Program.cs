@@ -26,14 +26,13 @@ namespace Test
 			Serializer.Initialize(types);
 
 			MessageBase[] msgs;
-
 			msgs = MessageBase.CreateSimpleMessages(2000000).ToArray();
 			RunTests("SimpleMessages", msgs);
 
 			msgs = MessageBase.CreateMessages(300000).ToArray();
 			RunTests("Messages", msgs);
 
-			msgs = MessageBase.CreateLongMessages(1000).ToArray();
+			msgs = MessageBase.CreateLongMessages(500).ToArray();
 			RunTests("LongMessages", msgs);
 
 			//Console.WriteLine("Press enter to quit");

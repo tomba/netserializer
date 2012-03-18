@@ -88,9 +88,9 @@ namespace Test
 	sealed class LongMessage : MessageBase
 	{
 		[ProtoMember(1)]
-		short m_val;
+		byte[] m_byteArr;
 		[ProtoMember(2)]
-		ulong[] m_arr;
+		long[] m_longArr;
 
 		public LongMessage()
 		{
@@ -98,16 +98,23 @@ namespace Test
 
 		public LongMessage(Random r)
 		{
-			m_val = (short)r.Next();
-			m_arr = new ulong[r.Next(10000, 100000)];
+			m_byteArr = new byte[r.Next(10000, 100000)];
+			r.NextBytes(m_byteArr);
+
+			m_longArr = new long[r.Next(10000, 100000)];
+			for (int i = 0; i < m_longArr.Length; ++i)
+				m_longArr[i] = r.Next();
 		}
 
 		public override void Compare(MessageBase msg)
 		{
 			var m = (LongMessage)msg;
-			A(m_val == m.m_val);
-			for (int i = 0; i < m_arr.Length; ++i)
-				A(m_arr[i] == m.m_arr[i]);
+
+			for (int i = 0; i < m_byteArr.Length; ++i)
+				A(m_byteArr[i] == m.m_byteArr[i]);
+
+			for (int i = 0; i < m_longArr.Length; ++i)
+				A(m_longArr[i] == m.m_longArr[i]);
 		}
 	}
 
