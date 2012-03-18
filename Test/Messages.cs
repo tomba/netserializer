@@ -62,7 +62,7 @@ namespace Test
 
 	[Serializable]
 	[ProtoContract]
-	class SimpleMessage : MessageBase
+	sealed class SimpleMessage : MessageBase
 	{
 		[ProtoMember(1)]
 		short m_val;
@@ -85,7 +85,7 @@ namespace Test
 
 	[Serializable]
 	[ProtoContract]
-	class LongMessage : MessageBase
+	sealed class LongMessage : MessageBase
 	{
 		[ProtoMember(1)]
 		short m_val;
@@ -137,7 +137,7 @@ namespace Test
 
 	[Serializable]
 	[ProtoContract]
-	class Message : MessageBase
+	sealed class Message : MessageBase
 	{
 		[ProtoMember(1)]
 		bool m_bool;

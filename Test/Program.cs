@@ -25,12 +25,15 @@ namespace Test
 
 			Serializer.Initialize(types);
 
-			int numMessages = 111;
+			MessageBase[] msgs;
 
-			//var msgs = MessageBase.CreateMessages(numMessages).ToArray();
-			//var msgs = MessageBase.CreateSimpleMessages(numMessages).ToArray();
+			msgs = MessageBase.CreateSimpleMessages(1000000).ToArray();
+			RunTests("SimpleMessages", msgs);
 
-			var msgs = MessageBase.CreateLongMessages(numMessages).ToArray();
+			msgs = MessageBase.CreateMessages(300000).ToArray();
+			RunTests("Messages", msgs);
+
+			msgs = MessageBase.CreateLongMessages(1000).ToArray();
 			RunTests("LongMessages", msgs);
 
 			//Console.WriteLine("Press enter to quit");
