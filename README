@@ -60,15 +60,14 @@ serializer for my use case.
 
 The table lists the time it takes to serialize and deserialize the data, the
 number of GC collections (per generation) that happened during serialization
-and deserialization, and the size of the serialized data. The performance test
-can be found from the sources.
+and deserialization, and the size of the outputted serialized data. The
+performance test can be found from the sources.
 
-MemStreamTest (and PBMemStreamTest for protobuf-net) serializes the dataset to
-a memory stream and then deserializes it. NetTest (and PBNetTest) serializes
-the dataset into a NetworkStream, sent over local TCP socket to a reader thread
-which deserializes the data. Note: the size field is 0 for NetTest because
-measuring the size is not as easy with a socket, but as the dataset is the same
-as with MemStreamTest, so is the size of the data.
+MemStreamTest serializes the dataset to a memory stream and then deserializes
+it. NetTest serializes the dataset into a NetworkStream, sent over local TCP
+socket to a reader thread which deserializes the data. Note: the size is not
+available for NetTest, as tracking the sent data is not trivial. However, the
+dataset is the same as with MemStreamTest, an so is the size of the data.
 
 SimpleMessage class contains a single short field. Message class contains
 fields for all primitive types and some additional fields. LongMessage class
@@ -76,25 +75,25 @@ contains two long arrays, one byte[] and the other int[]. See the source for
 details.
 
 == 2000000 SimpleMessages ==
-                     |  time (ms) |    GC coll. |   size (B) |    
-MemStreamTest        |        837 |   4   2   0 |    7496110 |
-PBMemStreamTest      |       3852 | 182  18   2 |   20492059 |
-NetTest              |       1179 |   4   3   0 |          0 |
-PBNetTest            |      11421 | 222  66   1 |          0 |
+                                |  time (ms) |    GC coll. |   size (B) |
+NetSerializer |  MemStreamTest  |        837 |   4   2   0 |    7496110 |
+protobuf-net  |  MemStreamTest  |       3852 | 182  18   2 |   20492059 |
+NetSerializer |  NetTest        |       1179 |   4   3   0 |            |
+protobuf-net  |  NetTest        |      11421 | 222  66   1 |            |
 
 == 300000 Messages ==
-                     |  time (ms) |    GC coll. |   size (B) |    
-MemStreamTest        |       2201 |  28  19   1 |   49264372 |
-PBMemStreamTest      |       4306 |  89  31   3 |   72008225 |
-NetTest              |       1590 |  29  19   1 |          0 |
-PBNetTest            |       3888 |  71  27   1 |          0 |
+                                |  time (ms) |    GC coll. |   size (B) |
+NetSerializer |  MemStreamTest  |       2201 |  28  19   1 |   49264372 |
+protobuf-net  |  MemStreamTest  |       4306 |  89  31   3 |   72008225 |
+NetSerializer |  NetTest        |       1590 |  29  19   1 |            |
+protobuf-net  |  NetTest        |       3888 |  71  27   1 |            |
 
 == 500 LongMessages ==
-                     |  time (ms) |    GC coll. |   size (B) |    
-MemStreamTest        |       2793 |   5   3   1 |  165473359 |
-PBMemStreamTest      |       3522 |  40   9   4 |  191774211 |
-NetTest              |       1554 |   5   3   1 |          0 |
-PBNetTest            |       2697 |  26  10   4 |          0 |
+                                |  time (ms) |    GC coll. |   size (B) |
+NetSerializer |  MemStreamTest  |       2793 |   5   3   1 |  165473359 |
+protobuf-net  |  MemStreamTest  |       3522 |  40   9   4 |  191774211 |
+NetSerializer |  NetTest        |       1554 |   5   3   1 |            |
+protobuf-net  |  NetTest        |       2697 |  26  10   4 |            |
 
 As can be seen from the tests, NetSerializer is clearly faster and has smaller
 memory footprint in all cases. The SimpleMessage and LongMessage tests show
