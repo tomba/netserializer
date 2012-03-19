@@ -60,8 +60,6 @@ namespace NetSerializer
 			if (!s_map.ContainsKey(data.GetType()))
 				throw new ArgumentException("Type is not known");
 
-			var typeID = s_map[data.GetType()].TypeID;
-
 			D("Serializing {0}", data.GetType().Name);
 
 			s_serializerSwitch(stream, data);
@@ -258,7 +256,7 @@ namespace NetSerializer
 			ilGen = deserializerSwitchMethod.GetILGenerator();
 			GenerateDeserializerSwitch(ilGen, s_map);
 
-			var t = tb.CreateType();
+			tb.CreateType();
 			ab.Save("NetSerializerDebug.dll");
 		}
 
