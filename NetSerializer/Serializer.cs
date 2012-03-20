@@ -102,14 +102,31 @@ namespace NetSerializer
 						il.Emit(OpCodes.Ldarg, 1);
 					il.Emit(OpCodes.Ldfld, field);
 
-					var td = GetTypeData(field.FieldType);
-
 					// We can call the Serializer method directly for:
 					// - Value types
 					// - Types with static Serializer method, as the method will handle null
 					// Other reference types go through the SerializesSwitch
-					if (field.FieldType.IsValueType || td.IsStatic)
-						il.EmitCall(OpCodes.Call, GetWriterMethodInfo(field.FieldType), null);
+
+					var fieldType = field.FieldType;
+
+					bool direct;
+
+					if (fieldType.IsValueType)
+					{
+						direct = true;
+					}
+					else if (fieldType.IsAbstract || fieldType.IsInterface)
+					{
+						direct = false;
+					}
+					else
+					{
+						var td = GetTypeData(fieldType);
+						direct = td.IsStatic;
+					}
+
+					if (direct)
+						il.EmitCall(OpCodes.Call, GetWriterMethodInfo(fieldType), null);
 					else
 						il.EmitCall(OpCodes.Call, s_serializerSwitchMethodInfo, null);
 				}

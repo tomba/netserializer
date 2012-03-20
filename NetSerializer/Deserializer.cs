@@ -125,14 +125,31 @@ namespace NetSerializer
 						il.Emit(OpCodes.Ldind_Ref);
 					il.Emit(OpCodes.Ldflda, field);
 
-					var td = GetTypeData(field.FieldType);
-
 					// We can call the Deserializer method directly for:
 					// - Value types
 					// - Types with static Deserializer method, as the method will handle null
 					// Other reference types go through the DeserializesSwitch
-					if (field.FieldType.IsValueType || td.IsStatic)
-						il.EmitCall(OpCodes.Call, GetReaderMethodInfo(field.FieldType), null);
+
+					var fieldType = field.FieldType;
+
+					bool direct;
+
+					if (fieldType.IsValueType)
+					{
+						direct = true;
+					}
+					else if (fieldType.IsAbstract || fieldType.IsInterface)
+					{
+						direct = false;
+					}
+					else
+					{
+						var td = GetTypeData(fieldType);
+						direct = td.IsStatic;
+					}
+
+					if (direct)
+						il.EmitCall(OpCodes.Call, GetReaderMethodInfo(fieldType), null);
 					else
 						il.EmitCall(OpCodes.Call, s_deserializerSwitchMethodInfo, null);
 				}
