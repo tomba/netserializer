@@ -29,7 +29,9 @@ namespace Test
 		{
 			System.Threading.Thread.CurrentThread.Priority = System.Threading.ThreadPriority.Highest;
 
-			var types = typeof(MessageBase).Assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(MessageBase))).ToArray();
+			var types = typeof(MessageBase).Assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(MessageBase)))
+				.Concat(new Type[] { typeof(SimpleClass), typeof(SimpleClass2) })
+				.ToArray();
 
 			Serializer.Initialize(types);
 

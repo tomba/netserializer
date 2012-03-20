@@ -360,26 +360,62 @@ namespace Test
 		}
 	}
 
+
 	[Serializable]
 	[ProtoContract]
-	sealed class SimpleSealedClass
+	[ProtoInclude(1, typeof(SimpleClass))]
+	abstract class SimpleClassBase
+	{
+	}
+
+	[Serializable]
+	[ProtoContract]
+	sealed class SimpleClass : SimpleClassBase
 	{
 		[ProtoMember(1)]
 		long m_val;
 
-		public SimpleSealedClass()
+		public SimpleClass()
 		{
 		}
 
-		public SimpleSealedClass(Random r)
+		public SimpleClass(Random r)
 		{
 			m_val = (long)r.Next();
 		}
 
-		public void Compare(SimpleSealedClass msg)
+		public void Compare(SimpleClass other)
 		{
-			var m = (SimpleSealedClass)msg;
-			if (m_val != m.m_val)
+			if (m_val != other.m_val)
+				throw new Exception();
+		}
+	}
+
+	[ProtoContract]
+	[ProtoInclude(1, typeof(SimpleClass2))]
+	interface IMyTest
+	{
+	}
+
+	[Serializable]
+	[ProtoContract]
+	sealed class SimpleClass2 : IMyTest
+	{
+		[ProtoMember(1)]
+		long m_val;
+
+		public SimpleClass2()
+		{
+		}
+
+		public SimpleClass2(Random r)
+		{
+			m_val = (long)r.Next();
+		}
+
+		public void Compare(SimpleClass2 other)
+		{
+			if (m_val != other.m_val)
 				throw new Exception();
 		}
 	}
@@ -395,7 +431,13 @@ namespace Test
 		int[] m_intArr;
 
 		[ProtoMember(4)]
-		SimpleSealedClass m_sealedClass;
+		SimpleClass m_sealedClass;
+
+		[ProtoMember(5)]
+		SimpleClassBase m_abstractMsg;
+
+		[ProtoMember(6)]
+		IMyTest m_ifaceMsg;
 
 		public ComplexMessage()
 		{
@@ -416,7 +458,17 @@ namespace Test
 			if (r.Next(100) == 0)
 				m_sealedClass = null;
 			else
-				m_sealedClass = new SimpleSealedClass(r);
+				m_sealedClass = new SimpleClass(r);
+
+			if (r.Next(100) == 0)
+				m_abstractMsg = null;
+			else
+				m_abstractMsg = new SimpleClass(r);
+
+			if (r.Next(100) == 0)
+				m_ifaceMsg = null;
+			else
+				m_ifaceMsg = new SimpleClass2(r);
 		}
 
 		public override void Compare(MessageBase msg)
@@ -442,6 +494,16 @@ namespace Test
 				A(m_sealedClass == m.m_sealedClass);
 			else
 				m_sealedClass.Compare(m.m_sealedClass);
+
+			if (m_abstractMsg == null)
+				A(m_abstractMsg == m.m_abstractMsg);
+			else
+				((SimpleClass)m_abstractMsg).Compare((SimpleClass)m.m_abstractMsg);
+
+			if (m_ifaceMsg == null)
+				A(m_ifaceMsg == m.m_ifaceMsg);
+			else
+				((SimpleClass2)m_ifaceMsg).Compare((SimpleClass2)m.m_ifaceMsg);
 		}
 	}
 }
