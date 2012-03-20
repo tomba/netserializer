@@ -50,8 +50,6 @@ namespace Test
 			return m_received;
 		}
 
-		public long Size { get { return 0; } }
-
 		void ServerMain()
 		{
 			var listener = new TcpListener(IPAddress.Loopback, 9999);
