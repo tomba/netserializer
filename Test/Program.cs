@@ -35,16 +35,14 @@ namespace Test
 
 			Warmup();
 
-			MessageBase[] msgs;
+			RunTests(typeof(S16Message), 2000000);
+			RunTests(typeof(S32Message), 2000000);
+			RunTests(typeof(U32Message), 2000000);
+			RunTests(typeof(S64Message), 2000000);
 
-			msgs = MessageBase.CreateSimpleMessages(2000000).ToArray();
-			RunTests("SimpleMessages", msgs);
-
-			msgs = MessageBase.CreateMessages(300000).ToArray();
-			RunTests("Messages", msgs);
-
-			msgs = MessageBase.CreateLongMessages(500).ToArray();
-			RunTests("LongMessages", msgs);
+			RunTests(typeof(PrimitivesMessage), 1000000);
+			RunTests(typeof(ComplexMessage), 300000);
+			RunTests(typeof(LongArraysMessage), 500);
 
 			Console.WriteLine("Press enter to quit");
 			Console.ReadLine();
@@ -52,7 +50,7 @@ namespace Test
 
 		static void Warmup()
 		{
-			var msgs = new MessageBase[] { new SimpleMessage(), new Message(), new LongMessage() };
+			var msgs = new MessageBase[] { new S16Message(), new ComplexMessage(), new LongArraysMessage() };
 
 			IMemStreamTest t;
 
@@ -67,9 +65,11 @@ namespace Test
 			t.Deserialize();
 		}
 
-		static void RunTests(string name, MessageBase[] msgs)
+		static void RunTests(Type msgType, int numMessages)
 		{
-			Console.WriteLine("== {0} {1} ==", msgs.Length, name);
+			Console.WriteLine("== {0} {1} ==", numMessages, msgType.Name);
+
+			var msgs = MessageBase.CreateMessages(msgType, numMessages);
 
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
