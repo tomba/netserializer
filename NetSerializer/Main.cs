@@ -261,6 +261,16 @@ namespace NetSerializer
 			ab.Save("NetSerializerDebug.dll");
 		}
 
+		static TypeData GetTypeData(Type type)
+		{
+			TypeData data;
+
+			if (s_map.TryGetValue(type, out data) == false)
+				throw new Exception(String.Format("Unknown type {0}", type));
+
+			return data;
+		}
+
 		static ushort GetTypeID(object ob)
 		{
 			TypeData data;

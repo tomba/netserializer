@@ -102,9 +102,13 @@ namespace NetSerializer
 						il.Emit(OpCodes.Ldarg, 1);
 					il.Emit(OpCodes.Ldfld, field);
 
-					// All classes go to switch method. A sealed class with NeverNullAttribute could skip that.
-					// Also, perhaps it would be possible to skip the switch with sealed classes (but handle null).
-					if (field.FieldType.IsValueType)
+					var td = GetTypeData(field.FieldType);
+
+					// We can call the Serializer method directly for:
+					// - Value types
+					// - Types with static Serializer method, as the method will handle null
+					// Other reference types go through the SerializesSwitch
+					if (field.FieldType.IsValueType || td.IsStatic)
 						il.EmitCall(OpCodes.Call, GetWriterMethodInfo(field.FieldType), null);
 					else
 						il.EmitCall(OpCodes.Call, s_serializerSwitchMethodInfo, null);
