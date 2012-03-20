@@ -110,11 +110,25 @@ namespace Test
 		{
 			var m = (LongMessage)msg;
 
-			for (int i = 0; i < m_byteArr.Length; ++i)
-				A(m_byteArr[i] == m.m_byteArr[i]);
+			if (m_byteArr == null)
+			{
+				A(m_byteArr == m.m_byteArr);
+			}
+			else
+			{
+				for (int i = 0; i < m_byteArr.Length; ++i)
+					A(m_byteArr[i] == m.m_byteArr[i]);
+			}
 
-			for (int i = 0; i < m_intArr.Length; ++i)
-				A(m_intArr[i] == m.m_intArr[i]);
+			if (m_intArr == null)
+			{
+				A(m_intArr == m.m_intArr);
+			}
+			else
+			{
+				for (int i = 0; i < m_intArr.Length; ++i)
+					A(m_intArr[i] == m.m_intArr[i]);
+			}
 		}
 	}
 
@@ -237,12 +251,25 @@ namespace Test
 
 			A(m_string == m.m_string);
 
-			m_msg.Compare(m.m_msg);
+			if (m_msg == null)
+				A(m_msg == m.m_msg);
+			else
+				m_msg.Compare(m.m_msg);
 
-			for (int i = 0; i < m_intArr.Length; ++i)
-				A(m_intArr[i] == m.m_intArr[i]);
+			if (m_intArr == null)
+			{
+				A(m_intArr == m.m_intArr);
+			}
+			else
+			{
+				for (int i = 0; i < m_intArr.Length; ++i)
+					A(m_intArr[i] == m.m_intArr[i]);
+			}
 
-			m_sealedClass.Compare(m.m_sealedClass);
+			if (m_sealedClass == null)
+				A(m_sealedClass == m.m_sealedClass);
+			else
+				m_sealedClass.Compare(m.m_sealedClass);
 		}
 	}
 }

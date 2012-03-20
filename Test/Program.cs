@@ -25,6 +25,8 @@ namespace Test
 
 			Serializer.Initialize(types);
 
+			Warmup();
+
 			MessageBase[] msgs;
 
 			msgs = MessageBase.CreateSimpleMessages(2000000).ToArray();
@@ -38,6 +40,21 @@ namespace Test
 
 			//Console.WriteLine("Press enter to quit");
 			//Console.ReadLine();
+		}
+
+		static void Warmup()
+		{
+			var msgs = new MessageBase[] { new SimpleMessage(), new Message(), new LongMessage() };
+
+			ITest t;
+
+			t = new MemStreamTest();
+			t.Prepare(msgs.Length);
+			t.Test(msgs);
+
+			t = new PBMemStreamTest();
+			t.Prepare(msgs.Length);
+			t.Test(msgs);
 		}
 
 		static void RunTests(string name, MessageBase[] msgs)
