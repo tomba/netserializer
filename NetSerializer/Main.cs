@@ -188,7 +188,7 @@ namespace NetSerializer
 				new Type[] { typeof(Stream), typeof(object).MakeByRefType() },
 				typeof(Serializer), true);
 			deserializerSwitchMethod.DefineParameter(1, ParameterAttributes.None, "stream");
-			deserializerSwitchMethod.DefineParameter(2, ParameterAttributes.None, "value");
+			deserializerSwitchMethod.DefineParameter(2, ParameterAttributes.Out, "value");
 			s_deserializerSwitchMethodInfo = deserializerSwitchMethod;
 
 
@@ -240,7 +240,7 @@ namespace NetSerializer
 
 			var deserializerSwitchMethod = tb.DefineMethod("DeserializerSwitch", MethodAttributes.Public | MethodAttributes.Static, null, new Type[] { typeof(Stream), typeof(object).MakeByRefType() });
 			deserializerSwitchMethod.DefineParameter(1, ParameterAttributes.None, "stream");
-			deserializerSwitchMethod.DefineParameter(2, ParameterAttributes.None, "value");
+			deserializerSwitchMethod.DefineParameter(2, ParameterAttributes.Out, "value");
 			s_deserializerSwitchMethodInfo = deserializerSwitchMethod;
 
 			/* generate bodies */
