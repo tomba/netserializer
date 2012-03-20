@@ -1,12 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using System.Text;
 
 namespace NetSerializer
 {
-	static class Primitives
+	public static class Primitives
 	{
-		public static MethodInfo GetWritePrimitive(Type type)
+		internal static MethodInfo GetWritePrimitive(Type type)
 		{
 			if (type.IsEnum)
 				type = type.GetEnumUnderlyingType();
@@ -17,7 +18,7 @@ namespace NetSerializer
 			return mi;
 		}
 
-		public static MethodInfo GetReadPrimitive(Type type)
+		internal static MethodInfo GetReadPrimitive(Type type)
 		{
 			if (!type.IsByRef)
 				throw new Exception();
@@ -218,24 +219,28 @@ namespace NetSerializer
 			value = DecodeZigZag64(ReadVarint64(stream));
 		}
 
-		public static void WritePrimitive(Stream stream, float value)
+		public static unsafe void WritePrimitive(Stream stream, float value)
 		{
-			WriteVarint64(stream, EncodeZigZag64(BitConverter.DoubleToInt64Bits(value)));
+			uint v = *(uint*)(&value);
+			WriteVarint32(stream, v);
 		}
 
-		public static void ReadPrimitive(Stream stream, out float value)
+		public static unsafe void ReadPrimitive(Stream stream, out float value)
 		{
-			value = (float)BitConverter.Int64BitsToDouble(DecodeZigZag64(ReadVarint64(stream)));
+			uint v = ReadVarint32(stream);
+			value = *(float*)(&v);
 		}
 
-		public static void WritePrimitive(Stream stream, double value)
+		public static unsafe void WritePrimitive(Stream stream, double value)
 		{
-			WriteVarint64(stream, EncodeZigZag64(BitConverter.DoubleToInt64Bits(value)));
+			ulong v = *(ulong*)(&value);
+			WriteVarint64(stream, v);
 		}
 
-		public static void ReadPrimitive(Stream stream, out double value)
+		public static unsafe void ReadPrimitive(Stream stream, out double value)
 		{
-			value = BitConverter.Int64BitsToDouble(DecodeZigZag64(ReadVarint64(stream)));
+			ulong v = ReadVarint64(stream);
+			value = *(double*)(&v);
 		}
 
 		public static void WritePrimitive(Stream stream, string value)
