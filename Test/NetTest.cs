@@ -5,13 +5,13 @@ using System.Text;
 using System.Threading;
 using System.Net.Sockets;
 using System.Net;
-using NetSerializer;
 using System.Diagnostics;
 using System.IO;
+using NetSerializer;
 
 namespace Test
 {
-	class NetTest : ITest
+	class NetTest : INetTest
 	{
 		MessageBase[] m_sent;
 		MessageBase[] m_received;
@@ -20,6 +20,8 @@ namespace Test
 		Thread m_client;
 
 		ManualResetEvent m_ev;
+
+		public string Framework { get { return "NetSerializer"; } }
 
 		public void Prepare(int numMessages)
 		{

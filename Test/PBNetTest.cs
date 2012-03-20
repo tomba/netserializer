@@ -11,7 +11,7 @@ using ProtoBuf;
 
 namespace Test
 {
-	class PBNetTest : ITest
+	class PBNetTest : INetTest
 	{
 		MessageBase[] m_sent;
 		MessageBase[] m_received;
@@ -20,6 +20,8 @@ namespace Test
 		Thread m_client;
 
 		ManualResetEvent m_ev;
+
+		public string Framework { get { return "protobuf-net"; } }
 
 		public void Prepare(int numMessages)
 		{
