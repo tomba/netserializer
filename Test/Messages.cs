@@ -16,6 +16,7 @@ namespace Test
 	[ProtoInclude(5, typeof(U32Message))]
 	[ProtoInclude(6, typeof(S64Message))]
 	[ProtoInclude(7, typeof(ComplexMessage))]
+	[ProtoInclude(8, typeof(U8NullMessage))]
 	abstract class MessageBase
 	{
 		public abstract void Compare(MessageBase msg);
@@ -49,6 +50,29 @@ namespace Test
 			// XXX produces quite big numbers
 			random.NextBytes(r64buf);
 			return BitConverter.ToInt64(r64buf, 0);
+		}
+	}
+
+	[Serializable]
+	[ProtoContract]
+	sealed class U8NullMessage : MessageBase
+	{
+		[ProtoMember(1)]
+		byte m_val;
+
+		public U8NullMessage()
+		{
+		}
+
+		public U8NullMessage(Random r)
+		{
+			m_val = 0;
+		}
+
+		public override void Compare(MessageBase msg)
+		{
+			var m = (U8NullMessage)msg;
+			A(m_val == m.m_val);
 		}
 	}
 

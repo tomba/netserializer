@@ -35,6 +35,7 @@ namespace Test
 
 			Warmup();
 
+			RunTests(typeof(U8NullMessage), 2000000);
 			RunTests(typeof(S16Message), 2000000);
 			RunTests(typeof(S32Message), 2000000);
 			RunTests(typeof(U32Message), 2000000);
