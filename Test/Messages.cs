@@ -9,14 +9,16 @@ namespace Test
 {
 	[Serializable]
 	[ProtoContract]
-	[ProtoInclude(1, typeof(PrimitivesMessage))]
-	[ProtoInclude(2, typeof(LongArraysMessage))]
-	[ProtoInclude(3, typeof(S16Message))]
-	[ProtoInclude(4, typeof(S32Message))]
-	[ProtoInclude(5, typeof(U32Message))]
-	[ProtoInclude(6, typeof(S64Message))]
+	[ProtoInclude(1, typeof(U8NullMessage))]
+	[ProtoInclude(2, typeof(S16Message))]
+	[ProtoInclude(3, typeof(S32Message))]
+	[ProtoInclude(4, typeof(U32Message))]
+	[ProtoInclude(5, typeof(S64Message))]
+	[ProtoInclude(6, typeof(PrimitivesMessage))]
 	[ProtoInclude(7, typeof(ComplexMessage))]
-	[ProtoInclude(8, typeof(U8NullMessage))]
+	[ProtoInclude(8, typeof(ByteArrayMessage))]
+	[ProtoInclude(9, typeof(IntArrayMessage))]
+	[ProtoInclude(10, typeof(StringMessage))]
 	abstract class MessageBase
 	{
 		public abstract void Compare(MessageBase msg);
@@ -243,48 +245,36 @@ namespace Test
 		}
 	}
 
-
-
 	[Serializable]
 	[ProtoContract]
-	sealed class LongArraysMessage : MessageBase
+	sealed class ByteArrayMessage : MessageBase
 	{
 		[ProtoMember(1)]
 		byte[] m_byteArr;
-		[ProtoMember(2)]
-		int[] m_intArr;
 
-		public LongArraysMessage()
+		public ByteArrayMessage()
 		{
 		}
 
-		public LongArraysMessage(Random r)
+		public ByteArrayMessage(Random r)
 		{
-			if (r.Next(100) == 0)
+			int len = r.Next(100000);
+
+			if (len == 0)
 			{
 				m_byteArr = null;
 			}
 			else
 			{
-				m_byteArr = new byte[r.Next(10000, 100000)];
-				r.NextBytes(m_byteArr);
-			}
-
-			if (r.Next(100) == 0)
-			{
-				m_intArr = null;
-			}
-			else
-			{
-				m_intArr = new int[r.Next(10000, 100000)];
-				for (int i = 0; i < m_intArr.Length; ++i)
-					m_intArr[i] = r.Next();
+				m_byteArr = new byte[len - 1];
+				for (int i = 0; i < m_byteArr.Length; ++i)
+					m_byteArr[i] = (byte)i;
 			}
 		}
 
 		public override void Compare(MessageBase msg)
 		{
-			var m = (LongArraysMessage)msg;
+			var m = (ByteArrayMessage)msg;
 
 			if (m_byteArr == null)
 			{
@@ -295,6 +285,39 @@ namespace Test
 				for (int i = 0; i < m_byteArr.Length; ++i)
 					A(m_byteArr[i] == m.m_byteArr[i]);
 			}
+		}
+	}
+
+	[Serializable]
+	[ProtoContract]
+	sealed class IntArrayMessage : MessageBase
+	{
+		[ProtoMember(1)]
+		int[] m_intArr;
+
+		public IntArrayMessage()
+		{
+		}
+
+		public IntArrayMessage(Random r)
+		{
+			int len = r.Next(100000);
+
+			if (len == 0)
+			{
+				m_intArr = null;
+			}
+			else
+			{
+				m_intArr = new int[len - 1];
+				for (int i = 0; i < m_intArr.Length; ++i)
+					m_intArr[i] = r.Next();
+			}
+		}
+
+		public override void Compare(MessageBase msg)
+		{
+			var m = (IntArrayMessage)msg;
 
 			if (m_intArr == null)
 			{
@@ -308,7 +331,34 @@ namespace Test
 		}
 	}
 
+	[Serializable]
+	[ProtoContract]
+	sealed class StringMessage : MessageBase
+	{
+		[ProtoMember(1)]
+		string m_string;
 
+		public StringMessage()
+		{
+		}
+
+		public StringMessage(Random r)
+		{
+			int len = r.Next(1000);
+
+			if (len == 0)
+				m_string = null;
+			else
+				m_string = new string((char)r.Next((int)'a', (int)'z'), len - 1);
+		}
+
+		public override void Compare(MessageBase msg)
+		{
+			var m = (StringMessage)msg;
+
+			A(m_string == m.m_string);
+		}
+	}
 
 	[Serializable]
 	[ProtoContract]
@@ -338,9 +388,6 @@ namespace Test
 	[ProtoContract]
 	sealed class ComplexMessage : MessageBase
 	{
-		[ProtoMember(1)]
-		string m_string;
-
 		[ProtoMember(2)]
 		S16Message m_msg;
 
@@ -356,11 +403,6 @@ namespace Test
 
 		public ComplexMessage(Random r)
 		{
-			if (r.Next(100) == 0)
-				m_string = null;
-			else
-				m_string = new string((char)r.Next((int)'a', (int)'z'), r.Next(2, 100));
-
 			if (r.Next(100) == 0)
 				m_msg = null;
 			else
@@ -380,8 +422,6 @@ namespace Test
 		public override void Compare(MessageBase msg)
 		{
 			var m = (ComplexMessage)msg;
-
-			A(m_string == m.m_string);
 
 			if (m_msg == null)
 				A(m_msg == m.m_msg);

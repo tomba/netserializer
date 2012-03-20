@@ -35,6 +35,7 @@ namespace Test
 
 			Warmup();
 
+
 			RunTests(typeof(U8NullMessage), 2000000);
 			RunTests(typeof(S16Message), 2000000);
 			RunTests(typeof(S32Message), 2000000);
@@ -43,15 +44,19 @@ namespace Test
 
 			RunTests(typeof(PrimitivesMessage), 1000000);
 			RunTests(typeof(ComplexMessage), 300000);
-			RunTests(typeof(LongArraysMessage), 500);
 
-			Console.WriteLine("Press enter to quit");
-			Console.ReadLine();
+			RunTests(typeof(StringMessage), 200000);
+
+			RunTests(typeof(ByteArrayMessage), 10000);
+			RunTests(typeof(IntArrayMessage), 1000);
+
+			//Console.WriteLine("Press enter to quit");
+			//Console.ReadLine();
 		}
 
 		static void Warmup()
 		{
-			var msgs = new MessageBase[] { new S16Message(), new ComplexMessage(), new LongArraysMessage() };
+			var msgs = new MessageBase[] { new S16Message(), new ComplexMessage(), new IntArrayMessage() };
 
 			IMemStreamTest t;
 
