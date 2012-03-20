@@ -242,10 +242,25 @@ namespace NetSerializer
 				return;
 			}
 
+#if GC_NICE_VERSION
 			WritePrimitive(stream, (uint)value.Length + 1);
 
 			foreach (char c in value)
 				WritePrimitive(stream, c);
+#else
+
+			var encoding = new UTF8Encoding(false, true);
+
+			int len = encoding.GetByteCount(value);
+
+			WritePrimitive(stream, (uint)len + 1);
+
+			var buf = new byte[len];
+
+			encoding.GetBytes(value, 0, value.Length, buf, 0);
+
+			stream.Write(buf, 0, len);
+#endif
 		}
 
 		public static void ReadPrimitive(Stream stream, out string value)
@@ -266,11 +281,30 @@ namespace NetSerializer
 
 			len -= 1;
 
+#if GC_NICE_VERSION
 			var arr = new char[len];
 			for (uint i = 0; i < len; ++i)
 				ReadPrimitive(stream, out arr[i]);
 
 			value = new string(arr);
+#else
+
+			var encoding = new UTF8Encoding(false, true);
+
+			var buf = new byte[len];
+
+			int l = 0;
+
+			while (l < len)
+			{
+				int r = stream.Read(buf, l, (int)len - l);
+				if (r == 0)
+					throw new Exception();
+				l += r;
+			}
+
+			value = encoding.GetString(buf);
+#endif
 		}
 
 		public static void WritePrimitive(Stream stream, byte[] value)
