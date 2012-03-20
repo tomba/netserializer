@@ -153,25 +153,9 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldloca, idLocal);
 			il.EmitCall(OpCodes.Call, GetReaderMethodInfo(typeof(ushort)), null);
 
-			var notNullLabel = il.DefineLabel();
-
-			// if typeID == 0xffff
-			il.Emit(OpCodes.Ldloc, idLocal);
-			il.Emit(OpCodes.Ldc_I4, 0xffff);
-			il.Emit(OpCodes.Conv_I4);
-			il.Emit(OpCodes.Bne_Un, notNullLabel);
-
-			// write null to out object
-			il.Emit(OpCodes.Ldarg_1);
-			il.Emit(OpCodes.Ldnull);
-			il.Emit(OpCodes.Stind_Ref);
-			D(il, "deser done");
-			il.Emit(OpCodes.Ret);
-
-			// if typeID != 0xffff
-			il.MarkLabel(notNullLabel);
-
-			var jumpTable = new Label[map.Count];
+			// +1 for 0 (null)
+			var jumpTable = new Label[map.Count + 1];
+			jumpTable[0] = il.DefineLabel();
 			foreach (var kvp in map)
 				jumpTable[kvp.Value.TypeID] = il.DefineLabel();
 
@@ -181,6 +165,15 @@ namespace NetSerializer
 			D(il, "eihx");
 			il.ThrowException(typeof(Exception));
 
+			/* null case */
+			il.MarkLabel(jumpTable[0]);
+
+			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ldnull);
+			il.Emit(OpCodes.Stind_Ref);
+			il.Emit(OpCodes.Ret);
+
+			/* cases for types */
 			foreach (var kvp in map)
 			{
 				var data = kvp.Value;

@@ -108,7 +108,8 @@ namespace NetSerializer
 			// Sort the types so that we get the same typeID, regardless of the order in the HashSet
 			Array.Sort(rootTypes, (a, b) => String.Compare(a.FullName, b.FullName, StringComparison.Ordinal));
 
-			ushort typeID = 0;
+			// TypeID 0 is reserved for null
+			ushort typeID = 1;
 			foreach (var type in rootTypes)
 			{
 				if (type.IsInterface || type.IsAbstract)
@@ -260,19 +261,17 @@ namespace NetSerializer
 			ab.Save("NetSerializerDebug.dll");
 		}
 
-		static ushort GetTypeID(Type type)
+		static ushort GetTypeID(object ob)
 		{
 			TypeData data;
 
-			if (s_map.TryGetValue(type, out data) == false)
-				throw new Exception(String.Format("Unknown type {0}", type));
+			if (ob == null)
+				return 0;
+
+			if (s_map.TryGetValue(ob.GetType(), out data) == false)
+				throw new Exception(String.Format("Unknown type {0}", ob.GetType()));
 
 			return data.TypeID;
-		}
-
-		static ushort GetTypeID(object ob)
-		{
-			return GetTypeID(ob.GetType());
 		}
 
 		static FieldInfo[] GetFieldInfos(Type type)

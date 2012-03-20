@@ -120,20 +120,6 @@ namespace NetSerializer
 			// arg0: Stream, arg1: object
 
 			var idLocal = il.DeclareLocal(typeof(ushort));
-			var notNullLabel = il.DefineLabel();
-
-			// object == null?
-			il.Emit(OpCodes.Ldarg_1);
-			il.Emit(OpCodes.Brtrue, notNullLabel);
-
-			// if the object is null, write typeID 0xffff
-			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldc_I4_M1);
-			il.EmitCall(OpCodes.Call, GetWriterMethodInfo(typeof(ushort)), null);
-			il.Emit(OpCodes.Ret);
-
-			// object was not null
-			il.MarkLabel(notNullLabel);
 
 			// get TypeID from object's Type
 			var getTypeIDMethod = typeof(Serializer).GetMethod("GetTypeID", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(object) }, null);
@@ -146,7 +132,9 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldloc, idLocal);
 			il.EmitCall(OpCodes.Call, GetWriterMethodInfo(typeof(ushort)), null);
 
-			var jumpTable = new Label[map.Count];
+			// +1 for 0 (null)
+			var jumpTable = new Label[map.Count + 1];
+			jumpTable[0] = il.DefineLabel();
 			foreach (var kvp in map)
 				jumpTable[kvp.Value.TypeID] = il.DefineLabel();
 
@@ -156,6 +144,11 @@ namespace NetSerializer
 			D(il, "eihx");
 			il.ThrowException(typeof(Exception));
 
+			/* null case */
+			il.MarkLabel(jumpTable[0]);
+			il.Emit(OpCodes.Ret);
+
+			/* cases for types */
 			foreach (var kvp in map)
 			{
 				var data = kvp.Value;
