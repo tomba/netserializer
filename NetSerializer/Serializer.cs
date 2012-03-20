@@ -48,7 +48,7 @@ namespace NetSerializer
 				var idxLocal = il.DeclareLocal(typeof(int));
 
 				// i = 0
-				il.Emit(OpCodes.Ldnull);
+				il.Emit(OpCodes.Ldc_I4_0);
 				il.Emit(OpCodes.Stloc, idxLocal);
 
 				var loopBodyLabel = il.DefineLabel();
