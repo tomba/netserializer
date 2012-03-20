@@ -102,19 +102,10 @@ namespace NetSerializer
 
 		static void WriteVarint64(Stream stream, ulong value)
 		{
-			while (true)
-			{
-				if ((value & ~0x7Ful) == 0)
-				{
-					stream.WriteByte((byte)value);
-					return;
-				}
-				else
-				{
-					stream.WriteByte((byte)((value & 0x7F) | 0x80));
-					value >>= 7;
-				}
-			}
+			for (; value >= 0x80u; value >>= 7)
+				stream.WriteByte((byte)(value | 0x80u));
+
+			stream.WriteByte((byte)value);
 		}
 
 
