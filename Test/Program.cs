@@ -49,8 +49,8 @@ namespace Test
 
 			RunTests(typeof(StringMessage), 200000);
 
-			RunTests(typeof(ByteArrayMessage), 6000);
-			RunTests(typeof(IntArrayMessage), 1000);
+			RunTests(typeof(ByteArrayMessage), 5000);
+			RunTests(typeof(IntArrayMessage), 800);
 
 			//Console.WriteLine("Press enter to quit");
 			//Console.ReadLine();
