@@ -98,12 +98,26 @@ namespace Test
 
 		public LongMessage(Random r)
 		{
-			m_byteArr = new byte[r.Next(10000, 100000)];
-			r.NextBytes(m_byteArr);
+			if (r.Next(100) == 0)
+			{
+				m_byteArr = null;
+			}
+			else
+			{
+				m_byteArr = new byte[r.Next(10000, 100000)];
+				r.NextBytes(m_byteArr);
+			}
 
-			m_intArr = new int[r.Next(10000, 100000)];
-			for (int i = 0; i < m_intArr.Length; ++i)
-				m_intArr[i] = r.Next();
+			if (r.Next(100) == 0)
+			{
+				m_intArr = null;
+			}
+			else
+			{
+				m_intArr = new int[r.Next(10000, 100000)];
+				for (int i = 0; i < m_intArr.Length; ++i)
+					m_intArr[i] = r.Next();
+			}
 		}
 
 		public override void Compare(MessageBase msg)
@@ -221,13 +235,25 @@ namespace Test
 			m_single = (float)r.NextDouble();
 			m_double = r.NextDouble();
 
-			m_string = new string((char)r.Next((int)'a', (int)'z'), r.Next(2, 100));
+			if (r.Next(100) == 0)
+				m_string = null;
+			else
+				m_string = new string((char)r.Next((int)'a', (int)'z'), r.Next(2, 100));
 
-			m_msg = new SimpleMessage(r);
+			if (r.Next(100) == 0)
+				m_msg = null;
+			else
+				m_msg = new SimpleMessage(r);
 
-			m_intArr = new int[r.Next(1, 100)];
+			if (r.Next(100) == 0)
+				m_intArr = null;
+			else
+				m_intArr = new int[r.Next(1, 100)];
 
-			m_sealedClass = new SimpleSealedClass(r);
+			if (r.Next(100) == 0)
+				m_sealedClass = null;
+			else
+				m_sealedClass = new SimpleSealedClass(r);
 		}
 
 		public override void Compare(MessageBase msg)
