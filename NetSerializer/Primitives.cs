@@ -238,11 +238,11 @@ namespace NetSerializer
 		{
 			if (value == null)
 			{
-				WritePrimitive(stream, 0xffffffffU);
+				WritePrimitive(stream, (uint)0);
 				return;
 			}
 
-			WritePrimitive(stream, (uint)value.Length);
+			WritePrimitive(stream, (uint)value.Length + 1);
 
 			foreach (char c in value)
 				WritePrimitive(stream, c);
@@ -253,11 +253,18 @@ namespace NetSerializer
 			uint len;
 			ReadPrimitive(stream, out len);
 
-			if (len == 0xffffffffU)
+			if (len == 0)
 			{
 				value = null;
 				return;
 			}
+			else if (len == 1)
+			{
+				value = string.Empty;
+				return;
+			}
+
+			len -= 1;
 
 			var arr = new char[len];
 			for (uint i = 0; i < len; ++i)
