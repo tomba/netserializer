@@ -27,7 +27,7 @@ namespace NetSerializer
 			return mb;
 		}
 
-		static void GenerateDeserializerBody(Type type, ILGenerator il)
+		static void GenerateDeserializerBody(CodeGenContext ctx, Type type, ILGenerator il)
 		{
 			// arg0: stream, arg1: out value
 
@@ -42,7 +42,7 @@ namespace NetSerializer
 				// read array len
 				il.Emit(OpCodes.Ldarg_0);
 				il.Emit(OpCodes.Ldloca, lenLocal);
-				il.EmitCall(OpCodes.Call, GetReaderMethodInfo(typeof(uint)), null);
+				il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(typeof(uint)), null);
 
 				var arrLocal = il.DeclareLocal(type);
 
@@ -72,9 +72,9 @@ namespace NetSerializer
 				il.Emit(OpCodes.Ldloc, idxLocal);
 				il.Emit(OpCodes.Ldelema, elemType);
 				if (elemType.IsValueType)
-					il.EmitCall(OpCodes.Call, GetReaderMethodInfo(elemType), null);
+					il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(elemType), null);
 				else
-					il.EmitCall(OpCodes.Call, s_deserializerSwitchMethodInfo, null);
+					il.EmitCall(OpCodes.Call, ctx.DeserializerSwitchMethodInfo, null);
 
 				// i = i + 1
 				il.Emit(OpCodes.Ldloc, idxLocal);
@@ -144,14 +144,14 @@ namespace NetSerializer
 					}
 					else
 					{
-						var td = GetTypeData(fieldType);
+						var td = ctx.GetTypeData(fieldType);
 						direct = td.IsStatic;
 					}
 
 					if (direct)
-						il.EmitCall(OpCodes.Call, GetReaderMethodInfo(fieldType), null);
+						il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(fieldType), null);
 					else
-						il.EmitCall(OpCodes.Call, s_deserializerSwitchMethodInfo, null);
+						il.EmitCall(OpCodes.Call, ctx.DeserializerSwitchMethodInfo, null);
 				}
 			}
 
@@ -161,7 +161,7 @@ namespace NetSerializer
 
 
 
-		static void GenerateDeserializerSwitch(ILGenerator il, IDictionary<Type, TypeData> map)
+		static void GenerateDeserializerSwitch(CodeGenContext ctx, ILGenerator il, IDictionary<Type, TypeData> map)
 		{
 			// arg0: stream, arg1: out object
 
@@ -172,7 +172,7 @@ namespace NetSerializer
 			// read typeID
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldloca, idLocal);
-			il.EmitCall(OpCodes.Call, GetReaderMethodInfo(typeof(ushort)), null);
+			il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(typeof(ushort)), null);
 
 			// +1 for 0 (null)
 			var jumpTable = new Label[map.Count + 1];

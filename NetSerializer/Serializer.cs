@@ -28,7 +28,7 @@ namespace NetSerializer
 			return mb;
 		}
 
-		static void GenerateSerializerBody(Type type, ILGenerator il)
+		static void GenerateSerializerBody(CodeGenContext ctx, Type type, ILGenerator il)
 		{
 			// arg0: Stream, arg1: value
 
@@ -42,7 +42,7 @@ namespace NetSerializer
 				il.Emit(OpCodes.Ldarg_0);
 				il.Emit(OpCodes.Ldarg_1);
 				il.Emit(OpCodes.Ldlen);
-				il.EmitCall(OpCodes.Call, GetWriterMethodInfo(typeof(uint)), null);
+				il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(uint)), null);
 
 				// declare i
 				var idxLocal = il.DeclareLocal(typeof(int));
@@ -67,9 +67,9 @@ namespace NetSerializer
 				// All classes go to switch method. A sealed class with NeverNullAttribute could skip that.
 				// Also, perhaps it would be possible to skip the switch with sealed classes (but handle null).
 				if (elemType.IsValueType)
-					il.EmitCall(OpCodes.Call, GetWriterMethodInfo(elemType), null);
+					il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(elemType), null);
 				else
-					il.EmitCall(OpCodes.Call, s_serializerSwitchMethodInfo, null);
+					il.EmitCall(OpCodes.Call, ctx.SerializerSwitchMethodInfo, null);
 
 				// i = i + 1
 				il.Emit(OpCodes.Ldloc, idxLocal);
@@ -121,14 +121,14 @@ namespace NetSerializer
 					}
 					else
 					{
-						var td = GetTypeData(fieldType);
+						var td = ctx.GetTypeData(fieldType);
 						direct = td.IsStatic;
 					}
 
 					if (direct)
-						il.EmitCall(OpCodes.Call, GetWriterMethodInfo(fieldType), null);
+						il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(fieldType), null);
 					else
-						il.EmitCall(OpCodes.Call, s_serializerSwitchMethodInfo, null);
+						il.EmitCall(OpCodes.Call, ctx.SerializerSwitchMethodInfo, null);
 				}
 			}
 
@@ -136,7 +136,7 @@ namespace NetSerializer
 		}
 
 
-		static void GenerateSerializerSwitch(ILGenerator il, IDictionary<Type, TypeData> map)
+		static void GenerateSerializerSwitch(CodeGenContext ctx, ILGenerator il, IDictionary<Type, TypeData> map)
 		{
 			// arg0: Stream, arg1: object
 
@@ -151,7 +151,7 @@ namespace NetSerializer
 			// write typeID
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldloc, idLocal);
-			il.EmitCall(OpCodes.Call, GetWriterMethodInfo(typeof(ushort)), null);
+			il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(ushort)), null);
 
 			// +1 for 0 (null)
 			var jumpTable = new Label[map.Count + 1];
