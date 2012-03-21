@@ -93,8 +93,7 @@ namespace NetSerializer
 			}
 			else
 			{
-				var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-					.Where(fi => (fi.Attributes & FieldAttributes.NotSerialized) == 0);
+				var fields = GetFieldInfos(type);
 
 				foreach (var field in fields)
 					CollectTypes(field.FieldType, typeSet);
