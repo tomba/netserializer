@@ -9,7 +9,7 @@ namespace Test
 {
 	[Serializable]
 	[ProtoContract]
-	[ProtoInclude(1, typeof(U8NullMessage))]
+	[ProtoInclude(1, typeof(U8Message))]
 	[ProtoInclude(2, typeof(S16Message))]
 	[ProtoInclude(3, typeof(S32Message))]
 	[ProtoInclude(4, typeof(U32Message))]
@@ -57,23 +57,23 @@ namespace Test
 
 	[Serializable]
 	[ProtoContract]
-	sealed class U8NullMessage : MessageBase
+	sealed class U8Message : MessageBase
 	{
 		[ProtoMember(1)]
 		byte m_val;
 
-		public U8NullMessage()
+		public U8Message()
 		{
 		}
 
-		public U8NullMessage(Random r)
+		public U8Message(Random r)
 		{
-			m_val = 0;
+			m_val = (byte)r.Next();
 		}
 
 		public override void Compare(MessageBase msg)
 		{
-			var m = (U8NullMessage)msg;
+			var m = (U8Message)msg;
 			A(m_val == m.m_val);
 		}
 	}
