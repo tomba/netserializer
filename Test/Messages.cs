@@ -366,6 +366,23 @@ namespace Test
 	[ProtoInclude(1, typeof(SimpleClass))]
 	abstract class SimpleClassBase
 	{
+		[ProtoMember(2)]
+		int m_val;
+
+		protected SimpleClassBase()
+		{
+		}
+
+		protected SimpleClassBase(Random r)
+		{
+			m_val = r.Next();
+		}
+
+		public void Compare(SimpleClassBase other)
+		{
+			if (m_val != other.m_val)
+				throw new Exception();
+		}
 	}
 
 	[Serializable]
@@ -380,6 +397,7 @@ namespace Test
 		}
 
 		public SimpleClass(Random r)
+			: base(r)
 		{
 			m_val = (long)r.Next();
 		}
@@ -388,6 +406,8 @@ namespace Test
 		{
 			if (m_val != other.m_val)
 				throw new Exception();
+
+			base.Compare(other);
 		}
 	}
 
