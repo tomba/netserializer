@@ -118,12 +118,9 @@ namespace NetSerializer
 			foreach (var type in rootTypes)
 				CollectTypes(type, typeSet);
 
-			var types = typeSet.ToArray();
-
-			// Sort the types so that we get the same typeID, regardless of the order in the HashSet
-			Array.Sort(types, (a, b) => String.Compare(a.FullName, b.FullName, StringComparison.Ordinal));
-
-			return types;
+			return typeSet
+				.OrderBy(t => t.FullName, StringComparer.Ordinal)
+				.ToArray();
 		}
 
 		static Dictionary<Type, TypeData> GenerateTypeData(Type[] types)
@@ -292,17 +289,14 @@ namespace NetSerializer
 			return id;
 		}
 
-		static FieldInfo[] GetFieldInfos(Type type)
+		static IEnumerable<FieldInfo> GetFieldInfos(Type type)
 		{
 			if ((type.Attributes & TypeAttributes.Serializable) == 0)
 				throw new Exception();
 
 			var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
 				.Where(fi => (fi.Attributes & FieldAttributes.NotSerialized) == 0)
-				.ToArray();
-
-			// Sort the fields so that they are in the same order, regardless how Type.GetFields works
-			Array.Sort(fields, (a, b) => String.Compare(a.Name, b.Name, StringComparison.Ordinal));
+				.OrderBy(f => f.Name, StringComparer.Ordinal);
 
 			if (type.BaseType == null)
 			{
@@ -311,7 +305,7 @@ namespace NetSerializer
 			else
 			{
 				var baseFields = GetFieldInfos(type.BaseType);
-				return baseFields.Concat(fields).ToArray();
+				return baseFields.Concat(fields);
 			}
 		}
 
