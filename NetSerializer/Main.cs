@@ -153,6 +153,9 @@ namespace NetSerializer
 				}
 				else
 				{
+					if (typeof(System.Runtime.Serialization.ISerializable).IsAssignableFrom(type))
+						throw new Exception("ISerializable not supported");
+
 					td.IsDynamic = true;
 				}
 
