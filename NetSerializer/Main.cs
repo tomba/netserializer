@@ -148,7 +148,11 @@ namespace NetSerializer
 				{
 					td.WriterMethodInfo = writer;
 					td.ReaderMethodInfo = reader;
-					td.IsStatic = true;
+					td.IsDynamic = false;
+				}
+				else
+				{
+					td.IsDynamic = true;
 				}
 
 				map[type] = td;
@@ -161,7 +165,7 @@ namespace NetSerializer
 		{
 			Dictionary<Type, TypeData> map = GenerateTypeData(types);
 
-			var nonStaticTypes = map.Where(kvp => kvp.Value.IsStatic == false).Select(kvp => kvp.Key);
+			var nonStaticTypes = map.Where(kvp => kvp.Value.IsDynamic).Select(kvp => kvp.Key);
 
 			/* generate stubs */
 			foreach (var type in nonStaticTypes)
@@ -221,7 +225,7 @@ namespace NetSerializer
 		{
 			Dictionary<Type, TypeData> map = GenerateTypeData(types);
 
-			var nonStaticTypes = map.Where(kvp => kvp.Value.IsStatic == false).Select(kvp => kvp.Key);
+			var nonStaticTypes = map.Where(kvp => kvp.Value.IsDynamic).Select(kvp => kvp.Key);
 
 			var ab = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("NetSerializerDebug"), AssemblyBuilderAccess.RunAndSave);
 			var modb = ab.DefineDynamicModule("NetSerializerDebug.dll");
@@ -315,16 +319,6 @@ namespace NetSerializer
 			public MethodInfo SerializerSwitchMethodInfo;
 			public MethodInfo DeserializerSwitchMethodInfo;
 
-			public TypeData GetTypeData(Type type)
-			{
-				TypeData data;
-
-				if (TypeMap.TryGetValue(type, out data) == false)
-					throw new Exception(String.Format("Unknown type {0}", type));
-
-				return data;
-			}
-
 			public MethodInfo GetWriterMethodInfo(Type type)
 			{
 				if (!TypeMap.ContainsKey(type))
@@ -347,6 +341,11 @@ namespace NetSerializer
 			{
 				return TypeMap[type].ReaderILGen;
 			}
+
+			public bool IsDynamic(Type type)
+			{
+				return TypeMap[type].IsDynamic;
+			}
 		}
 
 		sealed class TypeData
@@ -357,7 +356,7 @@ namespace NetSerializer
 			}
 
 			public ushort TypeID;
-			public bool IsStatic;
+			public bool IsDynamic;
 			public MethodInfo WriterMethodInfo;
 			public ILGenerator WriterILGen;
 			public MethodInfo ReaderMethodInfo;

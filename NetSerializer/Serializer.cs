@@ -104,7 +104,7 @@ namespace NetSerializer
 
 					// We can call the Serializer method directly for:
 					// - Value types
-					// - Types with static Serializer method, as the method will handle null
+					// - Sealed types with static Serializer method, as the method will handle null
 					// Other reference types go through the SerializesSwitch
 
 					var fieldType = field.FieldType;
@@ -112,18 +112,11 @@ namespace NetSerializer
 					bool direct;
 
 					if (fieldType.IsValueType)
-					{
 						direct = true;
-					}
-					else if (fieldType.IsAbstract || fieldType.IsInterface)
-					{
-						direct = false;
-					}
+					else if (fieldType.IsSealed && ctx.IsDynamic(fieldType) == false)
+						direct = true;
 					else
-					{
-						var td = ctx.GetTypeData(fieldType);
-						direct = td.IsStatic;
-					}
+						direct = false;
 
 					if (direct)
 						il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(fieldType), null);
