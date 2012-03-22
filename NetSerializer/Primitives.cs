@@ -234,6 +234,19 @@ namespace NetSerializer
 			value = *(double*)(&v);
 		}
 
+		public static unsafe void WritePrimitive(Stream stream, DateTime value)
+		{
+			long v = value.ToBinary();
+			WritePrimitive(stream, v);
+		}
+
+		public static unsafe void ReadPrimitive(Stream stream, out DateTime value)
+		{
+			long v;
+			ReadPrimitive(stream, out v);
+			value = DateTime.FromBinary(v);
+		}
+
 		public static void WritePrimitive(Stream stream, string value)
 		{
 			if (value == null)
