@@ -170,6 +170,16 @@ namespace Test
 		}
 	}
 
+	enum MyEnum
+	{
+		Zero = 0,
+		One,
+		Two,
+		Three,
+		Four,
+		Five,
+	}
+
 	[Serializable]
 	[ProtoContract]
 	sealed class PrimitivesMessage : MessageBase
@@ -201,6 +211,9 @@ namespace Test
 		[ProtoMember(12)]
 		double m_double;
 
+		[ProtoMember(13)]
+		MyEnum m_enum;
+
 		public PrimitivesMessage()
 		{
 		}
@@ -222,6 +235,8 @@ namespace Test
 
 			m_single = (float)r.NextDouble();
 			m_double = r.NextDouble();
+
+			m_enum = (MyEnum)r.Next(0, 6);
 		}
 
 		public override void Compare(MessageBase msg)
@@ -242,6 +257,8 @@ namespace Test
 
 			A(m_single == m.m_single);
 			A(m_double == m.m_double);
+
+			A(m_enum == m.m_enum);
 		}
 	}
 
