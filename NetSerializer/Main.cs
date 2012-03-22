@@ -286,7 +286,7 @@ namespace NetSerializer
 
 		static IEnumerable<FieldInfo> GetFieldInfos(Type type)
 		{
-			if ((type.Attributes & TypeAttributes.Serializable) == 0)
+			if (!type.IsSerializable)
 				throw new Exception();
 
 			var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
