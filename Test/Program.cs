@@ -23,8 +23,11 @@ namespace Test
 		MessageBase[] Deserialize();
 	}
 
-	class Program
+	static class Program
 	{
+		static bool s_runProtoBufTests = true;
+		static bool s_quickRun = false;
+
 		static void Main(string[] args)
 		{
 			System.Threading.Thread.CurrentThread.Priority = System.Threading.ThreadPriority.Highest;
@@ -67,14 +70,20 @@ namespace Test
 			t.Serialize(msgs);
 			t.Deserialize();
 
-			t = new PBMemStreamTest();
-			t.Prepare(msgs.Length);
-			t.Serialize(msgs);
-			t.Deserialize();
+			if (s_runProtoBufTests)
+			{
+				t = new PBMemStreamTest();
+				t.Prepare(msgs.Length);
+				t.Serialize(msgs);
+				t.Deserialize();
+			}
 		}
 
 		static void RunTests(Type msgType, int numMessages)
 		{
+			if (s_quickRun)
+				numMessages = 50;
+
 			Console.WriteLine("== {0} {1} ==", numMessages, msgType.Name);
 
 			var msgs = MessageBase.CreateMessages(msgType, numMessages);
@@ -84,10 +93,12 @@ namespace Test
 			GC.Collect();
 
 			Test(new MemStreamTest(), msgs);
-			Test(new PBMemStreamTest(), msgs);
+			if (s_runProtoBufTests)
+				Test(new PBMemStreamTest(), msgs);
 
 			Test(new NetTest(), msgs);
-			Test(new PBNetTest(), msgs);
+			if (s_runProtoBufTests)
+				Test(new PBNetTest(), msgs);
 		}
 
 		static void Test(IMemStreamTest test, MessageBase[] msgs)
