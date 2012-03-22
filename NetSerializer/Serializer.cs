@@ -35,95 +35,103 @@ namespace NetSerializer
 			D(il, "ser {0}", type.Name);
 
 			if (type.IsArray)
+				GenSerializerBodyForArray(ctx, type, il);
+			else
+				GenSerializerBody(ctx, type, il);
+		}
+
+		static void GenSerializerBody(CodeGenContext ctx, Type type, ILGenerator il)
+		{
+			var fields = GetFieldInfos(type);
+
+			foreach (var field in fields)
 			{
-				var elemType = type.GetElementType();
+				// Note: the user defined value type is not passed as reference. could cause perf problems with big structs
 
-				// write array len
 				il.Emit(OpCodes.Ldarg_0);
-				il.Emit(OpCodes.Ldarg_1);
-				il.Emit(OpCodes.Ldlen);
-				il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(uint)), null);
+				if (type.IsValueType)
+					il.Emit(OpCodes.Ldarga, 1);
+				else
+					il.Emit(OpCodes.Ldarg, 1);
+				il.Emit(OpCodes.Ldfld, field);
 
-				// declare i
-				var idxLocal = il.DeclareLocal(typeof(int));
+				// We can call the Serializer method directly for:
+				// - Value types
+				// - Sealed types with static Serializer method, as the method will handle null
+				// Other reference types go through the SerializesSwitch
 
-				// i = 0
-				il.Emit(OpCodes.Ldc_I4_0);
-				il.Emit(OpCodes.Stloc, idxLocal);
+				var fieldType = field.FieldType;
 
-				var loopBodyLabel = il.DefineLabel();
-				var loopCheckLabel = il.DefineLabel();
+				bool direct;
 
-				il.Emit(OpCodes.Br, loopCheckLabel);
+				if (fieldType.IsValueType)
+					direct = true;
+				else if (fieldType.IsSealed && ctx.IsDynamic(fieldType) == false)
+					direct = true;
+				else
+					direct = false;
 
-				// loop body
-				il.MarkLabel(loopBodyLabel);
-
-				// write element at index i
-				il.Emit(OpCodes.Ldarg_0);
-				il.Emit(OpCodes.Ldarg_1);
-				il.Emit(OpCodes.Ldloc, idxLocal);
-				il.Emit(OpCodes.Ldelem, elemType);
-				// All classes go to switch method. A sealed class with NeverNullAttribute could skip that.
-				// Also, perhaps it would be possible to skip the switch with sealed classes (but handle null).
-				if (elemType.IsValueType)
-					il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(elemType), null);
+				if (direct)
+					il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(fieldType), null);
 				else
 					il.EmitCall(OpCodes.Call, ctx.SerializerSwitchMethodInfo, null);
-
-				// i = i + 1
-				il.Emit(OpCodes.Ldloc, idxLocal);
-				il.Emit(OpCodes.Ldc_I4_1);
-				il.Emit(OpCodes.Add);
-				il.Emit(OpCodes.Stloc, idxLocal);
-
-				il.MarkLabel(loopCheckLabel);
-
-				// loop condition
-				il.Emit(OpCodes.Ldloc, idxLocal);
-				il.Emit(OpCodes.Ldarg_1);
-				il.Emit(OpCodes.Ldlen);
-				il.Emit(OpCodes.Conv_I4);
-				il.Emit(OpCodes.Clt);
-				il.Emit(OpCodes.Brtrue, loopBodyLabel);
 			}
+
+			il.Emit(OpCodes.Ret);
+		}
+
+		static void GenSerializerBodyForArray(CodeGenContext ctx, Type type, ILGenerator il)
+		{
+			var elemType = type.GetElementType();
+
+			// write array len
+			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ldlen);
+			il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(uint)), null);
+
+			// declare i
+			var idxLocal = il.DeclareLocal(typeof(int));
+
+			// i = 0
+			il.Emit(OpCodes.Ldc_I4_0);
+			il.Emit(OpCodes.Stloc, idxLocal);
+
+			var loopBodyLabel = il.DefineLabel();
+			var loopCheckLabel = il.DefineLabel();
+
+			il.Emit(OpCodes.Br, loopCheckLabel);
+
+			// loop body
+			il.MarkLabel(loopBodyLabel);
+
+			// write element at index i
+			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ldloc, idxLocal);
+			il.Emit(OpCodes.Ldelem, elemType);
+			// All classes go to switch method. A sealed class with NeverNullAttribute could skip that.
+			// Also, perhaps it would be possible to skip the switch with sealed classes (but handle null).
+			if (elemType.IsValueType)
+				il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(elemType), null);
 			else
-			{
-				var fields = GetFieldInfos(type);
+				il.EmitCall(OpCodes.Call, ctx.SerializerSwitchMethodInfo, null);
 
-				foreach (var field in fields)
-				{
-					// Note: the user defined value type is not passed as reference. could cause perf problems with big structs
+			// i = i + 1
+			il.Emit(OpCodes.Ldloc, idxLocal);
+			il.Emit(OpCodes.Ldc_I4_1);
+			il.Emit(OpCodes.Add);
+			il.Emit(OpCodes.Stloc, idxLocal);
 
-					il.Emit(OpCodes.Ldarg_0);
-					if (type.IsValueType)
-						il.Emit(OpCodes.Ldarga, 1);
-					else
-						il.Emit(OpCodes.Ldarg, 1);
-					il.Emit(OpCodes.Ldfld, field);
+			il.MarkLabel(loopCheckLabel);
 
-					// We can call the Serializer method directly for:
-					// - Value types
-					// - Sealed types with static Serializer method, as the method will handle null
-					// Other reference types go through the SerializesSwitch
-
-					var fieldType = field.FieldType;
-
-					bool direct;
-
-					if (fieldType.IsValueType)
-						direct = true;
-					else if (fieldType.IsSealed && ctx.IsDynamic(fieldType) == false)
-						direct = true;
-					else
-						direct = false;
-
-					if (direct)
-						il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(fieldType), null);
-					else
-						il.EmitCall(OpCodes.Call, ctx.SerializerSwitchMethodInfo, null);
-				}
-			}
+			// loop condition
+			il.Emit(OpCodes.Ldloc, idxLocal);
+			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ldlen);
+			il.Emit(OpCodes.Conv_I4);
+			il.Emit(OpCodes.Clt);
+			il.Emit(OpCodes.Brtrue, loopBodyLabel);
 
 			il.Emit(OpCodes.Ret);
 		}

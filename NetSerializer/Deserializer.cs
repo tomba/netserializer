@@ -34,124 +34,130 @@ namespace NetSerializer
 			D(il, "deser {0}", type.Name);
 
 			if (type.IsArray)
+				GenDeserializerBodyForArray(ctx, type, il);
+			else
+				GenDeserializerBody(ctx, type, il);
+		}
+
+		static void GenDeserializerBody(CodeGenContext ctx, Type type, ILGenerator il)
+		{
+			if (type.IsClass)
 			{
-				var elemType = type.GetElementType();
+				// instantiate empty class
+				il.Emit(OpCodes.Ldarg_1);
 
-				var lenLocal = il.DeclareLocal(typeof(uint));
+				var gtfh = typeof(Type).GetMethod("GetTypeFromHandle", BindingFlags.Public | BindingFlags.Static);
+				var guo = typeof(System.Runtime.Serialization.FormatterServices).GetMethod("GetUninitializedObject", BindingFlags.Public | BindingFlags.Static);
+				il.Emit(OpCodes.Ldtoken, type);
+				il.Emit(OpCodes.Call, gtfh);
+				il.Emit(OpCodes.Call, guo);
+				il.Emit(OpCodes.Castclass, type);
 
-				// read array len
-				il.Emit(OpCodes.Ldarg_0);
-				il.Emit(OpCodes.Ldloca, lenLocal);
-				il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(typeof(uint)), null);
-
-				var arrLocal = il.DeclareLocal(type);
-
-				// create new array
-				il.Emit(OpCodes.Ldloc, lenLocal);
-				il.Emit(OpCodes.Newarr, elemType);
-				il.Emit(OpCodes.Stloc, arrLocal);
-
-				// declare i
-				var idxLocal = il.DeclareLocal(typeof(int));
-
-				// i = 0
-				il.Emit(OpCodes.Ldc_I4_0);
-				il.Emit(OpCodes.Stloc, idxLocal);
-
-				var loopBodyLabel = il.DefineLabel();
-				var loopCheckLabel = il.DefineLabel();
-
-				il.Emit(OpCodes.Br, loopCheckLabel);
-
-				// loop body
-				il.MarkLabel(loopBodyLabel);
-
-				// read element to arr[i]
-				il.Emit(OpCodes.Ldarg_0);
-				il.Emit(OpCodes.Ldloc, arrLocal);
-				il.Emit(OpCodes.Ldloc, idxLocal);
-				il.Emit(OpCodes.Ldelema, elemType);
-				if (elemType.IsValueType)
-					il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(elemType), null);
-				else
-					il.EmitCall(OpCodes.Call, ctx.DeserializerSwitchMethodInfo, null);
-
-				// i = i + 1
-				il.Emit(OpCodes.Ldloc, idxLocal);
-				il.Emit(OpCodes.Ldc_I4_1);
-				il.Emit(OpCodes.Add);
-				il.Emit(OpCodes.Stloc, idxLocal);
-
-				il.MarkLabel(loopCheckLabel);
-
-				// loop condition
-				il.Emit(OpCodes.Ldloc, idxLocal);
-				il.Emit(OpCodes.Ldloc, arrLocal);
-				il.Emit(OpCodes.Ldlen);
-				il.Emit(OpCodes.Conv_I4);
-				il.Emit(OpCodes.Clt);
-				il.Emit(OpCodes.Brtrue, loopBodyLabel);
-
-
-				// store new array to the out value
-				il.Emit(OpCodes.Ldarg, 1);
-				il.Emit(OpCodes.Ldloc, arrLocal);
 				il.Emit(OpCodes.Stind_Ref);
 			}
-			else
+
+			var fields = GetFieldInfos(type);
+
+			foreach (var field in fields)
 			{
+				il.Emit(OpCodes.Ldarg_0);
+				il.Emit(OpCodes.Ldarg, 1);
 				if (type.IsClass)
-				{
-					// instantiate empty class
-					il.Emit(OpCodes.Ldarg_1);
+					il.Emit(OpCodes.Ldind_Ref);
+				il.Emit(OpCodes.Ldflda, field);
 
-					var gtfh = typeof(Type).GetMethod("GetTypeFromHandle", BindingFlags.Public | BindingFlags.Static);
-					var guo = typeof(System.Runtime.Serialization.FormatterServices).GetMethod("GetUninitializedObject", BindingFlags.Public | BindingFlags.Static);
-					il.Emit(OpCodes.Ldtoken, type);
-					il.Emit(OpCodes.Call, gtfh);
-					il.Emit(OpCodes.Call, guo);
-					il.Emit(OpCodes.Castclass, type);
+				// We can call the Deserializer method directly for:
+				// - Value types
+				// - Sealed types with static Deserializer method, as the method will handle null
+				// Other reference types go through the DeserializesSwitch
 
-					il.Emit(OpCodes.Stind_Ref);
-				}
+				var fieldType = field.FieldType;
 
-				var fields = GetFieldInfos(type);
+				bool direct;
 
-				foreach (var field in fields)
-				{
-					il.Emit(OpCodes.Ldarg_0);
-					il.Emit(OpCodes.Ldarg, 1);
-					if (type.IsClass)
-						il.Emit(OpCodes.Ldind_Ref);
-					il.Emit(OpCodes.Ldflda, field);
+				if (fieldType.IsValueType)
+					direct = true;
+				else if (fieldType.IsSealed && ctx.IsDynamic(fieldType) == false)
+					direct = true;
+				else
+					direct = false;
 
-					// We can call the Deserializer method directly for:
-					// - Value types
-					// - Sealed types with static Deserializer method, as the method will handle null
-					// Other reference types go through the DeserializesSwitch
-
-					var fieldType = field.FieldType;
-
-					bool direct;
-
-					if (fieldType.IsValueType)
-						direct = true;
-					else if (fieldType.IsSealed && ctx.IsDynamic(fieldType) == false)
-						direct = true;
-					else
-						direct = false;
-
-					if (direct)
-						il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(fieldType), null);
-					else
-						il.EmitCall(OpCodes.Call, ctx.DeserializerSwitchMethodInfo, null);
-				}
+				if (direct)
+					il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(fieldType), null);
+				else
+					il.EmitCall(OpCodes.Call, ctx.DeserializerSwitchMethodInfo, null);
 			}
 
-			D(il, "deser done");
 			il.Emit(OpCodes.Ret);
 		}
 
+		static void GenDeserializerBodyForArray(CodeGenContext ctx, Type type, ILGenerator il)
+		{
+			var elemType = type.GetElementType();
+
+			var lenLocal = il.DeclareLocal(typeof(uint));
+
+			// read array len
+			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ldloca, lenLocal);
+			il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(typeof(uint)), null);
+
+			var arrLocal = il.DeclareLocal(type);
+
+			// create new array
+			il.Emit(OpCodes.Ldloc, lenLocal);
+			il.Emit(OpCodes.Newarr, elemType);
+			il.Emit(OpCodes.Stloc, arrLocal);
+
+			// declare i
+			var idxLocal = il.DeclareLocal(typeof(int));
+
+			// i = 0
+			il.Emit(OpCodes.Ldc_I4_0);
+			il.Emit(OpCodes.Stloc, idxLocal);
+
+			var loopBodyLabel = il.DefineLabel();
+			var loopCheckLabel = il.DefineLabel();
+
+			il.Emit(OpCodes.Br, loopCheckLabel);
+
+			// loop body
+			il.MarkLabel(loopBodyLabel);
+
+			// read element to arr[i]
+			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ldloc, arrLocal);
+			il.Emit(OpCodes.Ldloc, idxLocal);
+			il.Emit(OpCodes.Ldelema, elemType);
+			if (elemType.IsValueType)
+				il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(elemType), null);
+			else
+				il.EmitCall(OpCodes.Call, ctx.DeserializerSwitchMethodInfo, null);
+
+			// i = i + 1
+			il.Emit(OpCodes.Ldloc, idxLocal);
+			il.Emit(OpCodes.Ldc_I4_1);
+			il.Emit(OpCodes.Add);
+			il.Emit(OpCodes.Stloc, idxLocal);
+
+			il.MarkLabel(loopCheckLabel);
+
+			// loop condition
+			il.Emit(OpCodes.Ldloc, idxLocal);
+			il.Emit(OpCodes.Ldloc, arrLocal);
+			il.Emit(OpCodes.Ldlen);
+			il.Emit(OpCodes.Conv_I4);
+			il.Emit(OpCodes.Clt);
+			il.Emit(OpCodes.Brtrue, loopBodyLabel);
+
+
+			// store new array to the out value
+			il.Emit(OpCodes.Ldarg, 1);
+			il.Emit(OpCodes.Ldloc, arrLocal);
+			il.Emit(OpCodes.Stind_Ref);
+
+			il.Emit(OpCodes.Ret);
+		}
 
 
 		static void GenerateDeserializerSwitch(CodeGenContext ctx, ILGenerator il, IDictionary<Type, TypeData> map)
