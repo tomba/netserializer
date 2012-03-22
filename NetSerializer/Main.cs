@@ -196,12 +196,7 @@ namespace NetSerializer
 			deserializerSwitchMethod.DefineParameter(2, ParameterAttributes.Out, "value");
 			var deserializerSwitchMethodInfo = deserializerSwitchMethod;
 
-			var ctx = new CodeGenContext()
-			{
-				TypeMap = map,
-				SerializerSwitchMethodInfo = serializerSwitchMethod,
-				DeserializerSwitchMethodInfo = deserializerSwitchMethod,
-			};
+			var ctx = new CodeGenContext(map, serializerSwitchMethodInfo, deserializerSwitchMethodInfo);
 
 			/* generate bodies */
 			foreach (var type in nonStaticTypes)
@@ -256,12 +251,7 @@ namespace NetSerializer
 			deserializerSwitchMethod.DefineParameter(2, ParameterAttributes.Out, "value");
 			var deserializerSwitchMethodInfo = deserializerSwitchMethod;
 
-			var ctx = new CodeGenContext()
-			{
-				TypeMap = map,
-				SerializerSwitchMethodInfo = serializerSwitchMethod,
-				DeserializerSwitchMethodInfo = deserializerSwitchMethod,
-			};
+			var ctx = new CodeGenContext(map, serializerSwitchMethodInfo, deserializerSwitchMethodInfo);
 
 			/* generate bodies */
 			foreach (var type in nonStaticTypes)
@@ -280,6 +270,7 @@ namespace NetSerializer
 			ab.Save("NetSerializerDebug.dll");
 		}
 
+		/* called from the dynamically generated code */
 		static ushort GetTypeID(object ob)
 		{
 			ushort id;
@@ -315,36 +306,44 @@ namespace NetSerializer
 
 		sealed class CodeGenContext
 		{
-			public Dictionary<Type, TypeData> TypeMap;
-			public MethodInfo SerializerSwitchMethodInfo;
-			public MethodInfo DeserializerSwitchMethodInfo;
+			public Dictionary<Type, TypeData> m_typeMap;
+
+			public CodeGenContext(Dictionary<Type, TypeData> typeMap, MethodInfo serializerSwitch, MethodInfo deserializerSwitch)
+			{
+				m_typeMap = typeMap;
+				this.SerializerSwitchMethodInfo = serializerSwitch;
+				this.DeserializerSwitchMethodInfo = deserializerSwitch;
+			}
+
+			public MethodInfo SerializerSwitchMethodInfo { get; private set; }
+			public MethodInfo DeserializerSwitchMethodInfo { get; private set; }
 
 			public MethodInfo GetWriterMethodInfo(Type type)
 			{
-				if (!TypeMap.ContainsKey(type))
+				if (!m_typeMap.ContainsKey(type))
 					throw new Exception(String.Format("Unknown type {0}", type));
 
-				return TypeMap[type].WriterMethodInfo;
+				return m_typeMap[type].WriterMethodInfo;
 			}
 
 			public ILGenerator GetWriterILGen(Type type)
 			{
-				return TypeMap[type].WriterILGen;
+				return m_typeMap[type].WriterILGen;
 			}
 
 			public MethodInfo GetReaderMethodInfo(Type type)
 			{
-				return TypeMap[type].ReaderMethodInfo;
+				return m_typeMap[type].ReaderMethodInfo;
 			}
 
 			public ILGenerator GetReaderILGen(Type type)
 			{
-				return TypeMap[type].ReaderILGen;
+				return m_typeMap[type].ReaderILGen;
 			}
 
 			public bool IsDynamic(Type type)
 			{
-				return TypeMap[type].IsDynamic;
+				return m_typeMap[type].IsDynamic;
 			}
 		}
 
