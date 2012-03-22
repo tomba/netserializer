@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define GENERATE_DEBUGGING_ASSEMBLY
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -26,9 +28,8 @@ namespace NetSerializer
 
 			var types = CollectTypes(rootTypes);
 
-#if DEBUG
 			GenerateAssembly(types);
-#endif
+
 			s_typeIDMap = GenerateDynamic(types);
 
 			s_initialized = true;
@@ -216,6 +217,7 @@ namespace NetSerializer
 			return map.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.TypeID);
 		}
 
+		[System.Diagnostics.Conditional("GENERATE_DEBUGGING_ASSEMBLY")]
 		static void GenerateAssembly(Type[] types)
 		{
 			Dictionary<Type, TypeData> map = GenerateTypeData(types);
