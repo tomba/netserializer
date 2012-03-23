@@ -132,12 +132,13 @@ namespace NetSerializer
 		{
 			// We can call the Serializer method directly for:
 			// - Value types
+			// - Array types
 			// - Sealed types with static Serializer method, as the method will handle null
 			// Other reference types go through the SerializesSwitch
 
 			bool direct;
 
-			if (type.IsValueType)
+			if (type.IsValueType || type.IsArray)
 				direct = true;
 			else if (type.IsSealed && ctx.IsDynamic(type) == false)
 				direct = true;
