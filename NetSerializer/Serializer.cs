@@ -50,9 +50,9 @@ namespace NetSerializer
 
 				il.Emit(OpCodes.Ldarg_0);
 				if (type.IsValueType)
-					il.Emit(OpCodes.Ldarga, 1);
+					il.Emit(OpCodes.Ldarga_S, 1);
 				else
-					il.Emit(OpCodes.Ldarg, 1);
+					il.Emit(OpCodes.Ldarg_1);
 				il.Emit(OpCodes.Ldfld, field);
 
 				GenSerializerCall(ctx, il, field.FieldType);
@@ -68,7 +68,7 @@ namespace NetSerializer
 			var notNullLabel = il.DefineLabel();
 
 			il.Emit(OpCodes.Ldarg_1);
-			il.Emit(OpCodes.Brtrue, notNullLabel);
+			il.Emit(OpCodes.Brtrue_S, notNullLabel);
 
 			// if value == null, write 0
 			il.Emit(OpCodes.Ldarg_0);
@@ -91,12 +91,12 @@ namespace NetSerializer
 
 			// i = 0
 			il.Emit(OpCodes.Ldc_I4_0);
-			il.Emit(OpCodes.Stloc, idxLocal);
+			il.Emit(OpCodes.Stloc_S, idxLocal);
 
 			var loopBodyLabel = il.DefineLabel();
 			var loopCheckLabel = il.DefineLabel();
 
-			il.Emit(OpCodes.Br, loopCheckLabel);
+			il.Emit(OpCodes.Br_S, loopCheckLabel);
 
 			// loop body
 			il.MarkLabel(loopBodyLabel);
@@ -104,26 +104,26 @@ namespace NetSerializer
 			// write element at index i
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldarg_1);
-			il.Emit(OpCodes.Ldloc, idxLocal);
+			il.Emit(OpCodes.Ldloc_S, idxLocal);
 			il.Emit(OpCodes.Ldelem, elemType);
 
 			GenSerializerCall(ctx, il, elemType);
 
 			// i = i + 1
-			il.Emit(OpCodes.Ldloc, idxLocal);
+			il.Emit(OpCodes.Ldloc_S, idxLocal);
 			il.Emit(OpCodes.Ldc_I4_1);
 			il.Emit(OpCodes.Add);
-			il.Emit(OpCodes.Stloc, idxLocal);
+			il.Emit(OpCodes.Stloc_S, idxLocal);
 
 			il.MarkLabel(loopCheckLabel);
 
 			// loop condition
-			il.Emit(OpCodes.Ldloc, idxLocal);
+			il.Emit(OpCodes.Ldloc_S, idxLocal);
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldlen);
 			il.Emit(OpCodes.Conv_I4);
 			il.Emit(OpCodes.Clt);
-			il.Emit(OpCodes.Brtrue, loopBodyLabel);
+			il.Emit(OpCodes.Brtrue_S, loopBodyLabel);
 
 			il.Emit(OpCodes.Ret);
 		}
@@ -162,11 +162,11 @@ namespace NetSerializer
 			var getTypeIDMethod = typeof(Serializer).GetMethod("GetTypeID", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(object) }, null);
 			il.Emit(OpCodes.Ldarg_1);
 			il.EmitCall(OpCodes.Call, getTypeIDMethod, null);
-			il.Emit(OpCodes.Stloc, idLocal);
+			il.Emit(OpCodes.Stloc_S, idLocal);
 
 			// write typeID
 			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldloc, idLocal);
+			il.Emit(OpCodes.Ldloc_S, idLocal);
 			il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(ushort)), null);
 
 			// +1 for 0 (null)
@@ -175,7 +175,7 @@ namespace NetSerializer
 			foreach (var kvp in map)
 				jumpTable[kvp.Value.TypeID] = il.DefineLabel();
 
-			il.Emit(OpCodes.Ldloc, idLocal);
+			il.Emit(OpCodes.Ldloc_S, idLocal);
 			il.Emit(OpCodes.Switch, jumpTable);
 
 			D(il, "eihx");

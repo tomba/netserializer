@@ -61,7 +61,7 @@ namespace NetSerializer
 			foreach (var field in fields)
 			{
 				il.Emit(OpCodes.Ldarg_0);
-				il.Emit(OpCodes.Ldarg, 1);
+				il.Emit(OpCodes.Ldarg_1);
 				if (type.IsClass)
 					il.Emit(OpCodes.Ldind_Ref);
 				il.Emit(OpCodes.Ldflda, field);
@@ -80,16 +80,16 @@ namespace NetSerializer
 
 			// read array len
 			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldloca, lenLocal);
+			il.Emit(OpCodes.Ldloca_S, lenLocal);
 			il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(typeof(uint)), null);
 
 			var notNullLabel = il.DefineLabel();
 
 			/* if len == 0, return null */
-			il.Emit(OpCodes.Ldloc, lenLocal);
-			il.Emit(OpCodes.Brtrue, notNullLabel);
+			il.Emit(OpCodes.Ldloc_S, lenLocal);
+			il.Emit(OpCodes.Brtrue_S, notNullLabel);
 
-			il.Emit(OpCodes.Ldarg, 1);
+			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldnull);
 			il.Emit(OpCodes.Stind_Ref);
 			il.Emit(OpCodes.Ret);
@@ -99,55 +99,55 @@ namespace NetSerializer
 			var arrLocal = il.DeclareLocal(type);
 
 			// create new array with len - 1
-			il.Emit(OpCodes.Ldloc, lenLocal);
+			il.Emit(OpCodes.Ldloc_S, lenLocal);
 			il.Emit(OpCodes.Ldc_I4_1);
 			il.Emit(OpCodes.Sub);
 			il.Emit(OpCodes.Newarr, elemType);
-			il.Emit(OpCodes.Stloc, arrLocal);
+			il.Emit(OpCodes.Stloc_S, arrLocal);
 
 			// declare i
 			var idxLocal = il.DeclareLocal(typeof(int));
 
 			// i = 0
 			il.Emit(OpCodes.Ldc_I4_0);
-			il.Emit(OpCodes.Stloc, idxLocal);
+			il.Emit(OpCodes.Stloc_S, idxLocal);
 
 			var loopBodyLabel = il.DefineLabel();
 			var loopCheckLabel = il.DefineLabel();
 
-			il.Emit(OpCodes.Br, loopCheckLabel);
+			il.Emit(OpCodes.Br_S, loopCheckLabel);
 
 			// loop body
 			il.MarkLabel(loopBodyLabel);
 
 			// read element to arr[i]
 			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldloc, arrLocal);
-			il.Emit(OpCodes.Ldloc, idxLocal);
+			il.Emit(OpCodes.Ldloc_S, arrLocal);
+			il.Emit(OpCodes.Ldloc_S, idxLocal);
 			il.Emit(OpCodes.Ldelema, elemType);
 
 			GenDeserializerCall(ctx, il, elemType);
 
 			// i = i + 1
-			il.Emit(OpCodes.Ldloc, idxLocal);
+			il.Emit(OpCodes.Ldloc_S, idxLocal);
 			il.Emit(OpCodes.Ldc_I4_1);
 			il.Emit(OpCodes.Add);
-			il.Emit(OpCodes.Stloc, idxLocal);
+			il.Emit(OpCodes.Stloc_S, idxLocal);
 
 			il.MarkLabel(loopCheckLabel);
 
 			// loop condition
-			il.Emit(OpCodes.Ldloc, idxLocal);
-			il.Emit(OpCodes.Ldloc, arrLocal);
+			il.Emit(OpCodes.Ldloc_S, idxLocal);
+			il.Emit(OpCodes.Ldloc_S, arrLocal);
 			il.Emit(OpCodes.Ldlen);
 			il.Emit(OpCodes.Conv_I4);
 			il.Emit(OpCodes.Clt);
-			il.Emit(OpCodes.Brtrue, loopBodyLabel);
+			il.Emit(OpCodes.Brtrue_S, loopBodyLabel);
 
 
 			// store new array to the out value
-			il.Emit(OpCodes.Ldarg, 1);
-			il.Emit(OpCodes.Ldloc, arrLocal);
+			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ldloc_S, arrLocal);
 			il.Emit(OpCodes.Stind_Ref);
 
 			il.Emit(OpCodes.Ret);
@@ -186,7 +186,7 @@ namespace NetSerializer
 
 			// read typeID
 			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldloca, idLocal);
+			il.Emit(OpCodes.Ldloca_S, idLocal);
 			il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(typeof(ushort)), null);
 
 			// +1 for 0 (null)
@@ -195,7 +195,7 @@ namespace NetSerializer
 			foreach (var kvp in map)
 				jumpTable[kvp.Value.TypeID] = il.DefineLabel();
 
-			il.Emit(OpCodes.Ldloc, idLocal);
+			il.Emit(OpCodes.Ldloc_S, idLocal);
 			il.Emit(OpCodes.Switch, jumpTable);
 
 			D(il, "eihx");
@@ -220,12 +220,12 @@ namespace NetSerializer
 
 				// call deserializer for this typeID
 				il.Emit(OpCodes.Ldarg_0);
-				il.Emit(OpCodes.Ldloca, local);
+				il.Emit(OpCodes.Ldloca_S, local);
 				il.EmitCall(OpCodes.Call, data.ReaderMethodInfo, null);
 
 				// write result object to out object
 				il.Emit(OpCodes.Ldarg_1);
-				il.Emit(OpCodes.Ldloc, local);
+				il.Emit(OpCodes.Ldloc_S, local);
 				if (kvp.Key.IsValueType)
 					il.Emit(OpCodes.Box, kvp.Key);
 				il.Emit(OpCodes.Stind_Ref);

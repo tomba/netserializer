@@ -1,4 +1,4 @@
-﻿#define GENERATE_DEBUGGING_ASSEMBLY
+﻿//#define GENERATE_DEBUGGING_ASSEMBLY
 
 using System;
 using System.Collections.Generic;
