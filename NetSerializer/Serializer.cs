@@ -65,10 +65,25 @@ namespace NetSerializer
 		{
 			var elemType = type.GetElementType();
 
-			// write array len
+			var notNullLabel = il.DefineLabel();
+
+			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Brtrue, notNullLabel);
+
+			// if value == null, write 0
+			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ldc_I4_0);
+			il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(uint)), null);
+			il.Emit(OpCodes.Ret);
+
+			il.MarkLabel(notNullLabel);
+
+			// write array len + 1
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldlen);
+			il.Emit(OpCodes.Ldc_I4_1);
+			il.Emit(OpCodes.Add);
 			il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(uint)), null);
 
 			// declare i

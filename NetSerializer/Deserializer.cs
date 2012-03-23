@@ -83,10 +83,25 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldloca, lenLocal);
 			il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(typeof(uint)), null);
 
+			var notNullLabel = il.DefineLabel();
+
+			/* if len == 0, return null */
+			il.Emit(OpCodes.Ldloc, lenLocal);
+			il.Emit(OpCodes.Brtrue, notNullLabel);
+
+			il.Emit(OpCodes.Ldarg, 1);
+			il.Emit(OpCodes.Ldnull);
+			il.Emit(OpCodes.Stind_Ref);
+			il.Emit(OpCodes.Ret);
+
+			il.MarkLabel(notNullLabel);
+
 			var arrLocal = il.DeclareLocal(type);
 
-			// create new array
+			// create new array with len - 1
 			il.Emit(OpCodes.Ldloc, lenLocal);
+			il.Emit(OpCodes.Ldc_I4_1);
+			il.Emit(OpCodes.Sub);
 			il.Emit(OpCodes.Newarr, elemType);
 			il.Emit(OpCodes.Stloc, arrLocal);
 
