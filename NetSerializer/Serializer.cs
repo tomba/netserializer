@@ -55,26 +55,7 @@ namespace NetSerializer
 					il.Emit(OpCodes.Ldarg, 1);
 				il.Emit(OpCodes.Ldfld, field);
 
-				// We can call the Serializer method directly for:
-				// - Value types
-				// - Sealed types with static Serializer method, as the method will handle null
-				// Other reference types go through the SerializesSwitch
-
-				var fieldType = field.FieldType;
-
-				bool direct;
-
-				if (fieldType.IsValueType)
-					direct = true;
-				else if (fieldType.IsSealed && ctx.IsDynamic(fieldType) == false)
-					direct = true;
-				else
-					direct = false;
-
-				if (direct)
-					il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(fieldType), null);
-				else
-					il.EmitCall(OpCodes.Call, ctx.SerializerSwitchMethodInfo, null);
+				GenSerializerCall(ctx, il, field.FieldType);
 			}
 
 			il.Emit(OpCodes.Ret);
@@ -110,12 +91,8 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldloc, idxLocal);
 			il.Emit(OpCodes.Ldelem, elemType);
-			// All classes go to switch method. A sealed class with NeverNullAttribute could skip that.
-			// Also, perhaps it would be possible to skip the switch with sealed classes (but handle null).
-			if (elemType.IsValueType)
-				il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(elemType), null);
-			else
-				il.EmitCall(OpCodes.Call, ctx.SerializerSwitchMethodInfo, null);
+
+			GenSerializerCall(ctx, il, elemType);
 
 			// i = i + 1
 			il.Emit(OpCodes.Ldloc, idxLocal);
@@ -134,6 +111,28 @@ namespace NetSerializer
 			il.Emit(OpCodes.Brtrue, loopBodyLabel);
 
 			il.Emit(OpCodes.Ret);
+		}
+
+		static void GenSerializerCall(CodeGenContext ctx, ILGenerator il, Type type)
+		{
+			// We can call the Serializer method directly for:
+			// - Value types
+			// - Sealed types with static Serializer method, as the method will handle null
+			// Other reference types go through the SerializesSwitch
+
+			bool direct;
+
+			if (type.IsValueType)
+				direct = true;
+			else if (type.IsSealed && ctx.IsDynamic(type) == false)
+				direct = true;
+			else
+				direct = false;
+
+			if (direct)
+				il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(type), null);
+			else
+				il.EmitCall(OpCodes.Call, ctx.SerializerSwitchMethodInfo, null);
 		}
 
 

@@ -66,26 +66,7 @@ namespace NetSerializer
 					il.Emit(OpCodes.Ldind_Ref);
 				il.Emit(OpCodes.Ldflda, field);
 
-				// We can call the Deserializer method directly for:
-				// - Value types
-				// - Sealed types with static Deserializer method, as the method will handle null
-				// Other reference types go through the DeserializesSwitch
-
-				var fieldType = field.FieldType;
-
-				bool direct;
-
-				if (fieldType.IsValueType)
-					direct = true;
-				else if (fieldType.IsSealed && ctx.IsDynamic(fieldType) == false)
-					direct = true;
-				else
-					direct = false;
-
-				if (direct)
-					il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(fieldType), null);
-				else
-					il.EmitCall(OpCodes.Call, ctx.DeserializerSwitchMethodInfo, null);
+				GenDeserializerCall(ctx, il, field.FieldType);
 			}
 
 			il.Emit(OpCodes.Ret);
@@ -129,10 +110,8 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldloc, arrLocal);
 			il.Emit(OpCodes.Ldloc, idxLocal);
 			il.Emit(OpCodes.Ldelema, elemType);
-			if (elemType.IsValueType)
-				il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(elemType), null);
-			else
-				il.EmitCall(OpCodes.Call, ctx.DeserializerSwitchMethodInfo, null);
+
+			GenDeserializerCall(ctx, il, elemType);
 
 			// i = i + 1
 			il.Emit(OpCodes.Ldloc, idxLocal);
@@ -159,6 +138,27 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ret);
 		}
 
+		static void GenDeserializerCall(CodeGenContext ctx, ILGenerator il, Type type)
+		{
+			// We can call the Deserializer method directly for:
+			// - Value types
+			// - Sealed types with static Deserializer method, as the method will handle null
+			// Other reference types go through the DeserializesSwitch
+
+			bool direct;
+
+			if (type.IsValueType)
+				direct = true;
+			else if (type.IsSealed && ctx.IsDynamic(type) == false)
+				direct = true;
+			else
+				direct = false;
+
+			if (direct)
+				il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(type), null);
+			else
+				il.EmitCall(OpCodes.Call, ctx.DeserializerSwitchMethodInfo, null);
+		}
 
 		static void GenerateDeserializerSwitch(CodeGenContext ctx, ILGenerator il, IDictionary<Type, TypeData> map)
 		{
