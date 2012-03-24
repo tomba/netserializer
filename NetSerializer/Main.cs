@@ -24,7 +24,7 @@ namespace NetSerializer
 		public static void Initialize(Type[] rootTypes)
 		{
 			if (s_initialized)
-				throw new Exception();
+				throw new InvalidOperationException("NetSerializer already initialized");
 
 			var types = CollectTypes(rootTypes);
 
@@ -38,10 +38,7 @@ namespace NetSerializer
 		public static void Serialize(Stream stream, object data)
 		{
 			if (!s_initialized)
-				throw new Exception();
-
-			if (!s_typeIDMap.ContainsKey(data.GetType()))
-				throw new ArgumentException("Type is not known");
+				throw new InvalidOperationException("NetSerializer not initialized");
 
 			D("Serializing {0}", data.GetType().Name);
 
@@ -51,7 +48,7 @@ namespace NetSerializer
 		public static object Deserialize(Stream stream)
 		{
 			if (!s_initialized)
-				throw new Exception();
+				throw new InvalidOperationException("NetSerializer not initialized");
 
 			D("Deserializing");
 
@@ -84,7 +81,7 @@ namespace NetSerializer
 				return;
 
 			if (!type.IsSerializable)
-				throw new NotSupportedException(String.Format("Type {0} is not marked as Serializable", type.ToString()));
+				throw new NotSupportedException(String.Format("Type {0} is not marked as Serializable", type.FullName));
 
 			typeSet.Add(type);
 
@@ -136,12 +133,12 @@ namespace NetSerializer
 				var reader = Primitives.GetReadPrimitive(type.MakeByRefType());
 
 				if ((writer != null) != (reader != null))
-					throw new Exception();
+					throw new InvalidOperationException(String.Format("Missing a read or write primitive for {0}", type.FullName));
 
 				var isStatic = writer != null;
 
 				if (type.IsPrimitive && isStatic == false)
-					throw new Exception();
+					throw new InvalidOperationException(String.Format("Missing primitive read/write methods for {0}", type.FullName));
 
 				var td = new TypeData(typeID++);
 
@@ -154,7 +151,7 @@ namespace NetSerializer
 				else
 				{
 					if (typeof(System.Runtime.Serialization.ISerializable).IsAssignableFrom(type))
-						throw new Exception("ISerializable not supported");
+						throw new InvalidOperationException(String.Format("Cannot serialize {0}: ISerializable not supported", type.FullName));
 
 					td.IsDynamic = true;
 				}
@@ -284,15 +281,14 @@ namespace NetSerializer
 				return 0;
 
 			if (s_typeIDMap.TryGetValue(ob.GetType(), out id) == false)
-				throw new Exception(String.Format("Unknown type {0}", ob.GetType()));
+				throw new InvalidOperationException(String.Format("Unknown type {0}", ob.GetType().FullName));
 
 			return id;
 		}
 
 		static IEnumerable<FieldInfo> GetFieldInfos(Type type)
 		{
-			if (!type.IsSerializable)
-				throw new Exception();
+			System.Diagnostics.Trace.Assert(type.IsSerializable);
 
 			var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
 				.Where(fi => (fi.Attributes & FieldAttributes.NotSerialized) == 0)
@@ -325,9 +321,6 @@ namespace NetSerializer
 
 			public MethodInfo GetWriterMethodInfo(Type type)
 			{
-				if (!m_typeMap.ContainsKey(type))
-					throw new Exception(String.Format("Unknown type {0}", type));
-
 				return m_typeMap[type].WriterMethodInfo;
 			}
 

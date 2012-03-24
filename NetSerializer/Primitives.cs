@@ -20,8 +20,7 @@ namespace NetSerializer
 
 		internal static MethodInfo GetReadPrimitive(Type type)
 		{
-			if (!type.IsByRef)
-				throw new Exception();
+			System.Diagnostics.Trace.Assert(type.IsByRef);
 
 			if (type.GetElementType().IsEnum)
 				type = type.GetElementType().GetEnumUnderlyingType().MakeByRefType();
@@ -61,7 +60,7 @@ namespace NetSerializer
 			{
 				int b = stream.ReadByte();
 				if (b == -1)
-					throw new Exception();
+					throw new EndOfStreamException();
 
 				result |= (b & 0x7f) << offset;
 
@@ -69,7 +68,7 @@ namespace NetSerializer
 					return (uint)result;
 			}
 
-			throw new Exception();
+			throw new InvalidDataException();
 		}
 
 		static void WriteVarint32(Stream stream, uint value)
@@ -89,7 +88,7 @@ namespace NetSerializer
 			{
 				int b = stream.ReadByte();
 				if (b == -1)
-					throw new Exception();
+					throw new EndOfStreamException();
 
 				result |= ((long)(b & 0x7f)) << offset;
 
@@ -97,7 +96,7 @@ namespace NetSerializer
 					return (ulong)result;
 			}
 
-			throw new Exception();
+			throw new InvalidDataException();
 		}
 
 		static void WriteVarint64(Stream stream, ulong value)
@@ -312,7 +311,7 @@ namespace NetSerializer
 			{
 				int r = stream.Read(buf, l, (int)len - l);
 				if (r == 0)
-					throw new Exception();
+					throw new EndOfStreamException();
 				l += r;
 			}
 
@@ -360,7 +359,7 @@ namespace NetSerializer
 			{
 				int r = stream.Read(value, l, (int)len - l);
 				if (r == 0)
-					throw new Exception();
+					throw new EndOfStreamException();
 				l += r;
 			}
 		}
