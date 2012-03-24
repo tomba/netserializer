@@ -461,19 +461,16 @@ namespace Test
 	[ProtoContract]
 	sealed class ComplexMessage : MessageBase
 	{
-		[ProtoMember(2)]
+		[ProtoMember(1)]
 		S16Message m_msg;
 
-		[ProtoMember(3)]
-		int[] m_intArr;
-
-		[ProtoMember(4)]
+		[ProtoMember(2)]
 		SimpleClass m_sealedClass;
 
-		[ProtoMember(5)]
+		[ProtoMember(3)]
 		SimpleClassBase m_abstractMsg;
 
-		[ProtoMember(6)]
+		[ProtoMember(4)]
 		IMyTest m_ifaceMsg;
 
 		public ComplexMessage()
@@ -486,11 +483,6 @@ namespace Test
 				m_msg = null;
 			else
 				m_msg = new S16Message(r);
-
-			if (r.Next(100) == 0)
-				m_intArr = null;
-			else
-				m_intArr = new int[r.Next(1, 100)];
 
 			if (r.Next(100) == 0)
 				m_sealedClass = null;
@@ -516,16 +508,6 @@ namespace Test
 				A(m_msg == m.m_msg);
 			else
 				m_msg.Compare(m.m_msg);
-
-			if (m_intArr == null)
-			{
-				A(m_intArr == m.m_intArr);
-			}
-			else
-			{
-				for (int i = 0; i < m_intArr.Length; ++i)
-					A(m_intArr[i] == m.m_intArr[i]);
-			}
 
 			if (m_sealedClass == null)
 				A(m_sealedClass == m.m_sealedClass);

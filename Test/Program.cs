@@ -48,7 +48,7 @@ namespace Test
 			RunTests(typeof(S64Message), 2000000);
 
 			RunTests(typeof(PrimitivesMessage), 1000000);
-			RunTests(typeof(ComplexMessage), 300000);
+			RunTests(typeof(ComplexMessage), 1000000);
 
 			RunTests(typeof(StringMessage), 200000);
 
