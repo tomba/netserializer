@@ -40,7 +40,6 @@ namespace Test
 
 			Warmup();
 
-
 			RunTests(typeof(U8Message), 2000000);
 			RunTests(typeof(S16Message), 2000000);
 			RunTests(typeof(S32Message), 2000000);
@@ -52,6 +51,8 @@ namespace Test
 			RunTests(typeof(ComplexMessage), 1000000);
 
 			RunTests(typeof(StringMessage), 200000);
+
+			RunTests(typeof(BoxedPrimitivesMessage), 1000000);
 
 			RunTests(typeof(ByteArrayMessage), 5000);
 			RunTests(typeof(IntArrayMessage), 800);

@@ -240,6 +240,48 @@ namespace Test
 	}
 
 	[Serializable]
+	sealed class BoxedPrimitivesMessage : MessageBase
+	{
+		object m_bool;
+
+		object m_byte;
+		object m_int;
+		object m_long;
+
+		[ProtoMember(5)]
+		object m_enum;
+
+		public BoxedPrimitivesMessage()
+		{
+		}
+
+		public BoxedPrimitivesMessage(Random r)
+		{
+			m_bool = (r.Next() & 1) == 1;
+			m_byte = (byte)r.Next();
+			m_int = (int)r.Next();
+			m_long = (long)r.Next();
+
+			m_int = r.Next();
+
+			m_enum = (MyEnum)r.Next(0, 6);
+		}
+
+		public override void Compare(MessageBase msg)
+		{
+			var m = (BoxedPrimitivesMessage)msg;
+
+			A((bool)m_bool == (bool)m.m_bool);
+
+			A((byte)m_byte == (byte)m.m_byte);
+			A((int)m_int == (int)m.m_int);
+			A((long)m_long == (long)m.m_long);
+
+			A((MyEnum)m_enum == (MyEnum)m.m_enum);
+		}
+	}
+
+	[Serializable]
 	[ProtoContract]
 	sealed class ByteArrayMessage : MessageBase
 	{
