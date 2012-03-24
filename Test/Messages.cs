@@ -18,6 +18,7 @@ namespace Test
 	[ProtoInclude(7, typeof(ByteArrayMessage))]
 	[ProtoInclude(8, typeof(IntArrayMessage))]
 	[ProtoInclude(9, typeof(StringMessage))]
+	[ProtoInclude(10, typeof(DictionaryMessage))]
 	abstract class MessageBase
 	{
 		public abstract void Compare(MessageBase msg);
@@ -430,6 +431,66 @@ namespace Test
 		{
 			if (m_val != other.m_val)
 				throw new Exception();
+		}
+	}
+
+	[Serializable]
+	[ProtoContract]
+	sealed class DictionaryMessage : MessageBase
+	{
+		[ProtoMember(1)]
+		Dictionary<int, int> m_intMap;
+
+		[ProtoMember(2)]
+		Dictionary<string, SimpleClass2> m_obMap;
+
+		public DictionaryMessage()
+		{
+		}
+
+		public DictionaryMessage(Random r)
+		{
+			var len = r.Next(0, 1000);
+			if (len > 0)
+			{
+				m_intMap = new Dictionary<int, int>(len);
+				for (int i = 0; i < len; ++i)
+					m_intMap[r.Next()] = r.Next();
+			}
+
+			len = r.Next(0, 1000);
+			if (len > 0)
+			{
+				m_obMap = new Dictionary<string, SimpleClass2>();
+				for (int i = 0; i < len; ++i)
+				{
+					var str = i.ToString();
+					m_obMap[str] = new SimpleClass2(r);
+				}
+			}
+		}
+
+		public override void Compare(MessageBase msg)
+		{
+			var m = (DictionaryMessage)msg;
+
+			if (m_intMap == null)
+				A(m_intMap == m.m_intMap);
+			else
+			{
+				A(m_intMap.Count == m.m_intMap.Count);
+				foreach (var kvp in m_intMap)
+					A(kvp.Value == m.m_intMap[kvp.Key]);
+			}
+
+			if (m_obMap == null)
+				A(m_obMap == m.m_obMap);
+			else
+			{
+				A(m_obMap.Count == m.m_obMap.Count);
+				foreach (var kvp in m_obMap)
+					kvp.Value.Compare(m.m_obMap[kvp.Key]);
+			}
 		}
 	}
 
