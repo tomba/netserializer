@@ -304,7 +304,6 @@ namespace Test
 		object m_int;
 		object m_long;
 
-		[ProtoMember(5)]
 		object m_enum;
 
 		public BoxedPrimitivesMessage()
