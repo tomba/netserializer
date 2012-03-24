@@ -44,7 +44,6 @@ namespace Test
 			RunTests(typeof(U8Message), 2000000);
 			RunTests(typeof(S16Message), 2000000);
 			RunTests(typeof(S32Message), 2000000);
-			RunTests(typeof(U32Message), 2000000);
 			RunTests(typeof(S64Message), 2000000);
 
 			RunTests(typeof(PrimitivesMessage), 1000000);

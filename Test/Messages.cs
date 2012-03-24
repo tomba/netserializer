@@ -12,13 +12,12 @@ namespace Test
 	[ProtoInclude(1, typeof(U8Message))]
 	[ProtoInclude(2, typeof(S16Message))]
 	[ProtoInclude(3, typeof(S32Message))]
-	[ProtoInclude(4, typeof(U32Message))]
-	[ProtoInclude(5, typeof(S64Message))]
-	[ProtoInclude(6, typeof(PrimitivesMessage))]
-	[ProtoInclude(7, typeof(ComplexMessage))]
-	[ProtoInclude(8, typeof(ByteArrayMessage))]
-	[ProtoInclude(9, typeof(IntArrayMessage))]
-	[ProtoInclude(10, typeof(StringMessage))]
+	[ProtoInclude(4, typeof(S64Message))]
+	[ProtoInclude(5, typeof(PrimitivesMessage))]
+	[ProtoInclude(6, typeof(ComplexMessage))]
+	[ProtoInclude(7, typeof(ByteArrayMessage))]
+	[ProtoInclude(8, typeof(IntArrayMessage))]
+	[ProtoInclude(9, typeof(StringMessage))]
 	abstract class MessageBase
 	{
 		public abstract void Compare(MessageBase msg);
@@ -120,29 +119,6 @@ namespace Test
 		public override void Compare(MessageBase msg)
 		{
 			var m = (S32Message)msg;
-			A(m_val == m.m_val);
-		}
-	}
-
-	[Serializable]
-	[ProtoContract]
-	sealed class U32Message : MessageBase
-	{
-		[ProtoMember(1)]
-		uint m_val;
-
-		public U32Message()
-		{
-		}
-
-		public U32Message(Random r)
-		{
-			m_val = (uint)r.Next();
-		}
-
-		public override void Compare(MessageBase msg)
-		{
-			var m = (U32Message)msg;
 			A(m_val == m.m_val);
 		}
 	}
