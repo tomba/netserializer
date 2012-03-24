@@ -52,6 +52,8 @@ namespace Test
 
 			RunTests(typeof(StringMessage), 200000);
 
+			RunTests(typeof(StructMessage), 1000000);
+
 			RunTests(typeof(BoxedPrimitivesMessage), 1000000);
 
 			RunTests(typeof(ByteArrayMessage), 5000);

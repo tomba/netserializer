@@ -19,6 +19,7 @@ namespace Test
 	[ProtoInclude(8, typeof(IntArrayMessage))]
 	[ProtoInclude(9, typeof(StringMessage))]
 	[ProtoInclude(10, typeof(DictionaryMessage))]
+	[ProtoInclude(11, typeof(StructMessage))]
 	abstract class MessageBase
 	{
 		public abstract void Compare(MessageBase msg);
@@ -121,6 +122,61 @@ namespace Test
 		{
 			var m = (S32Message)msg;
 			A(m_val == m.m_val);
+		}
+	}
+
+	[Serializable]
+	[ProtoContract]
+	struct MyStruct1
+	{
+		[ProtoMember(1)]
+		public byte m_byte;
+		[ProtoMember(2)]
+		public int m_int;
+		[ProtoMember(3)]
+		public long m_long;
+	}
+
+	[Serializable]
+	[ProtoContract]
+	struct MyStruct2
+	{
+		[ProtoMember(1)]
+		public string m_string;
+		[ProtoMember(2)]
+		public int m_int;
+	}
+
+	[Serializable]
+	[ProtoContract]
+	sealed class StructMessage : MessageBase
+	{
+		[ProtoMember(1)]
+		MyStruct1 m_struct1;
+
+		[ProtoMember(2)]
+		MyStruct2 m_struct2;
+
+		public StructMessage()
+		{
+		}
+
+		public StructMessage(Random r)
+		{
+			m_struct1.m_byte = (byte)r.Next();
+			m_struct1.m_int = r.Next();
+			m_struct1.m_long = (long)r.Next() + (long)r.Next();
+
+			m_struct2.m_string = new string((char)r.Next((int)'a', (int)'z'), r.Next(0, 20));
+			m_struct2.m_int = r.Next();
+		}
+
+		public override void Compare(MessageBase msg)
+		{
+			var m = (StructMessage)msg;
+			A(m_struct1.Equals(m.m_struct1));
+
+			A(m_struct2.Equals(m.m_struct2));
 		}
 	}
 
