@@ -87,6 +87,8 @@ namespace Test
 
 			Console.WriteLine("== {0} {1} ==", numMessages, msgType.Name);
 
+			bool protobufCompatible = msgType.GetCustomAttributes(typeof(ProtoBuf.ProtoContractAttribute), false).Any();
+
 			var msgs = MessageBase.CreateMessages(msgType, numMessages);
 
 			GC.Collect();
@@ -94,11 +96,11 @@ namespace Test
 			GC.Collect();
 
 			Test(new MemStreamTest(), msgs);
-			if (s_runProtoBufTests)
+			if (s_runProtoBufTests && protobufCompatible)
 				Test(new PBMemStreamTest(), msgs);
 
 			Test(new NetTest(), msgs);
-			if (s_runProtoBufTests)
+			if (s_runProtoBufTests && protobufCompatible)
 				Test(new PBNetTest(), msgs);
 		}
 
