@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Diagnostics;
 
 namespace NetSerializer
 {
@@ -188,17 +189,30 @@ namespace NetSerializer
 			/* cases for types */
 			foreach (var kvp in map)
 			{
+				var type = kvp.Key;
 				var data = kvp.Value;
 
 				il.MarkLabel(jumpTable[data.TypeID]);
 
 				il.Emit(OpCodes.Ldarg_0);
 				il.Emit(OpCodes.Ldarg_1);
-				if (kvp.Key.IsValueType)
-					il.Emit(OpCodes.Unbox_Any, kvp.Key);
+				if (type.IsValueType)
+					il.Emit(OpCodes.Unbox_Any, type);
 				else
-					il.Emit(OpCodes.Castclass, kvp.Key);
-				il.EmitCall(OpCodes.Call, data.WriterMethodInfo, null);
+					il.Emit(OpCodes.Castclass, type);
+
+				if (data.WriterMethodInfo.IsGenericMethodDefinition)
+				{
+					Debug.Assert(type.IsGenericType);
+
+					var genArgs = type.GetGenericArguments();
+
+					il.EmitCall(OpCodes.Call, data.WriterMethodInfo.MakeGenericMethod(genArgs), null);
+				}
+				else
+				{
+					il.EmitCall(OpCodes.Call, data.WriterMethodInfo, null);
+				}
 
 				il.Emit(OpCodes.Ret);
 			}

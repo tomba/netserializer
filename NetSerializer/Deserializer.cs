@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Diagnostics;
 
 namespace NetSerializer
 {
@@ -212,22 +213,34 @@ namespace NetSerializer
 			/* cases for types */
 			foreach (var kvp in map)
 			{
+				var type = kvp.Key;
 				var data = kvp.Value;
 
 				il.MarkLabel(jumpTable[data.TypeID]);
 
-				var local = il.DeclareLocal(kvp.Key);
+				var local = il.DeclareLocal(type);
 
 				// call deserializer for this typeID
 				il.Emit(OpCodes.Ldarg_0);
 				il.Emit(OpCodes.Ldloca_S, local);
-				il.EmitCall(OpCodes.Call, data.ReaderMethodInfo, null);
+				if (data.WriterMethodInfo.IsGenericMethodDefinition)
+				{
+					Debug.Assert(type.IsGenericType);
+
+					var genArgs = type.GetGenericArguments();
+
+					il.EmitCall(OpCodes.Call, data.ReaderMethodInfo.MakeGenericMethod(genArgs), null);
+				}
+				else
+				{
+					il.EmitCall(OpCodes.Call, data.ReaderMethodInfo, null);
+				}
 
 				// write result object to out object
 				il.Emit(OpCodes.Ldarg_1);
 				il.Emit(OpCodes.Ldloc_S, local);
-				if (kvp.Key.IsValueType)
-					il.Emit(OpCodes.Box, kvp.Key);
+				if (type.IsValueType)
+					il.Emit(OpCodes.Box, type);
 				il.Emit(OpCodes.Stind_Ref);
 
 				D(il, "deser switch done");

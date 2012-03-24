@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Diagnostics;
 
 namespace NetSerializer
 {
@@ -89,6 +90,18 @@ namespace NetSerializer
 			{
 				CollectTypes(type.GetElementType(), typeSet);
 			}
+			else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+			{
+				var args = type.GetGenericArguments();
+
+				Debug.Assert(args.Length == 2);
+
+				// Dictionary<K,V> is stored as KeyValuePair<K,V>[]
+
+				var arrayType = typeof(KeyValuePair<,>).MakeGenericType(args).MakeArrayType();
+
+				CollectTypes(arrayType, typeSet);
+			}
 			else
 			{
 				var fields = GetFieldInfos(type);
@@ -130,7 +143,7 @@ namespace NetSerializer
 			foreach (var type in types)
 			{
 				var writer = Primitives.GetWritePrimitive(type);
-				var reader = Primitives.GetReadPrimitive(type.MakeByRefType());
+				var reader = Primitives.GetReadPrimitive(type);
 
 				if ((writer != null) != (reader != null))
 					throw new InvalidOperationException(String.Format("Missing a read or write primitive for {0}", type.FullName));
@@ -288,7 +301,7 @@ namespace NetSerializer
 
 		static IEnumerable<FieldInfo> GetFieldInfos(Type type)
 		{
-			System.Diagnostics.Trace.Assert(type.IsSerializable);
+			Debug.Assert(type.IsSerializable);
 
 			var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
 				.Where(fi => (fi.Attributes & FieldAttributes.NotSerialized) == 0)
