@@ -27,6 +27,21 @@ non-deserializable.  For this reason I think the best (and perhaps only) use
 for NetSerializer is for sending data over network, between a client and a
 server which have verified version compatibility when the connection is made.
 
+Supported Types
+
+NetSerializer supports serializing the following types:
+
+- All primitive types (Boolean, Byte, SByte, Int16, UInt16, Int32, UInt32,
+  Int64, UInt64, IntPtr, UIntPtr, Char, Double, and Single)
+- Strings
+- Enums
+- Arrays
+- Structs and classes marked as [Serializable]. Note that NetSerializer does
+  _not_ support ISerializable, so not all classes marked with [Serializable]
+  are supported.  However, NetSerializer has special support for the following
+  ISerializable classes:
+- Dictionary<K,V>
+- DateTime
 
 Usage
 
