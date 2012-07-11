@@ -146,10 +146,9 @@ namespace NetSerializer
 			else
 				direct = false;
 
-			if (direct)
-				il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(type), null);
-			else
-				il.EmitCall(OpCodes.Call, ctx.SerializerSwitchMethodInfo, null);
+			var method = direct ? ctx.GetWriterMethodInfo(type) : ctx.SerializerSwitchMethodInfo;
+
+			il.EmitCall(OpCodes.Call, method, null);
 		}
 
 
@@ -196,10 +195,7 @@ namespace NetSerializer
 
 				il.Emit(OpCodes.Ldarg_0);
 				il.Emit(OpCodes.Ldarg_1);
-				if (type.IsValueType)
-					il.Emit(OpCodes.Unbox_Any, type);
-				else
-					il.Emit(OpCodes.Castclass, type);
+				il.Emit(type.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, type);
 
 				if (data.WriterMethodInfo.IsGenericMethodDefinition)
 				{

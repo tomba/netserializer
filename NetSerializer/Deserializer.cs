@@ -171,10 +171,9 @@ namespace NetSerializer
 			else
 				direct = false;
 
-			if (direct)
-				il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(type), null);
-			else
-				il.EmitCall(OpCodes.Call, ctx.DeserializerSwitchMethodInfo, null);
+			var method = direct ? ctx.GetReaderMethodInfo(type) : ctx.DeserializerSwitchMethodInfo;
+
+			il.EmitCall(OpCodes.Call, method, null);
 		}
 
 		static void GenerateDeserializerSwitch(CodeGenContext ctx, ILGenerator il, IDictionary<Type, TypeData> map)

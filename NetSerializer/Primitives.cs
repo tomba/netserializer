@@ -14,9 +14,7 @@ namespace NetSerializer
 			if (type.IsEnum)
 				type = type.GetEnumUnderlyingType();
 
-			MethodInfo writer;
-
-			writer = typeof(Primitives).GetMethod("WritePrimitive", BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
+			MethodInfo writer = typeof(Primitives).GetMethod("WritePrimitive", BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
 				new Type[] { typeof(Stream), type }, null);
 
 			if (writer != null)
@@ -304,13 +302,13 @@ namespace NetSerializer
 			value = *(double*)(&v);
 		}
 
-		public static unsafe void WritePrimitive(Stream stream, DateTime value)
+		public static void WritePrimitive(Stream stream, DateTime value)
 		{
 			long v = value.ToBinary();
 			WritePrimitive(stream, v);
 		}
 
-		public static unsafe void ReadPrimitive(Stream stream, out DateTime value)
+		public static void ReadPrimitive(Stream stream, out DateTime value)
 		{
 			long v;
 			ReadPrimitive(stream, out v);

@@ -320,7 +320,7 @@ namespace NetSerializer
 
 		sealed class CodeGenContext
 		{
-			public Dictionary<Type, TypeData> m_typeMap;
+			readonly Dictionary<Type, TypeData> m_typeMap;
 
 			public CodeGenContext(Dictionary<Type, TypeData> typeMap, MethodInfo serializerSwitch, MethodInfo deserializerSwitch)
 			{
@@ -365,7 +365,7 @@ namespace NetSerializer
 				this.TypeID = typeID;
 			}
 
-			public ushort TypeID;
+			public readonly ushort TypeID;
 			public bool IsDynamic;
 			public MethodInfo WriterMethodInfo;
 			public ILGenerator WriterILGen;
