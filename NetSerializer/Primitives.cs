@@ -278,6 +278,7 @@ namespace NetSerializer
 			value = DecodeZigZag64(ReadVarint64(stream));
 		}
 
+#if !NO_UNSAFE
 		public static unsafe void WritePrimitive(Stream stream, float value)
 		{
 			uint v = *(uint*)(&value);
@@ -301,6 +302,31 @@ namespace NetSerializer
 			ulong v = ReadVarint64(stream);
 			value = *(double*)(&v);
 		}
+#else
+		public static void WritePrimitive(Stream stream, float value)
+		{
+			WritePrimitive(stream, (double)value);
+		}
+
+		public static void ReadPrimitive(Stream stream, out float value)
+		{
+			double v;
+			ReadPrimitive(stream, out v);
+			value = (float)v;
+		}
+
+		public static void WritePrimitive(Stream stream, double value)
+		{
+			ulong v = (ulong)BitConverter.DoubleToInt64Bits(value);
+			WriteVarint64(stream, v);
+		}
+
+		public static void ReadPrimitive(Stream stream, out double value)
+		{
+			ulong v = ReadVarint64(stream);
+			value = BitConverter.Int64BitsToDouble((long)v);
+		}
+#endif
 
 		public static void WritePrimitive(Stream stream, DateTime value)
 		{
