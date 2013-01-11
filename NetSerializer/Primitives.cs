@@ -17,8 +17,8 @@ namespace NetSerializer
 	{
 		internal static MethodInfo GetWritePrimitive(Type type)
 		{
-			if (type.IsEnum)
-				type = type.GetEnumUnderlyingType();
+		    if (type.IsEnum)
+		        type = Enum.GetUnderlyingType(type);
 
 			MethodInfo writer = typeof(Primitives).GetMethod("WritePrimitive", BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
 				new Type[] { typeof(Stream), type }, null);
@@ -61,7 +61,7 @@ namespace NetSerializer
 		internal static MethodInfo GetReadPrimitive(Type type)
 		{
 			if (type.IsEnum)
-				type = type.GetEnumUnderlyingType();
+				type = Enum.GetUnderlyingType(type);
 
 			var reader = typeof(Primitives).GetMethod("ReadPrimitive", BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
 				new Type[] { typeof(Stream), type.MakeByRefType() }, null);
