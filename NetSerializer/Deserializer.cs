@@ -10,6 +10,7 @@ using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Diagnostics;
+using System.Runtime.Serialization;
 
 namespace NetSerializer
 {
@@ -74,6 +75,23 @@ namespace NetSerializer
 				il.Emit(OpCodes.Ldflda, field);
 
 				GenDeserializerCall(ctx, il, field.FieldType);
+			}
+
+			// IDeserializationCallback
+			if (typeof(IDeserializationCallback).IsAssignableFrom(type))
+			{
+				MethodInfo miOnDeserialization = typeof(IDeserializationCallback).GetMethod("OnDeserialization",
+														BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+														null,
+														new []{ typeof(Object) },
+														null);
+
+				il.Emit(OpCodes.Ldarg_1);
+				if (type.IsClass)
+					il.Emit(OpCodes.Ldind_Ref);
+				il.Emit(OpCodes.Isinst, typeof(IDeserializationCallback));
+				il.Emit(OpCodes.Ldnull);
+				il.Emit(OpCodes.Callvirt, miOnDeserialization);
 			}
 
 			il.Emit(OpCodes.Ret);
