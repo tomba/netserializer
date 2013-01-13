@@ -43,6 +43,16 @@ NetSerializer supports serializing the following types:
 - Dictionary<K,V>
 - DateTime
 
+If need be, adding similar special support for other ISerializable classes
+should be quite simple in many cases. For example, the code in Primitives.cs
+for serializing DateTime is:
+
+public static void WritePrimitive(Stream stream, DateTime value)
+{
+	long v = value.ToBinary();
+	WritePrimitive(stream, v);
+}
+
 Usage
 
 Usage is simple. The types to be serialized need to be marked with the standard
