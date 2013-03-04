@@ -435,11 +435,12 @@ namespace Test
 
 		public StringMessage(Random r)
 		{
-			int len = r.Next(1000);
+			int len = r.Next(100);
 
 			if (len == 0)
 				m_string = null;
 			else
+				//m_string = new string((char)r.Next(0xD7FF), len - 1);
 				m_string = new string((char)r.Next((int)'a', (int)'z'), len - 1);
 		}
 
