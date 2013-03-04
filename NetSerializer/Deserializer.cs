@@ -218,7 +218,9 @@ namespace NetSerializer
 			il.Emit(OpCodes.Switch, jumpTable);
 
 			D(il, "eihx");
-			il.ThrowException(typeof(Exception));
+			ConstructorInfo exceptionCtor = typeof(Exception).GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new Type[0], null);
+			il.Emit(OpCodes.Newobj, exceptionCtor);
+			il.Emit(OpCodes.Throw);
 
 			/* null case */
 			il.MarkLabel(jumpTable[0]);
