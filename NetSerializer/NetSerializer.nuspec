@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>http://mozilla.org/MPL/2.0/</licenseUrl>
+    <projectUrl>https://github.com/tomba/netserializer</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <copyright>Copyright 2012 Tomi Valkeinen</copyright>
+    <tags>Serializer</tags>
+  </metadata>
+</package>
