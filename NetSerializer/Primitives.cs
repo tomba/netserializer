@@ -15,97 +15,6 @@ namespace NetSerializer
 {
 	public static class Primitives
 	{
-		internal static MethodInfo GetWritePrimitive(Type type)
-		{
-			if (type.IsEnum)
-				type = Enum.GetUnderlyingType(type);
-
-			MethodInfo writer = typeof(Primitives).GetMethod("WritePrimitive", BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
-				new Type[] { typeof(Stream), type }, null);
-
-			if (writer != null)
-				return writer;
-
-			if (type.IsGenericType)
-			{
-				var genType = type.GetGenericTypeDefinition();
-
-				var mis = typeof(Primitives).GetMethods(BindingFlags.Static | BindingFlags.Public)
-					.Where(mi => mi.IsGenericMethod && mi.Name == "WritePrimitive");
-
-				foreach (var mi in mis)
-				{
-					var p = mi.GetParameters();
-
-					if (p.Length != 2)
-						continue;
-
-					if (p[0].ParameterType != typeof(Stream))
-						continue;
-
-					var paramType = p[1].ParameterType;
-
-					if (paramType.IsGenericType == false)
-						continue;
-
-					var genParamType = paramType.GetGenericTypeDefinition();
-
-					if (genType == genParamType)
-						return mi;
-				}
-			}
-
-			return null;
-		}
-
-		internal static MethodInfo GetReadPrimitive(Type type)
-		{
-			if (type.IsEnum)
-				type = Enum.GetUnderlyingType(type);
-
-			var reader = typeof(Primitives).GetMethod("ReadPrimitive", BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
-				new Type[] { typeof(Stream), type.MakeByRefType() }, null);
-
-			if (reader != null)
-				return reader;
-
-			if (type.IsGenericType)
-			{
-				var genType = type.GetGenericTypeDefinition();
-
-				var mis = typeof(Primitives).GetMethods(BindingFlags.Static | BindingFlags.Public)
-					.Where(mi => mi.IsGenericMethod && mi.Name == "ReadPrimitive");
-
-				foreach (var mi in mis)
-				{
-					var p = mi.GetParameters();
-
-					if (p.Length != 2)
-						continue;
-
-					if (p[0].ParameterType != typeof(Stream))
-						continue;
-
-					var paramType = p[1].ParameterType;
-
-					if (paramType.IsByRef == false)
-						continue;
-
-					paramType = paramType.GetElementType();
-
-					if (paramType.IsGenericType == false)
-						continue;
-
-					var genParamType = paramType.GetGenericTypeDefinition();
-
-					if (genType == genParamType)
-						return mi;
-				}
-			}
-
-			return null;
-		}
-
 		static uint EncodeZigZag32(int n)
 		{
 			return (uint)((n << 1) ^ (n >> 31));
@@ -603,12 +512,12 @@ namespace NetSerializer
 			foreach (var kvp in value)
 				kvpArray[i++] = kvp;
 
-			NetSerializer.Serializer.Serialize(stream, kvpArray);
+			NetSerializer.Serializer.SerializeInternal(stream, kvpArray);
 		}
 
 		public static void ReadPrimitive<TKey, TValue>(Stream stream, out Dictionary<TKey, TValue> value)
 		{
-			var kvpArray = (KeyValuePair<TKey, TValue>[])NetSerializer.Serializer.Deserialize(stream);
+			var kvpArray = (KeyValuePair<TKey, TValue>[])NetSerializer.Serializer.DeserializeInternal(stream);
 
 			value = new Dictionary<TKey, TValue>(kvpArray.Length);
 

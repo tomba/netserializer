@@ -14,9 +14,9 @@ using System.Runtime.Serialization;
 
 namespace NetSerializer
 {
-	static partial class Serializer
+	static class DeserializerCodegen
 	{
-		static DynamicMethod GenerateDynamicDeserializerStub(Type type)
+		public static DynamicMethod GenerateDynamicDeserializerStub(Type type)
 		{
 			var dm = new DynamicMethod("Deserialize", null,
 				new Type[] { typeof(Stream), type.MakeByRefType() },
@@ -28,7 +28,7 @@ namespace NetSerializer
 		}
 
 #if GENERATE_DEBUGGING_ASSEMBLY
-		static MethodBuilder GenerateStaticDeserializerStub(TypeBuilder tb, Type type)
+		public static MethodBuilder GenerateStaticDeserializerStub(TypeBuilder tb, Type type)
 		{
 			var mb = tb.DefineMethod("Deserialize", MethodAttributes.Public | MethodAttributes.Static, null, new Type[] { typeof(Stream), type.MakeByRefType() });
 			mb.DefineParameter(1, ParameterAttributes.None, "stream");
@@ -37,7 +37,7 @@ namespace NetSerializer
 		}
 #endif
 
-		static void GenerateDeserializerBody(CodeGenContext ctx, Type type, ILGenerator il)
+		public static void GenerateDeserializerBody(CodeGenContext ctx, Type type, ILGenerator il)
 		{
 			// arg0: stream, arg1: out value
 
@@ -64,7 +64,7 @@ namespace NetSerializer
 				il.Emit(OpCodes.Stind_Ref);
 			}
 
-			var fields = GetFieldInfos(type);
+			var fields = Helpers.GetFieldInfos(type);
 
 			foreach (var field in fields)
 			{
@@ -195,7 +195,7 @@ namespace NetSerializer
 			il.EmitCall(OpCodes.Call, method, null);
 		}
 
-		static void GenerateDeserializerSwitch(CodeGenContext ctx, ILGenerator il, IDictionary<Type, TypeData> map)
+		public static void GenerateDeserializerSwitch(CodeGenContext ctx, ILGenerator il, IDictionary<Type, TypeData> map)
 		{
 			// arg0: stream, arg1: out object
 
