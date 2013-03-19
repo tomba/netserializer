@@ -41,8 +41,6 @@ namespace NetSerializer
 		{
 			// arg0: stream, arg1: out value
 
-			D(il, "deser {0}", type.Name);
-
 			if (type.IsArray)
 				GenDeserializerBodyForArray(ctx, type, il);
 			else
@@ -201,8 +199,6 @@ namespace NetSerializer
 		{
 			// arg0: stream, arg1: out object
 
-			D(il, "deser switch");
-
 			var idLocal = il.DeclareLocal(typeof(ushort));
 
 			// read typeID
@@ -219,7 +215,6 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldloc_S, idLocal);
 			il.Emit(OpCodes.Switch, jumpTable);
 
-			D(il, "eihx");
 			ConstructorInfo exceptionCtor = typeof(Exception).GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new Type[0], null);
 			il.Emit(OpCodes.Newobj, exceptionCtor);
 			il.Emit(OpCodes.Throw);
@@ -264,8 +259,6 @@ namespace NetSerializer
 				if (type.IsValueType)
 					il.Emit(OpCodes.Box, type);
 				il.Emit(OpCodes.Stind_Ref);
-
-				D(il, "deser switch done");
 
 				il.Emit(OpCodes.Ret);
 			}

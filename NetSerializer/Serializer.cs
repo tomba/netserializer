@@ -41,8 +41,6 @@ namespace NetSerializer
 		{
 			// arg0: Stream, arg1: value
 
-			D(il, "ser {0}", type.Name);
-
 			if (type.IsArray)
 				GenSerializerBodyForArray(ctx, type, il);
 			else
@@ -186,7 +184,6 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldloc_S, idLocal);
 			il.Emit(OpCodes.Switch, jumpTable);
 
-			D(il, "eihx");
 			ConstructorInfo exceptionCtor = typeof(Exception).GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new Type[0], null);
 			il.Emit(OpCodes.Newobj, exceptionCtor);
 			il.Emit(OpCodes.Throw);

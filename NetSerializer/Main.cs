@@ -46,8 +46,6 @@ namespace NetSerializer
 			if (!s_initialized)
 				throw new InvalidOperationException("NetSerializer not initialized");
 
-			D("Serializing {0}", data.GetType().Name);
-
 			s_serializerSwitch(stream, data);
 		}
 
@@ -56,23 +54,9 @@ namespace NetSerializer
 			if (!s_initialized)
 				throw new InvalidOperationException("NetSerializer not initialized");
 
-			D("Deserializing");
-
 			object o;
 			s_deserializerSwitch(stream, out o);
 			return o;
-		}
-
-		[System.Diagnostics.Conditional("DEBUG")]
-		static void D(string fmt, params object[] args)
-		{
-			//Console.WriteLine("S: " + String.Format(fmt, args));
-		}
-
-		[System.Diagnostics.Conditional("DEBUG")]
-		static void D(ILGenerator ilGen, string fmt, params object[] args)
-		{
-			//ilGen.EmitWriteLine("E: " + String.Format(fmt, args));
 		}
 
 		static void CollectTypes(Type type, HashSet<Type> typeSet)
