@@ -146,16 +146,10 @@ namespace NetSerializer
 			ushort typeID = 1;
 			foreach (var type in types)
 			{
-				MethodInfo writer = null;
-				MethodInfo reader = null;
+				MethodInfo writer;
+				MethodInfo reader;
 
-				writer = Helpers.GetWritePrimitive(typeof(Primitives), type);
-				reader = Helpers.GetReadPrimitive(typeof(Primitives), type);
-
-				if ((writer != null) != (reader != null))
-					throw new InvalidOperationException(String.Format("Missing a read or write primitive for {0}", type.FullName));
-
-				var isStatic = writer != null;
+				bool isStatic = Helpers.GetPrimitives(typeof(Primitives), type, out writer, out reader);
 
 				if (type.IsPrimitive && isStatic == false)
 					throw new InvalidOperationException(String.Format("Missing primitive read/write methods for {0}", type.FullName));

@@ -10,92 +10,94 @@ namespace NetSerializer
 {
 	static class Helpers
 	{
-		public static MethodInfo GetWritePrimitive(Type containerType, Type type)
+		public static bool GetPrimitives(Type containerType, Type type, out MethodInfo writer, out MethodInfo reader)
 		{
 			if (type.IsEnum)
 				type = Enum.GetUnderlyingType(type);
 
-			MethodInfo writer = containerType.GetMethod("WritePrimitive", BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
-				new Type[] { typeof(Stream), type }, null);
+			if (type.IsGenericType == false)
+			{
+				writer = containerType.GetMethod("WritePrimitive", BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
+					new Type[] { typeof(Stream), type }, null);
 
-			if (writer != null)
-				return writer;
-
-			if (type.IsGenericType)
+				reader = containerType.GetMethod("ReadPrimitive", BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
+					new Type[] { typeof(Stream), type.MakeByRefType() }, null);
+			}
+			else
 			{
 				var genType = type.GetGenericTypeDefinition();
 
-				var mis = containerType.GetMethods(BindingFlags.Static | BindingFlags.Public)
-					.Where(mi => mi.IsGenericMethod && mi.Name == "WritePrimitive");
+				writer = GetGenWriter(containerType, genType);
+				reader = GetGenReader(containerType, genType);
+			}
 
-				foreach (var mi in mis)
-				{
-					var p = mi.GetParameters();
+			if (writer == null && reader == null)
+				return false;
+			else if (writer != null && reader != null)
+				return true;
+			else
+				throw new InvalidOperationException(String.Format("Missing a {0}Primitive() for {1}",
+					reader == null ? "Read" : "Write", type.FullName));
+		}
 
-					if (p.Length != 2)
-						continue;
+		static MethodInfo GetGenWriter(Type containerType, Type genType)
+		{
+			var mis = containerType.GetMethods(BindingFlags.Static | BindingFlags.Public)
+				.Where(mi => mi.IsGenericMethod && mi.Name == "WritePrimitive");
 
-					if (p[0].ParameterType != typeof(Stream))
-						continue;
+			foreach (var mi in mis)
+			{
+				var p = mi.GetParameters();
 
-					var paramType = p[1].ParameterType;
+				if (p.Length != 2)
+					continue;
 
-					if (paramType.IsGenericType == false)
-						continue;
+				if (p[0].ParameterType != typeof(Stream))
+					continue;
 
-					var genParamType = paramType.GetGenericTypeDefinition();
+				var paramType = p[1].ParameterType;
 
-					if (genType == genParamType)
-						return mi;
-				}
+				if (paramType.IsGenericType == false)
+					continue;
+
+				var genParamType = paramType.GetGenericTypeDefinition();
+
+				if (genType == genParamType)
+					return mi;
 			}
 
 			return null;
 		}
 
-		public static MethodInfo GetReadPrimitive(Type containerType, Type type)
+		static MethodInfo GetGenReader(Type containerType, Type genType)
 		{
-			if (type.IsEnum)
-				type = Enum.GetUnderlyingType(type);
+			var mis = containerType.GetMethods(BindingFlags.Static | BindingFlags.Public)
+				.Where(mi => mi.IsGenericMethod && mi.Name == "ReadPrimitive");
 
-			var reader = containerType.GetMethod("ReadPrimitive", BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
-				new Type[] { typeof(Stream), type.MakeByRefType() }, null);
-
-			if (reader != null)
-				return reader;
-
-			if (type.IsGenericType)
+			foreach (var mi in mis)
 			{
-				var genType = type.GetGenericTypeDefinition();
+				var p = mi.GetParameters();
 
-				var mis = containerType.GetMethods(BindingFlags.Static | BindingFlags.Public)
-					.Where(mi => mi.IsGenericMethod && mi.Name == "ReadPrimitive");
+				if (p.Length != 2)
+					continue;
 
-				foreach (var mi in mis)
-				{
-					var p = mi.GetParameters();
+				if (p[0].ParameterType != typeof(Stream))
+					continue;
 
-					if (p.Length != 2)
-						continue;
+				var paramType = p[1].ParameterType;
 
-					if (p[0].ParameterType != typeof(Stream))
-						continue;
+				if (paramType.IsByRef == false)
+					continue;
 
-					var paramType = p[1].ParameterType;
+				paramType = paramType.GetElementType();
 
-					if (paramType.IsByRef == false)
-						continue;
+				if (paramType.IsGenericType == false)
+					continue;
 
-					paramType = paramType.GetElementType();
+				var genParamType = paramType.GetGenericTypeDefinition();
 
-					if (paramType.IsGenericType == false)
-						continue;
-
-					var genParamType = paramType.GetGenericTypeDefinition();
-
-					if (genType == genParamType)
-						return mi;
-				}
+				if (genType == genParamType)
+					return mi;
 			}
 
 			return null;
