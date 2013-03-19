@@ -27,6 +27,7 @@ namespace NetSerializer
 			return dm;
 		}
 
+#if GENERATE_DEBUGGING_ASSEMBLY
 		static MethodBuilder GenerateStaticSerializerStub(TypeBuilder tb, Type type)
 		{
 			var mb = tb.DefineMethod("Serialize", MethodAttributes.Public | MethodAttributes.Static, null, new Type[] { typeof(Stream), type });
@@ -34,6 +35,7 @@ namespace NetSerializer
 			mb.DefineParameter(2, ParameterAttributes.None, "value");
 			return mb;
 		}
+#endif
 
 		static void GenerateSerializerBody(CodeGenContext ctx, Type type, ILGenerator il)
 		{

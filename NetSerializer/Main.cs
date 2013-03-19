@@ -4,8 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//#define GENERATE_DEBUGGING_ASSEMBLY
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -35,8 +33,9 @@ namespace NetSerializer
 
 			var types = CollectTypes(rootTypes);
 
+#if GENERATE_DEBUGGING_ASSEMBLY
 			GenerateAssembly(types);
-
+#endif
 			s_typeIDMap = GenerateDynamic(types);
 
 			s_initialized = true;
@@ -239,7 +238,7 @@ namespace NetSerializer
 			return map.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.TypeID);
 		}
 
-		[System.Diagnostics.Conditional("GENERATE_DEBUGGING_ASSEMBLY")]
+#if GENERATE_DEBUGGING_ASSEMBLY
 		static void GenerateAssembly(Type[] types)
 		{
 			Dictionary<Type, TypeData> map = GenerateTypeData(types);
@@ -293,6 +292,7 @@ namespace NetSerializer
 			tb.CreateType();
 			ab.Save("NetSerializerDebug.dll");
 		}
+#endif
 
 		/* called from the dynamically generated code */
 		static ushort GetTypeID(object ob)
