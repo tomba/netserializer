@@ -204,18 +204,7 @@ namespace NetSerializer
 				il.Emit(OpCodes.Ldarg_1);
 				il.Emit(type.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, type);
 
-				if (data.WriterMethodInfo.IsGenericMethodDefinition)
-				{
-					Debug.Assert(type.IsGenericType);
-
-					var genArgs = type.GetGenericArguments();
-
-					il.EmitCall(OpCodes.Call, data.WriterMethodInfo.MakeGenericMethod(genArgs), null);
-				}
-				else
-				{
-					il.EmitCall(OpCodes.Call, data.WriterMethodInfo, null);
-				}
+				il.EmitCall(OpCodes.Call, data.WriterMethodInfo, null);
 
 				il.Emit(OpCodes.Ret);
 			}

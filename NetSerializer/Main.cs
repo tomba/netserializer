@@ -158,6 +158,16 @@ namespace NetSerializer
 
 				if (isStatic)
 				{
+					if (writer.IsGenericMethodDefinition)
+					{
+						Debug.Assert(type.IsGenericType);
+
+						var genArgs = type.GetGenericArguments();
+
+						writer = writer.MakeGenericMethod(genArgs);
+						reader = reader.MakeGenericMethod(genArgs);
+					}
+
 					td.WriterMethodInfo = writer;
 					td.ReaderMethodInfo = reader;
 					td.IsDynamic = false;

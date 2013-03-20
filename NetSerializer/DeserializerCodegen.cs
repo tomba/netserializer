@@ -240,18 +240,8 @@ namespace NetSerializer
 				// call deserializer for this typeID
 				il.Emit(OpCodes.Ldarg_0);
 				il.Emit(OpCodes.Ldloca_S, local);
-				if (data.WriterMethodInfo.IsGenericMethodDefinition)
-				{
-					Debug.Assert(type.IsGenericType);
 
-					var genArgs = type.GetGenericArguments();
-
-					il.EmitCall(OpCodes.Call, data.ReaderMethodInfo.MakeGenericMethod(genArgs), null);
-				}
-				else
-				{
-					il.EmitCall(OpCodes.Call, data.ReaderMethodInfo, null);
-				}
+				il.EmitCall(OpCodes.Call, data.ReaderMethodInfo, null);
 
 				// write result object to out object
 				il.Emit(OpCodes.Ldarg_1);
