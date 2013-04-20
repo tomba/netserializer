@@ -239,13 +239,19 @@ namespace NetSerializer
 
 				// call deserializer for this typeID
 				il.Emit(OpCodes.Ldarg_0);
-				il.Emit(OpCodes.Ldloca_S, local);
+				if (local.LocalIndex < 256)
+					il.Emit(OpCodes.Ldloca_S, local);
+				else
+					il.Emit(OpCodes.Ldloca, local);
 
 				il.EmitCall(OpCodes.Call, data.ReaderMethodInfo, null);
 
 				// write result object to out object
 				il.Emit(OpCodes.Ldarg_1);
-				il.Emit(OpCodes.Ldloc_S, local);
+				if (local.LocalIndex < 256)
+					il.Emit(OpCodes.Ldloc_S, local);
+				else
+					il.Emit(OpCodes.Ldloc, local);
 				if (type.IsValueType)
 					il.Emit(OpCodes.Box, type);
 				il.Emit(OpCodes.Stind_Ref);
