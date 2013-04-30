@@ -2,9 +2,7 @@ Updated version of NetSerializer.
 Changes:
 - The next types were added to list of supported serialization types:
   (via WritePrimitive/ReadPrimitive)
-  bool?, byte?, sbyte?, char?, ushort?, short?, float?, double?,
-  TimeSpan, DateTimeOffset, decimal, Guid, 
-  byte[], int[],
+  Nullable<T>, TimeSpan, DateTimeOffset, decimal, Guid, int[],
   ArrayList, BitArray, HashTable, Queue, Stack, SorrtedList
   Tuple<T1>, Tuple<T1,T2>, Tuple<T1,T2,T3>, Tuple<T1,T2,T3,T4>, 
   Tuple<T1,T2,T3,T4,T5>, Tuple<T1,T2,T3,T4,T5,T6>,
