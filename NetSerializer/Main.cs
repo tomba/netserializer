@@ -197,9 +197,6 @@ namespace NetSerializer
 		}
 
 
-#if USE_LOCK
-		static ReaderWriterLockSlim lck = new ReaderWriterLockSlim();
-#endif
 		static Dictionary<ushort, TypeData> s_typeID_TypeData;
 		static Dictionary<Type, TypeData> s_typeMap = new Dictionary<Type, TypeData>();
 
@@ -220,31 +217,19 @@ namespace NetSerializer
 			if (s_initialized)
 				throw new InvalidOperationException("NetSerializer already initialized");
 
-#if USE_LOCK
-			lck.EnterWriteLock();
-			try
-#endif
-			{
-				var types = CollectTypes(rootTypes);
+			var types = CollectTypes(rootTypes);
 
 #if GENERATE_DEBUGGING_ASSEMBLY
-				GenerateAssembly(types, s_typeMap);
+			GenerateAssembly(types, s_typeMap);
 #endif
-				s_typeMap = GenerateDynamic(types, s_typeMap);
-				s_typeID_TypeData = s_typeMap.ToDictionary(kvp => kvp.Value.TypeID, kvp => kvp.Value);
+			s_typeMap = GenerateDynamic(types, s_typeMap);
+			s_typeID_TypeData = s_typeMap.ToDictionary(kvp => kvp.Value.TypeID, kvp => kvp.Value);
 
 #if GENERATE_SWITCH
-				s_Type_caseIDtypeIDMap = s_typeMap.ToDictionary(kvp => kvp.Key, kvp => (uint)(kvp.Value.TypeID | (kvp.Value.CaseID << 16)));
-				s_caseID_typeIDMap = s_typeMap.ToDictionary(kvp => kvp.Value.TypeID, kvp => kvp.Value.CaseID);
+			s_Type_caseIDtypeIDMap = s_typeMap.ToDictionary(kvp => kvp.Key, kvp => (uint)(kvp.Value.TypeID | (kvp.Value.CaseID << 16)));
+			s_caseID_typeIDMap = s_typeMap.ToDictionary(kvp => kvp.Value.TypeID, kvp => kvp.Value.CaseID);
 #endif
 				s_initialized = true;
-			}
-#if USE_LOCK
-			finally
-			{
-				lck.ExitWriteLock();
-			}
-#endif
 		}
 
 		public static void Register(Type[] regTypes)
@@ -252,29 +237,17 @@ namespace NetSerializer
 			if (!s_initialized)
 				throw new InvalidOperationException("NetSerializer not initialized");
 
-#if USE_LOCK
-			lck.EnterWriteLock();
-			try
-#endif
-			{
-				var ctypes = CollectTypes(regTypes);
-				var types = ctypes.Select(v => v).Where(v => !s_typeMap.ContainsKey(v)).ToArray<Type>();
+			var ctypes = CollectTypes(regTypes);
+			var types = ctypes.Select(v => v).Where(v => !s_typeMap.ContainsKey(v)).ToArray<Type>();
 
 #if GENERATE_DEBUGGING_ASSEMBLY
-				GenerateAssembly(types, s_typeMap);
+			GenerateAssembly(types, s_typeMap);
 #endif
-				s_typeMap = GenerateDynamic(types, s_typeMap);
-				s_typeID_TypeData = s_typeMap.ToDictionary(kvp => kvp.Value.TypeID, kvp => kvp.Value);
+			s_typeMap = GenerateDynamic(types, s_typeMap);
+			s_typeID_TypeData = s_typeMap.ToDictionary(kvp => kvp.Value.TypeID, kvp => kvp.Value);
 #if GENERATE_SWITCH
-				s_Type_caseIDtypeIDMap = s_typeMap.ToDictionary(kvp => kvp.Key, kvp => (uint)(kvp.Value.TypeID | (kvp.Value.CaseID << 16)));
-				s_caseID_typeIDMap = s_typeMap.ToDictionary(kvp => kvp.Value.TypeID, kvp => kvp.Value.CaseID);
-#endif
-			}
-#if USE_LOCK
-			finally
-			{
-				lck.ExitWriteLock();
-			}
+			s_Type_caseIDtypeIDMap = s_typeMap.ToDictionary(kvp => kvp.Key, kvp => (uint)(kvp.Value.TypeID | (kvp.Value.CaseID << 16)));
+			s_caseID_typeIDMap = s_typeMap.ToDictionary(kvp => kvp.Value.TypeID, kvp => kvp.Value.CaseID);
 #endif
 		}
 
@@ -283,19 +256,7 @@ namespace NetSerializer
 			if (!s_initialized)
 				throw new InvalidOperationException("NetSerializer not initialized");
 
-#if USE_LOCK
-			lck.EnterReadLock();
-			try
-#endif
-			{
-				Serializer.Serialize(stream, data, new ObjectList());
-			}
-#if USE_LOCK
-			finally
-			{
-				lck.ExitReadLock();
-			}
-#endif
+			Serializer.Serialize(stream, data, new ObjectList());
 		}
 
 		public static void Serialize(Stream stream, object data)
@@ -303,19 +264,7 @@ namespace NetSerializer
 			if (!s_initialized)
 				throw new InvalidOperationException("NetSerializer not initialized");
 
-#if USE_LOCK
-			lck.EnterReadLock();
-			try
-#endif
-			{
-				Serializer.Serialize(stream, data, null);
-			}
-#if USE_LOCK
-			finally
-			{
-				lck.ExitReadLock();
-			}
-#endif
+			Serializer.Serialize(stream, data, null);
 		}
 
 		internal static void Serialize(Stream stream, object data, ObjectList objList)
@@ -334,19 +283,7 @@ namespace NetSerializer
 			if (!s_initialized)
 				throw new InvalidOperationException("NetSerializer not initialized");
 
-#if USE_LOCK
-			lck.EnterReadLock();
-			try
-#endif
-			{
-				return Serializer.Deserialize(stream, null);
-			}
-#if USE_LOCK
-			finally
-			{
-				lck.ExitReadLock();
-			}
-#endif
+			return Serializer.Deserialize(stream, null);
 		}
 
 		public static object DeserializeDeep(Stream stream)
@@ -354,19 +291,7 @@ namespace NetSerializer
 			if (!s_initialized)
 				throw new InvalidOperationException("NetSerializer not initialized");
 
-#if USE_LOCK
-			lck.EnterReadLock();
-			try
-#endif
-			{
-				return Serializer.Deserialize(stream, new ObjectList());
-			}
-#if USE_LOCK
-			finally
-			{
-				lck.ExitReadLock();
-			}
-#endif
+			return Serializer.Deserialize(stream, new ObjectList());
 		}
 
 		internal static object Deserialize(Stream stream, ObjectList objList)
