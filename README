@@ -1,3 +1,33 @@
+Updated version of NetSerializer.
+Changes:
+- The next types were added to list of supported serialization types:
+  (via WritePrimitive/ReadPrimitive)
+  bool?, byte?, sbyte?, char?, ushort?, short?, float?, double?,
+  TimeSpan, DateTimeOffset, decimal, Guid, 
+  byte[], int[],
+  ArrayList, BitArray, HashTable, Queue, Stack, SorrtedList
+  Tuple<T1>, Tuple<T1,T2>, Tuple<T1,T2,T3>, Tuple<T1,T2,T3,T4>, 
+  Tuple<T1,T2,T3,T4,T5>, Tuple<T1,T2,T3,T4,T5,T6>,
+  Tuple<T1,T2,T3,T4,T5,T6,T7>,
+  Tuple<T1,T2,T3,T4,T5,T6,T7,TRest>,
+  List<T>, HashSet<T>, Queue<T>, Stack<T>, SortedDictionary<K,V>,
+  SortedList<K,V>, SortedSet<T>, ConcurrentDictionary<K,V>,
+  ConcurrentBag<T>, ConcurrentQueue<T>, ConcurrentStack<T>,
+  BlockingCollection<T>, LinkedList<T>
+
+- serialization Dictionary<K,V> was updated for less of using memory allocation 
+
+- generated of fly version SerializationSwitch/DeserializationSwitch was replaced
+  with using delegates and DynamicMethods. Old version may be created 
+  with GENERATE_SWITCH define
+
+- serialization/deserialization of graphs was added. 
+  New method SerializationDeep, DeserializationDeep
+
+- new object may be added to Serializer later after initialization with method
+  Serializer.Register(...)
+
+----------
 NetSerializer - A fast, simple serializer for .Net
 
 NetSerializer is a simple and very fast serializer for .Net languages. It is

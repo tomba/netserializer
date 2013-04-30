@@ -13,16 +13,30 @@ using System.Diagnostics;
 
 namespace NetSerializer
 {
-	static class SerializerCodegen
+	static partial class SerializerCodegen
 	{
 		public static DynamicMethod GenerateDynamicSerializerStub(Type type)
 		{
 			var dm = new DynamicMethod("Serialize", null,
-				new Type[] { typeof(Stream), type },
+				new Type[] { typeof(Stream), type, typeof(ObjectList) },
 				typeof(Serializer), true);
 
 			dm.DefineParameter(1, ParameterAttributes.None, "stream");
 			dm.DefineParameter(2, ParameterAttributes.None, "value");
+			dm.DefineParameter(3, ParameterAttributes.None, "objList");
+
+			return dm;
+		}
+
+		public static DynamicMethod GenerateDynamicSerializeInvokerStub()
+		{
+			var dm = new DynamicMethod(string.Empty, null,
+				new Type[] { typeof(Stream), typeof(object), typeof(ObjectList) },
+				typeof(Serializer), true);
+
+			dm.DefineParameter(1, ParameterAttributes.None, "stream");
+			dm.DefineParameter(2, ParameterAttributes.None, "value");
+			dm.DefineParameter(3, ParameterAttributes.None, "objList");
 
 			return dm;
 		}
@@ -30,9 +44,21 @@ namespace NetSerializer
 #if GENERATE_DEBUGGING_ASSEMBLY
 		public static MethodBuilder GenerateStaticSerializerStub(TypeBuilder tb, Type type)
 		{
-			var mb = tb.DefineMethod("Serialize", MethodAttributes.Public | MethodAttributes.Static, null, new Type[] { typeof(Stream), type });
+			var mb = tb.DefineMethod("Serialize", MethodAttributes.Public | MethodAttributes.Static, null, 
+						new Type[] { typeof(Stream), type, typeof(ObjectList) });
 			mb.DefineParameter(1, ParameterAttributes.None, "stream");
 			mb.DefineParameter(2, ParameterAttributes.None, "value");
+			mb.DefineParameter(3, ParameterAttributes.None, "objList");
+			return mb;
+		}
+
+		public static MethodBuilder GenerateStaticSerializeInvokerStub(TypeBuilder tb, int typeID)
+		{
+			var mb = tb.DefineMethod("SerializeInv" + typeID,	MethodAttributes.Public | MethodAttributes.Static, null,
+						new Type[] { typeof(Stream), typeof(object), typeof(ObjectList) });
+			mb.DefineParameter(1, ParameterAttributes.None, "stream");
+			mb.DefineParameter(2, ParameterAttributes.None, "value");
+			mb.DefineParameter(3, ParameterAttributes.None, "objList");
 			return mb;
 		}
 #endif
@@ -40,6 +66,8 @@ namespace NetSerializer
 		public static void GenerateSerializerBody(CodeGenContext ctx, Type type, ILGenerator il)
 		{
 			// arg0: Stream, arg1: value
+
+			//--			D(il, "ser {0}", type.Name);
 
 			if (type.IsArray)
 				GenSerializerBodyForArray(ctx, type, il);
@@ -49,6 +77,25 @@ namespace NetSerializer
 
 		static void GenSerializerBody(CodeGenContext ctx, Type type, ILGenerator il)
 		{
+			if (type.IsClass)
+			{
+				Type objStackType = typeof(ObjectList);
+				MethodInfo getAddMethod = objStackType.GetMethod("Add", BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(object) }, null);
+
+				var endLabel = il.DefineLabel();
+
+				//==if(objList==null)  goto endLabel; 
+				il.Emit(OpCodes.Ldarg_2);
+				il.Emit(OpCodes.Brfalse_S, endLabel);
+
+				//== objList.Add(value);
+				il.Emit(OpCodes.Ldarg_2);
+				il.Emit(OpCodes.Ldarg_1);
+				il.EmitCall(OpCodes.Call, getAddMethod, null);
+
+				il.MarkLabel(endLabel);
+			}
+
 			var fields = Helpers.GetFieldInfos(type);
 
 			foreach (var field in fields)
@@ -61,6 +108,7 @@ namespace NetSerializer
 				else
 					il.Emit(OpCodes.Ldarg_1);
 				il.Emit(OpCodes.Ldfld, field);
+				il.Emit(OpCodes.Ldarg_2);
 
 				GenSerializerCall(ctx, il, field.FieldType);
 			}
@@ -80,17 +128,37 @@ namespace NetSerializer
 			// if value == null, write 0
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldc_I4_0);
+			il.Emit(OpCodes.Ldarg_2);
 			il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(uint)), null);
 			il.Emit(OpCodes.Ret);
 
 			il.MarkLabel(notNullLabel);
 
+			//==============
+			Type objStackType = typeof(ObjectList);
+			MethodInfo getAddMethod = objStackType.GetMethod("Add", BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(object) }, null);
+
+			var endLabel = il.DefineLabel();
+
+			//==if(objList==null)  goto endLabel; 
+			il.Emit(OpCodes.Ldarg_2);
+			il.Emit(OpCodes.Brfalse_S, endLabel);
+
+			//== objList.Add(value);
+			il.Emit(OpCodes.Ldarg_2);
+			il.Emit(OpCodes.Ldarg_1);
+			il.EmitCall(OpCodes.Call, getAddMethod, null);
+
+			il.MarkLabel(endLabel);
+
+			//==============
 			// write array len + 1
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldlen);
 			il.Emit(OpCodes.Ldc_I4_1);
 			il.Emit(OpCodes.Add);
+			il.Emit(OpCodes.Ldarg_2);
 			il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(uint)), null);
 
 			// declare i
@@ -113,6 +181,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldloc_S, idxLocal);
 			il.Emit(OpCodes.Ldelem, elemType);
+			il.Emit(OpCodes.Ldarg_2);
 
 			GenSerializerCall(ctx, il, elemType);
 
@@ -152,41 +221,92 @@ namespace NetSerializer
 			else
 				direct = false;
 
+#if GENERATE_SWITCH
 			var method = direct ? ctx.GetWriterMethodInfo(type) : ctx.SerializerSwitchMethodInfo;
+#else
+			var method = direct ? ctx.GetWriterMethodInfo(type) : typeof(NetSerializer.Serializer).GetMethod("_SerializerSwitch");
+#endif
 
 			il.EmitCall(OpCodes.Call, method, null);
 		}
 
 
+#if GENERATE_SWITCH
 		public static void GenerateSerializerSwitch(CodeGenContext ctx, ILGenerator il, IDictionary<Type, TypeData> map)
 		{
-			// arg0: Stream, arg1: object
+			// arg0: Stream, arg1: object, arg2: objList
 
-			var idLocal = il.DeclareLocal(typeof(ushort));
+			//================			
+			Type objStackType = typeof(ObjectList);
+			Type objRefType = typeof(NetSerializer.ObjectRef);
+			MethodInfo getIndexOfMethod = objStackType.GetMethod("IndexOf", BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(object) }, null);
+
+			var endLabel = il.DefineLabel();
+
+			//==if(objList==null)  goto endLabel; 
+			il.Emit(OpCodes.Ldarg_2);
+			il.Emit(OpCodes.Brfalse_S, endLabel);
+
+			var id = il.DeclareLocal(typeof(int));
+
+			//int id = list.IdentityIndexOf(value);
+			il.Emit(OpCodes.Ldarg_2);
+			il.Emit(OpCodes.Ldarg_1);
+			il.EmitCall(OpCodes.Call, getIndexOfMethod, null);
+			il.Emit(OpCodes.Stloc_S, id);
+
+			//if (id == -1) goto endLabel;
+			il.Emit(OpCodes.Ldloc_S, id);
+			il.Emit(OpCodes.Ldc_I4_M1);
+			il.Emit(OpCodes.Beq, endLabel);
+
+			//== value = new ObjectRef(id);
+			ConstructorInfo obj_ref_const = objRefType.GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(int) }, null);
+			il.Emit(OpCodes.Ldloc_S, id);
+			il.Emit(OpCodes.Newobj, obj_ref_const);
+			il.Emit(OpCodes.Box, typeof(ObjectRef));
+			il.Emit(OpCodes.Starg, 1);
+
+			il.MarkLabel(endLabel);
+			//===============			
+
+			var idLocal_typeID = il.DeclareLocal(typeof(uint));
 
 			// get TypeID from object's Type
-			var getTypeIDMethod = typeof(Serializer).GetMethod("GetTypeID", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(object) }, null);
+			var getTypeIDcaseIDMethod = typeof(Serializer).GetMethod("GetTypeIDcaseID", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(object) }, null);
 			il.Emit(OpCodes.Ldarg_1);
-			il.EmitCall(OpCodes.Call, getTypeIDMethod, null);
-			il.Emit(OpCodes.Stloc_S, idLocal);
+			il.EmitCall(OpCodes.Call, getTypeIDcaseIDMethod, null);
+			il.Emit(OpCodes.Stloc_S, idLocal_typeID);
 
 			// write typeID
 			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldloc_S, idLocal);
+			il.Emit(OpCodes.Ldloc_S, idLocal_typeID);
+			il.Emit(OpCodes.Ldc_I4, 0xFFFF);
+			il.Emit(OpCodes.And);
+			il.Emit(OpCodes.Conv_U2);
+			il.Emit(OpCodes.Ldarg_2);
 			il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(ushort)), null);
 
 			// +1 for 0 (null)
 			var jumpTable = new Label[map.Count + 1];
 			jumpTable[0] = il.DefineLabel();
 			foreach (var kvp in map)
-				jumpTable[kvp.Value.TypeID] = il.DefineLabel();
+				jumpTable[kvp.Value.CaseID] = il.DefineLabel();
 
-			il.Emit(OpCodes.Ldloc_S, idLocal);
+			il.Emit(OpCodes.Ldloc_S, idLocal_typeID);
+			il.Emit(OpCodes.Ldc_I4, 16);
+			il.Emit(OpCodes.Shr_Un);
+			il.Emit(OpCodes.Ldc_I4, 0xFFFF);
+			il.Emit(OpCodes.And);
+			il.Emit(OpCodes.Conv_U2);
+
 			il.Emit(OpCodes.Switch, jumpTable);
 
+			//--			D(il, "eihx");
 			ConstructorInfo exceptionCtor = typeof(Exception).GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new Type[0], null);
 			il.Emit(OpCodes.Newobj, exceptionCtor);
 			il.Emit(OpCodes.Throw);
+
 
 			/* null case */
 			il.MarkLabel(jumpTable[0]);
@@ -198,16 +318,27 @@ namespace NetSerializer
 				var type = kvp.Key;
 				var data = kvp.Value;
 
-				il.MarkLabel(jumpTable[data.TypeID]);
+				il.MarkLabel(jumpTable[data.CaseID]);
 
 				il.Emit(OpCodes.Ldarg_0);
 				il.Emit(OpCodes.Ldarg_1);
 				il.Emit(type.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, type);
+				il.Emit(OpCodes.Ldarg_2);
 
-				il.EmitCall(OpCodes.Call, data.WriterMethodInfo, null);
+				if (data.WriterMethodInfo.IsGenericMethodDefinition)
+				{
+					Debug.Assert(type.IsGenericType);
+					var genArgs = type.GetGenericArguments();
+					il.EmitCall(OpCodes.Call, data.WriterMethodInfo.MakeGenericMethod(genArgs), null);
+				}
+				else
+				{
+					il.EmitCall(OpCodes.Call, data.WriterMethodInfo, null);
+				}
 
 				il.Emit(OpCodes.Ret);
 			}
 		}
+#endif
 	}
 }

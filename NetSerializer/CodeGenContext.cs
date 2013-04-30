@@ -1,4 +1,9 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,23 +14,36 @@ namespace NetSerializer
 {
 	sealed class TypeData
 	{
+#if GENERATE_SWITCH
+		public TypeData(ushort typeID, ushort caseID)
+		{
+			this.TypeID = typeID;
+			this.CaseID = caseID;
+		}
+		public readonly ushort CaseID;
+#else
 		public TypeData(ushort typeID)
 		{
 			this.TypeID = typeID;
 		}
-
+#endif
 		public readonly ushort TypeID;
 		public bool IsDynamic;
 		public MethodInfo WriterMethodInfo;
 		public ILGenerator WriterILGen;
 		public MethodInfo ReaderMethodInfo;
 		public ILGenerator ReaderILGen;
+#if !GENERATE_SWITCH
+		public Serializer.SerializationInvokeHandler serializer;
+		public Serializer.DeserializationInvokeHandler deserializer;
+#endif
 	}
 
 	sealed class CodeGenContext
 	{
 		readonly Dictionary<Type, TypeData> m_typeMap;
 
+#if GENERATE_SWITCH
 		public CodeGenContext(Dictionary<Type, TypeData> typeMap, MethodInfo serializerSwitch, MethodInfo deserializerSwitch)
 		{
 			m_typeMap = typeMap;
@@ -35,6 +53,12 @@ namespace NetSerializer
 
 		public MethodInfo SerializerSwitchMethodInfo { get; private set; }
 		public MethodInfo DeserializerSwitchMethodInfo { get; private set; }
+#else
+		public CodeGenContext(Dictionary<Type, TypeData> typeMap)
+		{
+			m_typeMap = typeMap;
+		}
+#endif
 
 		public MethodInfo GetWriterMethodInfo(Type type)
 		{
