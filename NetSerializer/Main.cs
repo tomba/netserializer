@@ -73,7 +73,7 @@ namespace NetSerializer
 
 		static Type[] CollectTypes(Type[] rootTypes)
 		{
-			var primitives = new Type[] {
+			var primitives = new [] {
 				typeof(bool),
 				typeof(byte), typeof(sbyte),
 				typeof(char),
@@ -82,6 +82,8 @@ namespace NetSerializer
 				typeof(ulong), typeof(long),
 				typeof(float), typeof(double),
 				typeof(string),
+
+                typeof (decimal), typeof(Uri), typeof (DateTime), typeof (TimeSpan), typeof (Guid), typeof(DateTimeOffset), 
 			};
 
 			var typeSet = new HashSet<Type>(primitives);
