@@ -103,6 +103,17 @@ namespace NetSerializer
 			value = b != 0;
 		}
 
+        public static void WritePrimitive(Stream stream, bool? value)
+        {
+            stream.WriteByte(value == null ? (byte) 0 : value.Value ? (byte) 2 : (byte) 1);
+        }
+
+		public static void ReadPrimitive(Stream stream, out bool? value)
+		{
+			var b = stream.ReadByte();
+		    value = b == 0 ? (bool?) null : b == 2;
+		}        
+
 		public static void WritePrimitive(Stream stream, byte value)
 		{
 			stream.WriteByte(value);
@@ -112,6 +123,29 @@ namespace NetSerializer
 		{
 			value = (byte)stream.ReadByte();
 		}
+
+        public static void WritePrimitive(Stream stream, byte? value)
+		{
+            if (value == null)
+            {
+                WritePrimitive(stream, (byte)0);
+                return;
+            }
+
+            WritePrimitive(stream, (byte)1);
+            WritePrimitive(stream, value.Value);            
+		}
+
+        public static void ReadPrimitive(Stream stream, out byte? value)
+        {
+            value = null;
+            if (stream.ReadByte() == 0)
+                return;
+
+            byte rValue;
+            ReadPrimitive(stream, out rValue);
+            value = rValue;
+        }
 
 		public static void WritePrimitive(Stream stream, sbyte value)
 		{
@@ -123,6 +157,29 @@ namespace NetSerializer
 			value = (sbyte)stream.ReadByte();
 		}
 
+        public static void WritePrimitive(Stream stream, sbyte? value)
+        {
+            if (value == null)
+            {
+                WritePrimitive(stream, (byte)0);
+                return;
+            }
+
+            WritePrimitive(stream, (byte)1);
+            WritePrimitive(stream, value.Value);            
+        }
+
+        public static void ReadPrimitive(Stream stream, out sbyte? value)
+        {
+            value = null;
+            if (stream.ReadByte()==0)
+                return;
+
+            sbyte rValue;
+            ReadPrimitive(stream, out rValue);
+            value = rValue;
+        }
+
 		public static void WritePrimitive(Stream stream, char value)
 		{
 			WriteVarint32(stream, value);
@@ -132,6 +189,29 @@ namespace NetSerializer
 		{
 			value = (char)ReadVarint32(stream);
 		}
+
+        public static void WritePrimitive(Stream stream, char? value)
+        {
+            if (value == null)
+            {
+                WritePrimitive(stream, (byte)0);
+                return;
+            }
+
+            WritePrimitive(stream, (byte)1);
+            WritePrimitive(stream, value.Value);
+        }
+
+        public static void ReadPrimitive(Stream stream, out char? value)
+        {
+            value = null;
+            if (stream.ReadByte() == 0)
+                return;
+
+            char rValue;
+            ReadPrimitive(stream, out rValue);
+            value = rValue;
+        }
 
 		public static void WritePrimitive(Stream stream, ushort value)
 		{
@@ -143,6 +223,29 @@ namespace NetSerializer
 			value = (ushort)ReadVarint32(stream);
 		}
 
+        public static void WritePrimitive(Stream stream, ushort? value)
+        {
+            if (value == null)
+            {
+                WritePrimitive(stream, (byte)0);
+                return;
+            }
+
+            WritePrimitive(stream, (byte)1);
+            WritePrimitive(stream, value.Value);
+        }
+
+        public static void ReadPrimitive(Stream stream, out ushort? value)
+        {
+            value = null;
+            if (stream.ReadByte() == 0)
+                return;
+
+            ushort rValue;
+            ReadPrimitive(stream, out rValue);
+            value = rValue;
+        }
+
 		public static void WritePrimitive(Stream stream, short value)
 		{
 			WriteVarint32(stream, EncodeZigZag32(value));
@@ -152,6 +255,29 @@ namespace NetSerializer
 		{
 			value = (short)DecodeZigZag32(ReadVarint32(stream));
 		}
+
+        public static void WritePrimitive(Stream stream, short? value)
+        {
+            if (value == null)
+            {
+                WritePrimitive(stream, (byte)0);
+                return;
+            }
+
+            WritePrimitive(stream, (byte)1);
+            WritePrimitive(stream, value.Value);
+        }
+
+        public static void ReadPrimitive(Stream stream, out short? value)
+        {
+            value = null;
+            if (stream.ReadByte() == 0)
+                return;
+
+            short rValue;
+            ReadPrimitive(stream, out rValue);
+            value = rValue;
+        }
 
 		public static void WritePrimitive(Stream stream, uint value)
 		{
@@ -163,6 +289,29 @@ namespace NetSerializer
 			value = ReadVarint32(stream);
 		}
 
+        public static void WritePrimitive(Stream stream, uint? value)
+        {
+            if (value == null)
+            {
+                WritePrimitive(stream, (byte)0);
+                return;
+            }
+
+            WritePrimitive(stream, (byte)1);
+            WritePrimitive(stream, value.Value);
+        }
+
+        public static void ReadPrimitive(Stream stream, out uint? value)
+        {
+            value = null;
+            if (stream.ReadByte() == 0)
+                return;
+
+            uint rValue;
+            ReadPrimitive(stream, out rValue);
+            value = rValue;
+        }
+
 		public static void WritePrimitive(Stream stream, int value)
 		{
 			WriteVarint32(stream, EncodeZigZag32(value));
@@ -172,6 +321,29 @@ namespace NetSerializer
 		{
 			value = DecodeZigZag32(ReadVarint32(stream));
 		}
+
+        public static void WritePrimitive(Stream stream, int? value)
+        {
+            if (value == null)
+            {
+                WritePrimitive(stream, (byte)0);
+                return;
+            }
+
+            WritePrimitive(stream, (byte)1);
+            WritePrimitive(stream, value.Value);
+        }
+
+        public static void ReadPrimitive(Stream stream, out int? value)
+        {
+            value = null;
+            if (stream.ReadByte() == 0)
+                return;
+
+            int rValue;
+            ReadPrimitive(stream, out rValue);
+            value = rValue;
+        }
 
 		public static void WritePrimitive(Stream stream, ulong value)
 		{
@@ -183,6 +355,29 @@ namespace NetSerializer
 			value = ReadVarint64(stream);
 		}
 
+        public static void WritePrimitive(Stream stream, ulong? value)
+        {
+            if (value == null)
+            {
+                WritePrimitive(stream, (byte)0);
+                return;
+            }
+
+            WritePrimitive(stream, (byte)1);
+            WritePrimitive(stream, value.Value);
+        }
+
+        public static void ReadPrimitive(Stream stream, out ulong? value)
+        {
+            value = null;
+            if (stream.ReadByte() == 0)
+                return;
+
+            ulong rValue;
+            ReadPrimitive(stream, out rValue);
+            value = rValue;
+        }
+
 		public static void WritePrimitive(Stream stream, long value)
 		{
 			WriteVarint64(stream, EncodeZigZag64(value));
@@ -192,6 +387,74 @@ namespace NetSerializer
 		{
 			value = DecodeZigZag64(ReadVarint64(stream));
 		}
+
+        public static void WritePrimitive(Stream stream, long? value)
+        {
+            if (value == null)
+            {
+                WritePrimitive(stream, (byte)0);
+                return;
+            }
+
+            WritePrimitive(stream, (byte)1);
+            WritePrimitive(stream, value.Value);
+        }
+
+        public static void ReadPrimitive(Stream stream, out long? value)
+        {
+            value = null;
+            if (stream.ReadByte() == 0)
+                return;
+
+            long rValue;
+            ReadPrimitive(stream, out rValue);
+            value = rValue;
+        }
+
+        public static void WritePrimitive(Stream stream, decimal value)
+        {
+            var bt = Decimal.GetBits(value);
+            var ba1 = BitConverter.GetBytes(bt[0]);
+            var ba2 = BitConverter.GetBytes(bt[1]);
+            var ba3 = BitConverter.GetBytes(bt[2]);
+            var ba4 = BitConverter.GetBytes(bt[3]);
+            WritePrimitive(stream, new[] { ba1[0], ba1[1], ba1[2], ba1[3], ba2[0], ba2[1], ba2[2], ba2[3], ba3[0], ba3[1], ba3[2], ba3[3], ba4[0], ba4[1], ba4[2], ba4[3] });            
+        }
+
+        public static void ReadPrimitive(Stream stream, out decimal value)
+        {
+            byte[] bt;
+            ReadPrimitive(stream, out bt);
+            var i1 = BitConverter.ToInt32(bt, 0);
+            var i2 = BitConverter.ToInt32(bt, 4);
+            var i3 = BitConverter.ToInt32(bt, 8);
+            var i4 = BitConverter.ToInt32(bt, 12);
+
+            value = new decimal(new int[] {i1, i2, i3, i4});
+        }
+
+        public static void WritePrimitive(Stream stream, decimal? value)
+        {
+            if (value == null)
+            {
+                WritePrimitive(stream, (byte)0);
+                return;
+            }
+
+            WritePrimitive(stream, (byte)1);
+            WritePrimitive(stream, value.Value);
+        }
+
+        public static void ReadPrimitive(Stream stream, out decimal? value)
+        {
+            value = null;
+            if (stream.ReadByte() == 0)
+                return;
+
+            decimal rValue;
+            ReadPrimitive(stream, out rValue);
+            value = rValue;
+        }
 
 #if !NO_UNSAFE
 		public static unsafe void WritePrimitive(Stream stream, float value)
@@ -243,6 +506,52 @@ namespace NetSerializer
 		}
 #endif
 
+        public static void WritePrimitive(Stream stream, float? value)
+        {
+            if (value == null)
+            {
+                WritePrimitive(stream, (byte)0);
+                return;
+            }
+
+            WritePrimitive(stream, (byte)1);
+            WritePrimitive(stream, value.Value);
+        }
+
+        public static void ReadPrimitive(Stream stream, out float? value)
+        {
+            value = null;
+            if (stream.ReadByte() == 0)
+                return;
+
+            float rValue;
+            ReadPrimitive(stream, out rValue);
+            value = rValue;
+        }
+
+        public static void WritePrimitive(Stream stream, double? value)
+        {
+            if (value == null)
+            {
+                WritePrimitive(stream, (byte)0);
+                return;
+            }
+
+            WritePrimitive(stream, (byte)1);
+            WritePrimitive(stream, value.Value);
+        }
+
+        public static void ReadPrimitive(Stream stream, out double? value)
+        {
+            value = null;
+            if (stream.ReadByte() == 0)
+                return;
+
+            double rValue;
+            ReadPrimitive(stream, out rValue);
+            value = rValue;
+        }
+
 		public static void WritePrimitive(Stream stream, DateTime value)
 		{
 			long v = value.ToBinary();
@@ -256,6 +565,155 @@ namespace NetSerializer
 			value = DateTime.FromBinary(v);
 		}
 
+        public static void WritePrimitive(Stream stream, DateTime? value)
+        {
+            if (value == null)
+            {
+                WritePrimitive(stream, (byte)0);
+                return;
+            }
+
+            WritePrimitive(stream, (byte)1);
+            WritePrimitive(stream, value.Value);
+        }
+
+        public static void ReadPrimitive(Stream stream, out DateTime? value)
+        {
+            value = null;
+            if (stream.ReadByte() == 0)
+                return;
+
+            DateTime rValue;
+            ReadPrimitive(stream, out rValue);
+            value = rValue;
+        }
+
+        public static void WritePrimitive(Stream stream, TimeSpan value)
+        {
+            long v = value.Ticks;
+            WritePrimitive(stream, v);
+        }
+
+        public static void ReadPrimitive(Stream stream, out TimeSpan value)
+        {
+            long v;
+            ReadPrimitive(stream, out v);
+            value = new TimeSpan(v);
+        }
+
+        public static void WritePrimitive(Stream stream, TimeSpan? value)
+        {
+            if (value == null)
+            {
+                WritePrimitive(stream, (byte)0);
+                return;
+            }
+
+            WritePrimitive(stream, (byte)1);
+            WritePrimitive(stream, value.Value);
+        }
+
+        public static void ReadPrimitive(Stream stream, out TimeSpan? value)
+        {
+            value = null;
+            if (stream.ReadByte() == 0)
+                return;
+
+            TimeSpan rValue;
+            ReadPrimitive(stream, out rValue);
+            value = rValue;
+        }
+
+        public static void WritePrimitive(Stream stream, DateTimeOffset value)
+        {
+            var v1 = value.DateTime;
+            var v2 = value.Offset;
+            WritePrimitive(stream, v1);
+            WritePrimitive(stream, v2);
+        }
+
+        public static void ReadPrimitive(Stream stream, out DateTimeOffset value)
+        {
+            DateTime v1;
+            TimeSpan v2;
+            ReadPrimitive(stream, out v1);
+            ReadPrimitive(stream, out v2);
+            value = new DateTimeOffset(v1, v2);
+        }
+
+        public static void WritePrimitive(Stream stream, DateTimeOffset? value)
+        {
+            if (value == null)
+            {
+                WritePrimitive(stream, (byte)0);
+                return;
+            }
+
+            WritePrimitive(stream, (byte)1);
+            WritePrimitive(stream, value.Value);
+        }
+
+        public static void ReadPrimitive(Stream stream, out DateTimeOffset? value)
+        {
+            value = null;
+            if (stream.ReadByte() == 0)
+                return;
+
+            DateTimeOffset rValue;
+            ReadPrimitive(stream, out rValue);
+            value = rValue;
+        }
+
+
+        public static void WritePrimitive(Stream stream, Guid value)
+        {
+            var v = value.ToByteArray();
+            WritePrimitive(stream, v);
+        }
+
+        public static void ReadPrimitive(Stream stream, out Guid value)
+        {
+            byte[] v;
+            ReadPrimitive(stream, out v);
+            value = new Guid(v);
+        }
+
+        public static void WritePrimitive(Stream stream, Guid? value)
+        {
+            if (value == null)
+            {
+                WritePrimitive(stream, (byte)0);
+                return;
+            }
+
+            WritePrimitive(stream, (byte)1);
+            WritePrimitive(stream, value.Value);
+        }
+
+        public static void ReadPrimitive(Stream stream, out Guid? value)
+        {
+            value = null;
+            if (stream.ReadByte() == 0)
+                return;
+
+            Guid rValue;
+            ReadPrimitive(stream, out rValue);
+            value = rValue;
+        }
+
+        public static void WritePrimitive(Stream stream, Uri value)
+        {
+            var v = value.OriginalString;
+            WritePrimitive(stream, v);
+        }
+
+        public static void ReadPrimitive(Stream stream, out Uri value)
+        {
+            string v;
+            ReadPrimitive(stream, out v);
+            value = new Uri(v, UriKind.RelativeOrAbsolute);
+        }
+        
 #if NO_UNSAFE
 		public static void WritePrimitive(Stream stream, string value)
 		{
@@ -504,7 +962,7 @@ namespace NetSerializer
 			}
 		}
 
-		public static void WritePrimitive<TKey, TValue>(Stream stream, Dictionary<TKey, TValue> value)
+        public static void WritePrimitive<TKey, TValue>(Stream stream, Dictionary<TKey, TValue> value)
 		{
 			var kvpArray = new KeyValuePair<TKey, TValue>[value.Count];
 
