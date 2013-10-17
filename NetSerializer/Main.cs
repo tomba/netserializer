@@ -133,11 +133,16 @@ namespace NetSerializer
 			}
 			else
 			{
-				var fields = Helpers.GetFieldInfos(type);
-
-				foreach (var field in fields)
+#if SERIALIZE_PROPERTIES
+                var fields = Helpers.GetPropertyInfos(type);
+                foreach (var field in fields)
+                    CollectTypes(field.PropertyType, typeSet);
+#else
+                var fields = Helpers.GetFieldInfos(type);
+                foreach (var field in fields)
 					CollectTypes(field.FieldType, typeSet);
-			}
+#endif
+            }
 		}
 
 		static Dictionary<Type, TypeData> GenerateTypeData(Type[] types)

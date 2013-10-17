@@ -128,5 +128,21 @@ namespace NetSerializer
 				return baseFields.Concat(fields);
 			}
 		}
+
+        public static IEnumerable<PropertyInfo> GetPropertyInfos(Type type)
+        {
+            var fields = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                .OrderBy(f => f.Name, StringComparer.Ordinal);
+
+            if (type.BaseType == null)
+            {
+                return fields;
+            }
+            else
+            {
+                var baseFields = GetPropertyInfos(type.BaseType);
+                return baseFields.Concat(fields);
+            }
+        }
 	}
 }

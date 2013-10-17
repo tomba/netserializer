@@ -96,7 +96,9 @@ namespace SilverlightTest
             var s = new MemoryStream();
 
             NetSerializer.Serializer.Serialize(s, t);
+            s.Flush();
 
+            s.Position = 0;
             var ret = (Test) NetSerializer.Serializer.Deserialize(s);
 
             output.Items.Add(".a == .a : " + (t.a == ret.a).ToString());

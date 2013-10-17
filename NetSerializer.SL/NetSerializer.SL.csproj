@@ -29,7 +29,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>Bin\Debug</OutputPath>
-    <DefineConstants>TRACE;DEBUG;SILVERLIGHT NO_UNSAFE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;SILVERLIGHT NO_UNSAFE SERIALIZE_PROPERTIES</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>

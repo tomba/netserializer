@@ -54,6 +54,28 @@ namespace NetSerializer
 
 		static void GenSerializerBody(CodeGenContext ctx, Type type, ILGenerator il)
 		{
+#if SERIALIZE_PROPERTIES
+            var fields = Helpers.GetPropertyInfos(type);
+
+            foreach (var field in fields)
+            {
+                //Maybe this helps
+                //http://www.codeproject.com/Articles/9927/Fast-Dynamic-Property-Access-with-C
+
+                var mth = type.GetMethod("get_" + field.Name);
+
+                // Note: the user defined value type is not passed as reference. could cause perf problems with big structs
+
+                il.Emit(OpCodes.Ldarg_0);
+                if (type.IsValueType)
+                    il.Emit(OpCodes.Ldarga_S, 1);
+                else
+                    il.Emit(OpCodes.Ldarg_1);
+                il.Emit(OpCodes.Call, mth);
+
+                GenSerializerCall(ctx, il, field.PropertyType);
+            }
+#else
 			var fields = Helpers.GetFieldInfos(type);
 
 			foreach (var field in fields)
@@ -69,6 +91,7 @@ namespace NetSerializer
 
 				GenSerializerCall(ctx, il, field.FieldType);
 			}
+#endif
 
 			il.Emit(OpCodes.Ret);
 		}
