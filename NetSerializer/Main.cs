@@ -312,7 +312,11 @@ namespace NetSerializer
 #endif
 
 		/* called from the dynamically generated code */
+#if SILVERLIGHT
+        public static ushort GetTypeID(object ob)
+#else
 		static ushort GetTypeID(object ob)
+#endif
 		{
 			ushort id;
 

@@ -9,6 +9,7 @@
     <Grid x:Name="LayoutRoot" Background="White">
         <Button Content="Start" HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
         <ListBox x:Name="output" HorizontalAlignment="Left" Height="280" Margin="10,10,0,0" VerticalAlignment="Top" Width="300"/>
+        <Button Content="Test2" HorizontalAlignment="Right" Margin="0,37,10,0" VerticalAlignment="Top" Width="75" Click="Button_Click_1"/>
 
     </Grid>
 </UserControl>

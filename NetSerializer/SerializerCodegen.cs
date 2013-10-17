@@ -170,7 +170,11 @@ namespace NetSerializer
 			var idLocal = il.DeclareLocal(typeof(ushort));
 
 			// get TypeID from object's Type
-			var getTypeIDMethod = typeof(Serializer).GetMethod("GetTypeID", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(object) }, null);
+#if SILVERLIGHT
+			var getTypeIDMethod = typeof(Serializer).GetMethod("GetTypeID", BindingFlags.Public | BindingFlags.Static, null, new Type[] { typeof(object) }, null);
+#else
+            var getTypeIDMethod = typeof(Serializer).GetMethod("GetTypeID", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(object) }, null);
+#endif
 			il.Emit(OpCodes.Ldarg_1);
 			il.EmitCall(OpCodes.Call, getTypeIDMethod, null);
 			il.Emit(OpCodes.Stloc_S, idLocal);
