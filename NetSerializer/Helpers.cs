@@ -109,11 +109,16 @@ namespace NetSerializer
 			Debug.Assert(type.IsSerializable);
 #endif
 
-			var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+#if SILVERLIGHT || ONLY_PUBLIC_FIELDS
+			var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
 				.Where(fi => (fi.Attributes & FieldAttributes.NotSerialized) == 0)
 				.OrderBy(f => f.Name, StringComparer.Ordinal);
-
-			if (type.BaseType == null)
+#else
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+				.Where(fi => (fi.Attributes & FieldAttributes.NotSerialized) == 0)
+				.OrderBy(f => f.Name, StringComparer.Ordinal);
+#endif
+            if (type.BaseType == null)
 			{
 				return fields;
 			}
