@@ -132,6 +132,7 @@ namespace NetSerializer
         public static IEnumerable<PropertyInfo> GetPropertyInfos(Type type)
         {
             var fields = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                .Where(x => x.CanRead && x.CanWrite)
                 .OrderBy(f => f.Name, StringComparer.Ordinal);
 
             if (type.BaseType == null)

@@ -59,9 +59,6 @@ namespace NetSerializer
 
             foreach (var field in fields)
             {
-                //Maybe this helps
-                //http://www.codeproject.com/Articles/9927/Fast-Dynamic-Property-Access-with-C
-
                 var mth = type.GetMethod("get_" + field.Name);
 
                 // Note: the user defined value type is not passed as reference. could cause perf problems with big structs

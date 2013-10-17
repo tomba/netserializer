@@ -73,6 +73,22 @@ namespace NetSerializer
 				il.Emit(OpCodes.Stind_Ref);
 			}
 
+#if SERIALIZE_PROPERTIES
+            var fields = Helpers.GetPropertyInfos(type);
+
+            foreach (var field in fields)
+            {
+                var mth = type.GetMethod("set_" + field.Name);
+                
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Ldarg_1);
+                if (type.IsClass)
+                    il.Emit(OpCodes.Ldind_Ref);
+                il.Emit(OpCodes.Call, mth);
+
+                GenDeserializerCall(ctx, il, field.PropertyType);
+            }
+#else
 			var fields = Helpers.GetFieldInfos(type);
 
 			foreach (var field in fields)
@@ -85,6 +101,7 @@ namespace NetSerializer
 
 				GenDeserializerCall(ctx, il, field.FieldType);
 			}
+#endif
 
 #if !SILVERLIGHT
 			if (typeof(IDeserializationCallback).IsAssignableFrom(type))
