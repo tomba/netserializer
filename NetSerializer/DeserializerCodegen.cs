@@ -84,8 +84,11 @@ namespace NetSerializer
                 il.Emit(OpCodes.Ldarg_1);
                 if (type.IsClass)
                     il.Emit(OpCodes.Ldind_Ref);
+                
+                //todo: I think this call needs to be after the serializer call and write the vaue back...
+                //look how this works...
                 il.Emit(OpCodes.Call, mth);
-
+                
                 GenDeserializerCall(ctx, il, field.PropertyType);
             }
 #else
