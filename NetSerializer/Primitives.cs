@@ -52,7 +52,11 @@ namespace NetSerializer
 					return (uint)result;
 			}
 
+#if SILVERLIGHT
+            throw new FormatException();
+#else
 			throw new InvalidDataException();
+#endif
 		}
 
 		static void WriteVarint32(Stream stream, uint value)
@@ -80,7 +84,11 @@ namespace NetSerializer
 					return (ulong)result;
 			}
 
+#if SILVERLIGHT
+            throw new FormatException();
+#else
 			throw new InvalidDataException();
+#endif
 		}
 
 		static void WriteVarint64(Stream stream, ulong value)
@@ -310,8 +318,12 @@ namespace NetSerializer
 				l += r;
 			}
 
-			value = encoding.GetString(buf);
-		}
+#if SILVERLIGHT
+			value = encoding.GetString(buf, 0, buf.Length);
+#else
+            value = encoding.GetString(buf);
+#endif
+        }
 #else
 		sealed class StringHelper
 		{

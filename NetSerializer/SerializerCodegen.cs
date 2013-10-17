@@ -17,9 +17,14 @@ namespace NetSerializer
 	{
 		public static DynamicMethod GenerateDynamicSerializerStub(Type type)
 		{
+#if SILVERLIGHT
+            var dm = new DynamicMethod("Serialize", null,
+                new Type[] { typeof(Stream), type });
+#else
 			var dm = new DynamicMethod("Serialize", null,
 				new Type[] { typeof(Stream), type },
 				typeof(Serializer), true);
+#endif
 
 			dm.DefineParameter(1, ParameterAttributes.None, "stream");
 			dm.DefineParameter(2, ParameterAttributes.None, "value");

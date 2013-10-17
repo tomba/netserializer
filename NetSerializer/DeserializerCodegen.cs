@@ -18,9 +18,14 @@ namespace NetSerializer
 	{
 		public static DynamicMethod GenerateDynamicDeserializerStub(Type type)
 		{
+#if SILVERLIGHT
 			var dm = new DynamicMethod("Deserialize", null,
+				new Type[] { typeof(Stream), type.MakeByRefType() });
+#else
+   			var dm = new DynamicMethod("Deserialize", null,
 				new Type[] { typeof(Stream), type.MakeByRefType() },
 				typeof(Serializer), true);
+#endif
 			dm.DefineParameter(1, ParameterAttributes.None, "stream");
 			dm.DefineParameter(2, ParameterAttributes.Out, "value");
 
@@ -53,9 +58,13 @@ namespace NetSerializer
 			{
 				// instantiate empty class
 				il.Emit(OpCodes.Ldarg_1);
-
-				var gtfh = typeof(Type).GetMethod("GetTypeFromHandle", BindingFlags.Public | BindingFlags.Static);
+                
+				var gtfh = typeof(Type).GetMethod("GetTypeFromHandle", BindingFlags.Public | BindingFlags.Static);               
+#if SILVERLIGHT
+                var guo = typeof(Activator).GetMethod("CreateInstance", BindingFlags.Public | BindingFlags.Static);
+#else
 				var guo = typeof(System.Runtime.Serialization.FormatterServices).GetMethod("GetUninitializedObject", BindingFlags.Public | BindingFlags.Static);
+#endif
 				il.Emit(OpCodes.Ldtoken, type);
 				il.Emit(OpCodes.Call, gtfh);
 				il.Emit(OpCodes.Call, guo);
@@ -77,6 +86,7 @@ namespace NetSerializer
 				GenDeserializerCall(ctx, il, field.FieldType);
 			}
 
+#if !SILVERLIGHT
 			if (typeof(IDeserializationCallback).IsAssignableFrom(type))
 			{
 				var miOnDeserialization = typeof(IDeserializationCallback).GetMethod("OnDeserialization",
@@ -88,6 +98,7 @@ namespace NetSerializer
 				il.Emit(OpCodes.Constrained, type);
 				il.Emit(OpCodes.Callvirt, miOnDeserialization);
 			}
+#endif
 
 			il.Emit(OpCodes.Ret);
 		}

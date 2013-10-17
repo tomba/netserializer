@@ -105,8 +105,10 @@ namespace NetSerializer
 			if (type.IsInterface)
 				return;
 
+#if !SILVERLIGHT
 			if (!type.IsSerializable)
 				throw new NotSupportedException(String.Format("Type {0} is not marked as Serializable", type.FullName));
+#endif
 
 			if (type.ContainsGenericParameters)
 				throw new NotSupportedException(String.Format("Type {0} contains generic parameters", type.FullName));
@@ -174,8 +176,10 @@ namespace NetSerializer
 				}
 				else
 				{
+#if !SILVERLIGHT
 					if (typeof(System.Runtime.Serialization.ISerializable).IsAssignableFrom(type))
 						throw new InvalidOperationException(String.Format("Cannot serialize {0}: ISerializable not supported", type.FullName));
+#endif
 
 					td.IsDynamic = true;
 				}
@@ -207,17 +211,27 @@ namespace NetSerializer
 				map[type].ReaderILGen = dm.GetILGenerator();
 			}
 
+#if SILVERLIGHT
 			var serializerSwitchMethod = new DynamicMethod("SerializerSwitch", null,
+				new Type[] { typeof(Stream), typeof(object) });
+#else
+            var serializerSwitchMethod = new DynamicMethod("SerializerSwitch", null,
 				new Type[] { typeof(Stream), typeof(object) },
 				typeof(Serializer), true);
-			serializerSwitchMethod.DefineParameter(1, ParameterAttributes.None, "stream");
+#endif
+            serializerSwitchMethod.DefineParameter(1, ParameterAttributes.None, "stream");
 			serializerSwitchMethod.DefineParameter(2, ParameterAttributes.None, "value");
 			var serializerSwitchMethodInfo = serializerSwitchMethod;
 
+#if SILVERLIGHT
 			var deserializerSwitchMethod = new DynamicMethod("DeserializerSwitch", null,
+				new Type[] { typeof(Stream), typeof(object).MakeByRefType() });
+#else
+            var deserializerSwitchMethod = new DynamicMethod("DeserializerSwitch", null,
 				new Type[] { typeof(Stream), typeof(object).MakeByRefType() },
 				typeof(Serializer), true);
-			deserializerSwitchMethod.DefineParameter(1, ParameterAttributes.None, "stream");
+#endif
+            deserializerSwitchMethod.DefineParameter(1, ParameterAttributes.None, "stream");
 			deserializerSwitchMethod.DefineParameter(2, ParameterAttributes.Out, "value");
 			var deserializerSwitchMethodInfo = deserializerSwitchMethod;
 
