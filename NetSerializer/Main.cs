@@ -105,12 +105,12 @@ namespace NetSerializer
 			if (type.IsInterface)
 				return;
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !SERIALIZE_PROPERTIES
 			if (!type.IsSerializable)
 				throw new NotSupportedException(String.Format("Type {0} is not marked as Serializable", type.FullName));
 #endif
 
-			if (type.ContainsGenericParameters)
+            if (type.ContainsGenericParameters)
 				throw new NotSupportedException(String.Format("Type {0} contains generic parameters", type.FullName));
 
 			typeSet.Add(type);

@@ -74,22 +74,39 @@ namespace NetSerializer
 			}
 
 #if SERIALIZE_PROPERTIES
-            var fields = Helpers.GetPropertyInfos(type);
+            var properties = Helpers.GetPropertyInfos(type);
 
-            foreach (var field in fields)
+            foreach (var property in properties)
             {
-                var mth = type.GetMethod("set_" + field.Name);
-                
+                var mth = type.GetMethod("set_" + property.Name);
+                var locVar = il.DeclareLocal(property.PropertyType);
+
                 il.Emit(OpCodes.Ldarg_0);
+                
+                if (locVar.LocalIndex > 255)
+                    il.Emit(OpCodes.Ldloca, locVar);
+                else
+                    il.Emit(OpCodes.Ldloca_S, locVar);
+                GenDeserializerCall(ctx, il, property.PropertyType);
+
                 il.Emit(OpCodes.Ldarg_1);
                 if (type.IsClass)
                     il.Emit(OpCodes.Ldind_Ref);
+
+                if (locVar.LocalIndex == 0)
+                    il.Emit(OpCodes.Ldloc_0);
+                else if (locVar.LocalIndex == 1)
+                    il.Emit(OpCodes.Ldloc_1);
+                else if (locVar.LocalIndex == 2)
+                    il.Emit(OpCodes.Ldloc_2);
+                else if (locVar.LocalIndex == 3)
+                    il.Emit(OpCodes.Ldloc_3);
+                else if (locVar.LocalIndex <= 255)
+                    il.Emit(OpCodes.Ldloc_S, locVar);
+                else
+                    il.Emit(OpCodes.Ldloc, locVar);
                 
-                //todo: I think this call needs to be after the serializer call and write the vaue back...
-                //look how this works...
-                il.Emit(OpCodes.Call, mth);
-                
-                GenDeserializerCall(ctx, il, field.PropertyType);
+                il.Emit(OpCodes.Callvirt, mth);
             }
 #else
 			var fields = Helpers.GetFieldInfos(type);
@@ -220,6 +237,7 @@ namespace NetSerializer
 				direct = true;
 			else
 				direct = false;
+            
 
 			var method = direct ? ctx.GetReaderMethodInfo(type) : ctx.DeserializerSwitchMethodInfo;
 
