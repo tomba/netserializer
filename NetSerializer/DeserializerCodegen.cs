@@ -76,18 +76,40 @@ namespace NetSerializer
 #if SERIALIZE_PROPERTIES
             var properties = Helpers.GetPropertyInfos(type);
 
+            //Ldarg 0 = Ziel Objekt ? , Ldarg_1 = Stream ? , Ldarg_2
+            var rdBt = typeof(Stream).GetMethod("ReadByte", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
+		    
             foreach (var property in properties)
             {
-                var mth = type.GetMethod("set_" + property.Name);
-                var locVar = il.DeclareLocal(property.PropertyType);
+                var mth = property.GetSetMethod();
+                
+                var prpTp = property.PropertyType;
 
+                Label? endLbl = null;
+                
+                if (property.PropertyType.IsGenericType &&
+                    property.PropertyType.GetGenericTypeDefinition() == typeof (Nullable<>))
+                {
+                    prpTp = property.PropertyType.GetGenericArguments()[0];
+
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Callvirt, rdBt);
+
+                    il.Emit(OpCodes.Ldc_I4_0);
+                
+                    endLbl = il.DefineLabel();
+                    il.Emit(OpCodes.Beq_S, endLbl.Value);                    
+                }
+
+                var locVar = il.DeclareLocal(prpTp);
+                
                 il.Emit(OpCodes.Ldarg_0);
                 
                 if (locVar.LocalIndex > 255)
                     il.Emit(OpCodes.Ldloca, locVar);
                 else
                     il.Emit(OpCodes.Ldloca_S, locVar);
-                GenDeserializerCall(ctx, il, property.PropertyType);
+                GenDeserializerCall(ctx, il, prpTp);
 
                 il.Emit(OpCodes.Ldarg_1);
                 if (type.IsClass)
@@ -105,8 +127,20 @@ namespace NetSerializer
                     il.Emit(OpCodes.Ldloc_S, locVar);
                 else
                     il.Emit(OpCodes.Ldloc, locVar);
-                
+
+                if (property.PropertyType.IsGenericType &&
+                    property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                {
+                    ConstructorInfo ctor = property.PropertyType.GetConstructor(
+                        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null,
+                        new[] { prpTp }, null);
+                    il.Emit(OpCodes.Newobj, ctor);
+                }
+
                 il.Emit(OpCodes.Callvirt, mth);
+
+                if (endLbl != null)
+                    il.MarkLabel(endLbl.Value);
             }
 #else
 			var fields = Helpers.GetFieldInfos(type);
@@ -233,6 +267,8 @@ namespace NetSerializer
 
 			if (type.IsValueType || type.IsArray)
 				direct = true;
+            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof (Nullable<>))
+                direct = true;
 			else if (type.IsSealed && ctx.IsDynamic(type) == false)
 				direct = true;
 			else

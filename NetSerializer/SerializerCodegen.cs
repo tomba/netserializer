@@ -55,22 +55,63 @@ namespace NetSerializer
 		static void GenSerializerBody(CodeGenContext ctx, Type type, ILGenerator il)
 		{
 #if SERIALIZE_PROPERTIES
-            var fields = Helpers.GetPropertyInfos(type);
+            var properties = Helpers.GetPropertyInfos(type);
 
-            foreach (var field in fields)
+		    var wrtBt = typeof (Stream).GetMethod("WriteByte", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] {typeof (Byte)}, null);
+            foreach (var property in properties)
             {
-                var mth = type.GetMethod("get_" + field.Name);
+                var mth = property.GetGetMethod();
 
                 // Note: the user defined value type is not passed as reference. could cause perf problems with big structs
 
-                il.Emit(OpCodes.Ldarg_0);
-                if (type.IsValueType)
-                    il.Emit(OpCodes.Ldarga_S, 1);
-                else
-                    il.Emit(OpCodes.Ldarg_1);
-                il.Emit(OpCodes.Call, mth);
+                //Ldarg_0 = Stream, ldarg_1 0 object to serialize
 
-                GenSerializerCall(ctx, il, field.PropertyType);
+                var underlying = Nullable.GetUnderlyingType(property.PropertyType);
+                if (underlying != null)
+                {
+                    var hasValueMth = property.PropertyType.GetProperty("HasValue").GetGetMethod();
+                    var getValueMth = property.PropertyType.GetProperty("Value").GetGetMethod();
+
+                    var loc = il.DeclareLocal(property.PropertyType);
+
+                    //il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Callvirt, mth);                 //Call Property Getter
+                    il.Emit(OpCodes.Stloc, loc);
+                    il.Emit(OpCodes.Ldloca, loc);
+                    il.Emit(OpCodes.Call, hasValueMth);             //Call HasValue
+
+                    var hasValueLbl = il.DefineLabel();
+                    var endLbl = il.DefineLabel();
+
+                    il.Emit(OpCodes.Brtrue_S, hasValueLbl);         //Nullable -> No Value Write 0 to Stream and jump to end
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldc_I4_0);
+                    il.Emit(OpCodes.Call, wrtBt);
+                    il.Emit(OpCodes.Br_S, endLbl);
+
+                    il.MarkLabel(hasValueLbl);                      //Nullable -> No Value Write 1 to Stream, Load Value and GenSerializerCall
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldc_I4_1);
+                    il.Emit(OpCodes.Call, wrtBt);
+
+                    il.Emit(OpCodes.Ldarg_0);                       //Stream als Arg0 für GenSerializerCall
+                    il.Emit(OpCodes.Ldloca, loc);            
+                    il.Emit(OpCodes.Call, getValueMth);             //Call GetValue
+                    GenSerializerCall(ctx, il, Nullable.GetUnderlyingType(property.PropertyType));
+                    il.MarkLabel(endLbl);                        
+                }
+                else
+                {
+                    il.Emit(OpCodes.Ldarg_0);
+                    if (type.IsValueType)
+                        il.Emit(OpCodes.Ldarga_S, 1);
+                    else
+                        il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Call, mth);             //Call Property Getter
+
+                    GenSerializerCall(ctx, il, property.PropertyType);
+                }
             }
 #else
 			var fields = Helpers.GetFieldInfos(type);
