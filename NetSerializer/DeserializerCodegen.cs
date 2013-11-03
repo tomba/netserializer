@@ -18,9 +18,14 @@ namespace NetSerializer
 	{
 		public static DynamicMethod GenerateDynamicDeserializerStub(Type type)
 		{
+#if SILVERLIGHT
 			var dm = new DynamicMethod("Deserialize", null,
+				new Type[] { typeof(Stream), type.MakeByRefType() });
+#else
+   			var dm = new DynamicMethod("Deserialize", null,
 				new Type[] { typeof(Stream), type.MakeByRefType() },
 				typeof(Serializer), true);
+#endif
 			dm.DefineParameter(1, ParameterAttributes.None, "stream");
 			dm.DefineParameter(2, ParameterAttributes.Out, "value");
 
@@ -53,9 +58,13 @@ namespace NetSerializer
 			{
 				// instantiate empty class
 				il.Emit(OpCodes.Ldarg_1);
-
-				var gtfh = typeof(Type).GetMethod("GetTypeFromHandle", BindingFlags.Public | BindingFlags.Static);
-				var guo = typeof(System.Runtime.Serialization.FormatterServices).GetMethod("GetUninitializedObject", BindingFlags.Public | BindingFlags.Static);
+                         
+                var gtfh = typeof(Type).GetMethod("GetTypeFromHandle", BindingFlags.Public | BindingFlags.Static);               
+#if SILVERLIGHT
+                var guo = typeof(Activator).GetMethod("CreateInstance", new Type[]{typeof(Type)});
+#else
+                var guo = typeof(System.Runtime.Serialization.FormatterServices).GetMethod("GetUninitializedObject", BindingFlags.Public | BindingFlags.Static);
+#endif
 				il.Emit(OpCodes.Ldtoken, type);
 				il.Emit(OpCodes.Call, gtfh);
 				il.Emit(OpCodes.Call, guo);
@@ -64,6 +73,76 @@ namespace NetSerializer
 				il.Emit(OpCodes.Stind_Ref);
 			}
 
+#if SERIALIZE_PROPERTIES
+            var properties = Helpers.GetPropertyInfos(type);
+
+            //Ldarg 0 = Ziel Objekt ? , Ldarg_1 = Stream ? , Ldarg_2
+            var rdBt = typeof(Stream).GetMethod("ReadByte", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
+		    
+            foreach (var property in properties)
+            {
+                var mth = property.GetSetMethod();
+                
+                var prpTp = property.PropertyType;
+
+                Label? endLbl = null;
+                
+                if (property.PropertyType.IsGenericType &&
+                    property.PropertyType.GetGenericTypeDefinition() == typeof (Nullable<>))
+                {
+                    prpTp = property.PropertyType.GetGenericArguments()[0];
+
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Callvirt, rdBt);
+
+                    il.Emit(OpCodes.Ldc_I4_0);
+                
+                    endLbl = il.DefineLabel();
+                    il.Emit(OpCodes.Beq_S, endLbl.Value);                    
+                }
+
+                var locVar = il.DeclareLocal(prpTp);
+                
+                il.Emit(OpCodes.Ldarg_0);
+                
+                if (locVar.LocalIndex > 255)
+                    il.Emit(OpCodes.Ldloca, locVar);
+                else
+                    il.Emit(OpCodes.Ldloca_S, locVar);
+                GenDeserializerCall(ctx, il, prpTp);
+
+                il.Emit(OpCodes.Ldarg_1);
+                if (type.IsClass)
+                    il.Emit(OpCodes.Ldind_Ref);
+
+                if (locVar.LocalIndex == 0)
+                    il.Emit(OpCodes.Ldloc_0);
+                else if (locVar.LocalIndex == 1)
+                    il.Emit(OpCodes.Ldloc_1);
+                else if (locVar.LocalIndex == 2)
+                    il.Emit(OpCodes.Ldloc_2);
+                else if (locVar.LocalIndex == 3)
+                    il.Emit(OpCodes.Ldloc_3);
+                else if (locVar.LocalIndex <= 255)
+                    il.Emit(OpCodes.Ldloc_S, locVar);
+                else
+                    il.Emit(OpCodes.Ldloc, locVar);
+
+                if (property.PropertyType.IsGenericType &&
+                    property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                {
+                    ConstructorInfo ctor = property.PropertyType.GetConstructor(
+                        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null,
+                        new[] { prpTp }, null);
+                    il.Emit(OpCodes.Newobj, ctor);
+                }
+
+                il.Emit(OpCodes.Callvirt, mth);
+
+                if (endLbl != null)
+                    il.MarkLabel(endLbl.Value);
+            }
+#else
 			var fields = Helpers.GetFieldInfos(type);
 
 			foreach (var field in fields)
@@ -76,7 +155,9 @@ namespace NetSerializer
 
 				GenDeserializerCall(ctx, il, field.FieldType);
 			}
+#endif
 
+#if !SILVERLIGHT
 			if (typeof(IDeserializationCallback).IsAssignableFrom(type))
 			{
 				var miOnDeserialization = typeof(IDeserializationCallback).GetMethod("OnDeserialization",
@@ -88,6 +169,7 @@ namespace NetSerializer
 				il.Emit(OpCodes.Constrained, type);
 				il.Emit(OpCodes.Callvirt, miOnDeserialization);
 			}
+#endif
 
 			il.Emit(OpCodes.Ret);
 		}
@@ -185,10 +267,13 @@ namespace NetSerializer
 
 			if (type.IsValueType || type.IsArray)
 				direct = true;
+            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof (Nullable<>))
+                direct = true;
 			else if (type.IsSealed && ctx.IsDynamic(type) == false)
 				direct = true;
 			else
 				direct = false;
+            
 
 			var method = direct ? ctx.GetReaderMethodInfo(type) : ctx.DeserializerSwitchMethodInfo;
 

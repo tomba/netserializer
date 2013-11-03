@@ -1,11 +1,17 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.20827.3
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetSerializer", "NetSerializer\NetSerializer.csproj", "{85A11D07-8D18-42D5-ACCF-EF9744EFE825}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{DD1A3698-ED72-49C8-874F-F721EA8012B6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrimitiveTest", "PrimitiveTest\PrimitiveTest.csproj", "{CBA6D818-4B6A-4A80-95D5-7F5EC3FBB3C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetSerializer.SL", "NetSerializer.SL\NetSerializer.SL.csproj", "{5FA18ABE-04F2-4CA0-8157-E027A1CEE32F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SilverlightTest", "SilverlightTest\SilverlightTest.csproj", "{9DB03D62-20DB-4615-8768-DD39E2283E1E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,6 +31,14 @@ Global
 		{CBA6D818-4B6A-4A80-95D5-7F5EC3FBB3C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CBA6D818-4B6A-4A80-95D5-7F5EC3FBB3C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CBA6D818-4B6A-4A80-95D5-7F5EC3FBB3C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FA18ABE-04F2-4CA0-8157-E027A1CEE32F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FA18ABE-04F2-4CA0-8157-E027A1CEE32F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FA18ABE-04F2-4CA0-8157-E027A1CEE32F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FA18ABE-04F2-4CA0-8157-E027A1CEE32F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9DB03D62-20DB-4615-8768-DD39E2283E1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DB03D62-20DB-4615-8768-DD39E2283E1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DB03D62-20DB-4615-8768-DD39E2283E1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DB03D62-20DB-4615-8768-DD39E2283E1E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

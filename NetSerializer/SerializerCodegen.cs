@@ -17,9 +17,14 @@ namespace NetSerializer
 	{
 		public static DynamicMethod GenerateDynamicSerializerStub(Type type)
 		{
+#if SILVERLIGHT
+            var dm = new DynamicMethod("Serialize", null,
+                new Type[] { typeof(Stream), type });
+#else
 			var dm = new DynamicMethod("Serialize", null,
 				new Type[] { typeof(Stream), type },
 				typeof(Serializer), true);
+#endif
 
 			dm.DefineParameter(1, ParameterAttributes.None, "stream");
 			dm.DefineParameter(2, ParameterAttributes.None, "value");
@@ -49,6 +54,66 @@ namespace NetSerializer
 
 		static void GenSerializerBody(CodeGenContext ctx, Type type, ILGenerator il)
 		{
+#if SERIALIZE_PROPERTIES
+            var properties = Helpers.GetPropertyInfos(type);
+
+		    var wrtBt = typeof (Stream).GetMethod("WriteByte", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] {typeof (Byte)}, null);
+            foreach (var property in properties)
+            {
+                var mth = property.GetGetMethod();
+
+                // Note: the user defined value type is not passed as reference. could cause perf problems with big structs
+
+                //Ldarg_0 = Stream, ldarg_1 0 object to serialize
+
+                var underlying = Nullable.GetUnderlyingType(property.PropertyType);
+                if (underlying != null)
+                {
+                    var hasValueMth = property.PropertyType.GetProperty("HasValue").GetGetMethod();
+                    var getValueMth = property.PropertyType.GetProperty("Value").GetGetMethod();
+
+                    var loc = il.DeclareLocal(property.PropertyType);
+
+                    //il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Callvirt, mth);                 //Call Property Getter
+                    il.Emit(OpCodes.Stloc, loc);
+                    il.Emit(OpCodes.Ldloca, loc);
+                    il.Emit(OpCodes.Call, hasValueMth);             //Call HasValue
+
+                    var hasValueLbl = il.DefineLabel();
+                    var endLbl = il.DefineLabel();
+
+                    il.Emit(OpCodes.Brtrue_S, hasValueLbl);         //Nullable -> No Value Write 0 to Stream and jump to end
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldc_I4_0);
+                    il.Emit(OpCodes.Call, wrtBt);
+                    il.Emit(OpCodes.Br_S, endLbl);
+
+                    il.MarkLabel(hasValueLbl);                      //Nullable -> No Value Write 1 to Stream, Load Value and GenSerializerCall
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldc_I4_1);
+                    il.Emit(OpCodes.Call, wrtBt);
+
+                    il.Emit(OpCodes.Ldarg_0);                       //Stream als Arg0 für GenSerializerCall
+                    il.Emit(OpCodes.Ldloca, loc);            
+                    il.Emit(OpCodes.Call, getValueMth);             //Call GetValue
+                    GenSerializerCall(ctx, il, Nullable.GetUnderlyingType(property.PropertyType));
+                    il.MarkLabel(endLbl);                        
+                }
+                else
+                {
+                    il.Emit(OpCodes.Ldarg_0);
+                    if (type.IsValueType)
+                        il.Emit(OpCodes.Ldarga_S, 1);
+                    else
+                        il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Call, mth);             //Call Property Getter
+
+                    GenSerializerCall(ctx, il, property.PropertyType);
+                }
+            }
+#else
 			var fields = Helpers.GetFieldInfos(type);
 
 			foreach (var field in fields)
@@ -64,6 +129,7 @@ namespace NetSerializer
 
 				GenSerializerCall(ctx, il, field.FieldType);
 			}
+#endif
 
 			il.Emit(OpCodes.Ret);
 		}
@@ -165,7 +231,11 @@ namespace NetSerializer
 			var idLocal = il.DeclareLocal(typeof(ushort));
 
 			// get TypeID from object's Type
-			var getTypeIDMethod = typeof(Serializer).GetMethod("GetTypeID", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(object) }, null);
+#if SILVERLIGHT
+			var getTypeIDMethod = typeof(Serializer).GetMethod("GetTypeID", BindingFlags.Public | BindingFlags.Static, null, new Type[] { typeof(object) }, null);
+#else
+            var getTypeIDMethod = typeof(Serializer).GetMethod("GetTypeID", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(object) }, null);
+#endif
 			il.Emit(OpCodes.Ldarg_1);
 			il.EmitCall(OpCodes.Call, getTypeIDMethod, null);
 			il.Emit(OpCodes.Stloc_S, idLocal);

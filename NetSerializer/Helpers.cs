@@ -105,13 +105,20 @@ namespace NetSerializer
 
 		public static IEnumerable<FieldInfo> GetFieldInfos(Type type)
 		{
+#if !SILVERLIGHT
 			Debug.Assert(type.IsSerializable);
+#endif
 
-			var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+#if SILVERLIGHT || ONLY_PUBLIC_FIELDS
+			var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
 				.Where(fi => (fi.Attributes & FieldAttributes.NotSerialized) == 0)
 				.OrderBy(f => f.Name, StringComparer.Ordinal);
-
-			if (type.BaseType == null)
+#else
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+				.Where(fi => (fi.Attributes & FieldAttributes.NotSerialized) == 0)
+				.OrderBy(f => f.Name, StringComparer.Ordinal);
+#endif
+            if (type.BaseType == null)
 			{
 				return fields;
 			}
@@ -121,5 +128,22 @@ namespace NetSerializer
 				return baseFields.Concat(fields);
 			}
 		}
+
+        public static IEnumerable<PropertyInfo> GetPropertyInfos(Type type)
+        {
+            var fields = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                .Where(x => x.CanRead && x.CanWrite)
+                .OrderBy(f => f.Name, StringComparer.Ordinal);
+
+            if (type.BaseType == null)
+            {
+                return fields;
+            }
+            else
+            {
+                var baseFields = GetPropertyInfos(type.BaseType);
+                return baseFields.Concat(fields);
+            }
+        }
 	}
 }
