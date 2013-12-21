@@ -10,6 +10,8 @@ namespace NetSerializer
 {
 	static class Helpers
 	{
+		public static readonly ConstructorInfo ExceptionCtorInfo = typeof(Exception).GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new Type[0], null);
+
 		public static bool GetPrimitives(Type containerType, Type type, out MethodInfo writer, out MethodInfo reader)
 		{
 			if (type.IsEnum)

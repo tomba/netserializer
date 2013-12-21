@@ -215,8 +215,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldloc_S, idLocal);
 			il.Emit(OpCodes.Switch, jumpTable);
 
-			ConstructorInfo exceptionCtor = typeof(Exception).GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new Type[0], null);
-			il.Emit(OpCodes.Newobj, exceptionCtor);
+			il.Emit(OpCodes.Newobj, Helpers.ExceptionCtorInfo);
 			il.Emit(OpCodes.Throw);
 
 			/* null case */
