@@ -165,9 +165,8 @@ namespace NetSerializer
 			var idLocal = il.DeclareLocal(typeof(ushort));
 
 			// get TypeID from object's Type
-			var getTypeIDMethod = typeof(Serializer).GetMethod("GetTypeID", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(object) }, null);
 			il.Emit(OpCodes.Ldarg_1);
-			il.EmitCall(OpCodes.Call, getTypeIDMethod, null);
+			il.EmitCall(OpCodes.Call, Helpers.GetTypeIDMethodInfo, null);
 			il.Emit(OpCodes.Stloc_S, idLocal);
 
 			// write typeID

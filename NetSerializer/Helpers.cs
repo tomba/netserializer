@@ -11,6 +11,7 @@ namespace NetSerializer
 	static class Helpers
 	{
 		public static readonly ConstructorInfo ExceptionCtorInfo = typeof(Exception).GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new Type[0], null);
+		public static readonly MethodInfo GetTypeIDMethodInfo = typeof(Serializer).GetMethod("GetTypeID", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(object) }, null);
 
 		public static bool GetPrimitives(Type containerType, Type type, out MethodInfo writer, out MethodInfo reader)
 		{
