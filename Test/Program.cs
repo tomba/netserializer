@@ -36,7 +36,11 @@ namespace Test
 				.Concat(new Type[] { typeof(SimpleClass), typeof(SimpleClass2) })
 				.ToArray();
 
+			var sw = Stopwatch.StartNew();
 			Serializer.Initialize(types);
+			sw.Stop();
+
+			Console.WriteLine("Serializer.Initialize() in {0} ms", sw.ElapsedMilliseconds);
 
 			Warmup();
 
