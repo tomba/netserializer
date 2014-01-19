@@ -247,6 +247,9 @@ namespace Test
 		[ProtoMember(13)]
 		MyEnum m_enum;
 
+		[ProtoMember(14)]
+		DateTime m_date;
+
 		public PrimitivesMessage()
 		{
 		}
@@ -270,6 +273,8 @@ namespace Test
 			m_double = r.NextDouble();
 
 			m_enum = (MyEnum)r.Next(0, 6);
+
+			m_date = DateTime.Now;
 		}
 
 		public override void Compare(MessageBase msg)
@@ -292,6 +297,8 @@ namespace Test
 			A(m_double == m.m_double);
 
 			A(m_enum == m.m_enum);
+
+			A(m_date == m.m_date);
 		}
 	}
 
