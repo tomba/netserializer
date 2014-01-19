@@ -25,7 +25,7 @@ namespace Test
 
 	static class Program
 	{
-		static bool s_runProtoBufTests = true;
+		static bool s_runProtoBufTests = false;
 		static bool s_quickRun = false;
 
 		static void Main(string[] args)
