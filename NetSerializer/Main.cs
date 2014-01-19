@@ -24,20 +24,40 @@ namespace NetSerializer
 		static SerializerSwitch s_serializerSwitch;
 		static DeserializerSwitch s_deserializerSwitch;
 
+		static ITypeSerializer[] s_typeSerializers = new ITypeSerializer[] {
+			new PrimitivesSerializer(),
+			new ArraySerializer(),
+			new EnumSerializer(),
+			new DictionarySerializer(),
+			new GenericSerializer(),
+		};
+
+		static ITypeSerializer[] s_userTypeSerializers;
+
 		static bool s_initialized;
 
 		public static void Initialize(Type[] rootTypes)
 		{
+			Initialize(rootTypes, new ITypeSerializer[0]);
+		}
+
+		public static void Initialize(Type[] rootTypes, ITypeSerializer[] userTypeSerializers)
+		{
 			if (s_initialized)
 				throw new InvalidOperationException("NetSerializer already initialized");
 
-			var types = CollectTypes(rootTypes);
+			s_userTypeSerializers = userTypeSerializers;
+
+			var typeDataMap = GenerateTypeData(rootTypes);
+
+			GenerateDynamic(typeDataMap);
+
+			s_typeIDMap = typeDataMap.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.TypeID);
 
 #if GENERATE_DEBUGGING_ASSEMBLY
-			GenerateAssembly(types);
+			// Note: GenerateDebugAssembly overwrites some fields from typeDataMap
+			GenerateDebugAssembly(typeDataMap);
 #endif
-			s_typeIDMap = GenerateDynamic(types);
-
 			s_initialized = true;
 		}
 
@@ -71,140 +91,89 @@ namespace NetSerializer
 			return o;
 		}
 
-		static Type[] CollectTypes(Type[] rootTypes)
+		static Dictionary<Type, TypeData> GenerateTypeData(Type[] rootTypes)
 		{
-			var primitives = new Type[] {
-				typeof(bool),
-				typeof(byte), typeof(sbyte),
-				typeof(char),
-				typeof(ushort), typeof(short),
-				typeof(uint), typeof(int),
-				typeof(ulong), typeof(long),
-				typeof(float), typeof(double),
-				typeof(string),
-			};
-
-			var typeSet = new HashSet<Type>(primitives);
-
-			foreach (var type in rootTypes)
-				CollectTypes(type, typeSet);
-
-			return typeSet
-				.OrderBy(t => t.FullName, StringComparer.Ordinal)
-				.ToArray();
-		}
-
-		static void CollectTypes(Type type, HashSet<Type> typeSet)
-		{
-			if (typeSet.Contains(type))
-				return;
-
-			if (type.IsAbstract)
-				return;
-
-			if (type.IsInterface)
-				return;
-
-			if (!type.IsSerializable)
-				throw new NotSupportedException(String.Format("Type {0} is not marked as Serializable", type.FullName));
-
-			if (type.ContainsGenericParameters)
-				throw new NotSupportedException(String.Format("Type {0} contains generic parameters", type.FullName));
-
-			typeSet.Add(type);
-
-			if (type.IsArray)
-			{
-				CollectTypes(type.GetElementType(), typeSet);
-			}
-			else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
-			{
-				var args = type.GetGenericArguments();
-
-				Debug.Assert(args.Length == 2);
-
-				// Dictionary<K,V> is stored as KeyValuePair<K,V>[]
-
-				var arrayType = typeof(KeyValuePair<,>).MakeGenericType(args).MakeArrayType();
-
-				CollectTypes(arrayType, typeSet);
-			}
-			else
-			{
-				var fields = Helpers.GetFieldInfos(type);
-
-				foreach (var field in fields)
-					CollectTypes(field.FieldType, typeSet);
-			}
-		}
-
-		static Dictionary<Type, TypeData> GenerateTypeData(Type[] types)
-		{
-			var map = new Dictionary<Type, TypeData>(types.Length);
+			var map = new Dictionary<Type, TypeData>();
+			var stack = new Stack<Type>(PrimitivesSerializer.GetSupportedTypes().Concat(rootTypes));
 
 			// TypeID 0 is reserved for null
 			ushort typeID = 1;
-			foreach (var type in types)
+
+			while (stack.Count > 0)
 			{
-				MethodInfo writer;
-				MethodInfo reader;
+				var type = stack.Pop();
 
-				bool isStatic = Helpers.GetPrimitives(typeof(Primitives), type, out writer, out reader);
+				if (map.ContainsKey(type))
+					continue;
 
-				if (type.IsPrimitive && isStatic == false)
-					throw new InvalidOperationException(String.Format("Missing primitive read/write methods for {0}", type.FullName));
+				if (type.IsAbstract || type.IsInterface)
+					continue;
 
-				var td = new TypeData(typeID++);
+				if (type.ContainsGenericParameters)
+					throw new NotSupportedException(String.Format("Type {0} contains generic parameters", type.FullName));
 
-				if (isStatic)
+				var serializer = s_userTypeSerializers.FirstOrDefault(h => h.Handles(type));
+
+				if (serializer == null)
+					serializer = s_typeSerializers.FirstOrDefault(h => h.Handles(type));
+
+				if (serializer == null)
+					throw new NotSupportedException(String.Format("No serializer for {0}", type.FullName));
+
+				foreach (var t in serializer.GetSubtypes(type))
+					stack.Push(t);
+
+				TypeData typeData;
+
+				if (serializer is IStaticTypeSerializer)
 				{
-					if (writer.IsGenericMethodDefinition)
-					{
-						Debug.Assert(type.IsGenericType);
+					var sts = (IStaticTypeSerializer)serializer;
 
-						var genArgs = type.GetGenericArguments();
+					MethodInfo writer;
+					MethodInfo reader;
 
-						writer = writer.MakeGenericMethod(genArgs);
-						reader = reader.MakeGenericMethod(genArgs);
-					}
+					sts.GetStaticMethods(type, out writer, out reader);
 
-					td.WriterMethodInfo = writer;
-					td.ReaderMethodInfo = reader;
-					td.IsDynamic = false;
+					Debug.Assert(writer != null && reader != null);
+
+					typeData = new TypeData(typeID++, writer, reader);
+
+				}
+				else if (serializer is IDynamicTypeSerializer)
+				{
+					var dts = (IDynamicTypeSerializer)serializer;
+
+					typeData = new TypeData(typeID++, dts);
 				}
 				else
 				{
-					if (typeof(System.Runtime.Serialization.ISerializable).IsAssignableFrom(type))
-						throw new InvalidOperationException(String.Format("Cannot serialize {0}: ISerializable not supported", type.FullName));
-
-					td.IsDynamic = true;
+					throw new Exception();
 				}
 
-				map[type] = td;
+				map[type] = typeData;
 			}
 
 			return map;
 		}
 
-		static Dictionary<Type, ushort> GenerateDynamic(Type[] types)
+		static void GenerateDynamic(Dictionary<Type, TypeData> map)
 		{
-			Dictionary<Type, TypeData> map = GenerateTypeData(types);
-
-			var nonStaticTypes = map.Where(kvp => kvp.Value.IsDynamic).Select(kvp => kvp.Key);
-
 			/* generate stubs */
-			foreach (var type in nonStaticTypes)
+			foreach (var kvp in map)
 			{
-				var dm = SerializerCodegen.GenerateDynamicSerializerStub(type);
-				map[type].WriterMethodInfo = dm;
-				map[type].WriterILGen = dm.GetILGenerator();
-			}
+				var type = kvp.Key;
+				var td = kvp.Value;
 
-			foreach (var type in nonStaticTypes)
-			{
-				var dm = DeserializerCodegen.GenerateDynamicDeserializerStub(type);
-				map[type].ReaderMethodInfo = dm;
-				map[type].ReaderILGen = dm.GetILGenerator();
+				if (!td.IsGenerated)
+					continue;
+
+				var writerDm = SerializerCodegen.GenerateDynamicSerializerStub(type);
+				td.WriterMethodInfo = writerDm;
+				td.WriterILGen = writerDm.GetILGenerator();
+
+				var readerDm = DeserializerCodegen.GenerateDynamicDeserializerStub(type);
+				td.ReaderMethodInfo = readerDm;
+				td.ReaderILGen = readerDm.GetILGenerator();
 			}
 
 			var serializerSwitchMethod = new DynamicMethod("SerializerSwitch", null,
@@ -224,11 +193,18 @@ namespace NetSerializer
 			var ctx = new CodeGenContext(map, serializerSwitchMethodInfo, deserializerSwitchMethodInfo);
 
 			/* generate bodies */
-			foreach (var type in nonStaticTypes)
-				SerializerCodegen.GenerateSerializerBody(ctx, type, map[type].WriterILGen);
 
-			foreach (var type in nonStaticTypes)
-				DeserializerCodegen.GenerateDeserializerBody(ctx, type, map[type].ReaderILGen);
+			foreach (var kvp in map)
+			{
+				var type = kvp.Key;
+				var td = kvp.Value;
+
+				if (!td.IsGenerated)
+					continue;
+
+				td.TypeSerializer.GenerateWriterMethod(type, ctx, td.WriterILGen);
+				td.TypeSerializer.GenerateReaderMethod(type, ctx, td.ReaderILGen);
+			}
 
 			var ilGen = serializerSwitchMethod.GetILGenerator();
 			SerializerCodegen.GenerateSerializerSwitch(ctx, ilGen, map);
@@ -237,34 +213,31 @@ namespace NetSerializer
 			ilGen = deserializerSwitchMethod.GetILGenerator();
 			DeserializerCodegen.GenerateDeserializerSwitch(ctx, ilGen, map);
 			s_deserializerSwitch = (DeserializerSwitch)deserializerSwitchMethod.CreateDelegate(typeof(DeserializerSwitch));
-
-			return map.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.TypeID);
 		}
 
 #if GENERATE_DEBUGGING_ASSEMBLY
-		static void GenerateAssembly(Type[] types)
+		static void GenerateDebugAssembly(Dictionary<Type, TypeData> map)
 		{
-			Dictionary<Type, TypeData> map = GenerateTypeData(types);
-
-			var nonStaticTypes = map.Where(kvp => kvp.Value.IsDynamic).Select(kvp => kvp.Key);
-
 			var ab = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("NetSerializerDebug"), AssemblyBuilderAccess.RunAndSave);
 			var modb = ab.DefineDynamicModule("NetSerializerDebug.dll");
 			var tb = modb.DefineType("NetSerializer", TypeAttributes.Public);
 
 			/* generate stubs */
-			foreach (var type in nonStaticTypes)
+			foreach (var kvp in map)
 			{
-				var mb = SerializerCodegen.GenerateStaticSerializerStub(tb, type);
-				map[type].WriterMethodInfo = mb;
-				map[type].WriterILGen = mb.GetILGenerator();
-			}
+				var type = kvp.Key;
+				var td = kvp.Value;
 
-			foreach (var type in nonStaticTypes)
-			{
+				if (!td.IsGenerated)
+					continue;
+
+				var mb = SerializerCodegen.GenerateStaticSerializerStub(tb, type);
+				td.WriterMethodInfo = mb;
+				td.WriterILGen = mb.GetILGenerator();
+
 				var dm = DeserializerCodegen.GenerateStaticDeserializerStub(tb, type);
-				map[type].ReaderMethodInfo = dm;
-				map[type].ReaderILGen = dm.GetILGenerator();
+				td.ReaderMethodInfo = dm;
+				td.ReaderILGen = dm.GetILGenerator();
 			}
 
 			var serializerSwitchMethod = tb.DefineMethod("SerializerSwitch", MethodAttributes.Public | MethodAttributes.Static, null, new Type[] { typeof(Stream), typeof(object) });
@@ -280,11 +253,18 @@ namespace NetSerializer
 			var ctx = new CodeGenContext(map, serializerSwitchMethodInfo, deserializerSwitchMethodInfo);
 
 			/* generate bodies */
-			foreach (var type in nonStaticTypes)
-				SerializerCodegen.GenerateSerializerBody(ctx, type, map[type].WriterILGen);
 
-			foreach (var type in nonStaticTypes)
-				DeserializerCodegen.GenerateDeserializerBody(ctx, type, map[type].ReaderILGen);
+			foreach (var kvp in map)
+			{
+				var type = kvp.Key;
+				var td = kvp.Value;
+
+				if (!td.IsGenerated)
+					continue;
+
+				td.TypeSerializer.GenerateWriterMethod(type, ctx, td.WriterILGen);
+				td.TypeSerializer.GenerateReaderMethod(type, ctx, td.ReaderILGen);
+			}
 
 			var ilGen = serializerSwitchMethod.GetILGenerator();
 			SerializerCodegen.GenerateSerializerSwitch(ctx, ilGen, map);
@@ -305,8 +285,10 @@ namespace NetSerializer
 			if (ob == null)
 				return 0;
 
-			if (s_typeIDMap.TryGetValue(ob.GetType(), out id) == false)
-				throw new InvalidOperationException(String.Format("Unknown type {0}", ob.GetType().FullName));
+			var type = ob.GetType();
+
+			if (s_typeIDMap.TryGetValue(type, out id) == false)
+				throw new InvalidOperationException(String.Format("Unknown type {0}", type.FullName));
 
 			return id;
 		}

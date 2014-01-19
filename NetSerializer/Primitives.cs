@@ -15,6 +15,20 @@ namespace NetSerializer
 {
 	public static class Primitives
 	{
+		public static MethodInfo GetWritePrimitive(Type type)
+		{
+			return typeof(Primitives).GetMethod("WritePrimitive",
+				BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
+				new Type[] { typeof(Stream), type }, null);
+		}
+
+		public static MethodInfo GetReaderPrimitive(Type type)
+		{
+			return typeof(Primitives).GetMethod("ReadPrimitive",
+				BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
+				new Type[] { typeof(Stream), type.MakeByRefType() }, null);
+		}
+
 		static uint EncodeZigZag32(int n)
 		{
 			return (uint)((n << 1) ^ (n >> 31));
@@ -502,27 +516,6 @@ namespace NetSerializer
 					throw new EndOfStreamException();
 				l += r;
 			}
-		}
-
-		public static void WritePrimitive<TKey, TValue>(Stream stream, Dictionary<TKey, TValue> value)
-		{
-			var kvpArray = new KeyValuePair<TKey, TValue>[value.Count];
-
-			int i = 0;
-			foreach (var kvp in value)
-				kvpArray[i++] = kvp;
-
-			NetSerializer.Serializer.SerializeInternal(stream, kvpArray);
-		}
-
-		public static void ReadPrimitive<TKey, TValue>(Stream stream, out Dictionary<TKey, TValue> value)
-		{
-			var kvpArray = (KeyValuePair<TKey, TValue>[])NetSerializer.Serializer.DeserializeInternal(stream);
-
-			value = new Dictionary<TKey, TValue>(kvpArray.Length);
-
-			foreach (var kvp in kvpArray)
-				value.Add(kvp.Key, kvp.Value);
 		}
 	}
 }

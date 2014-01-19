@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Text;
 
 namespace NetSerializer
@@ -12,99 +13,6 @@ namespace NetSerializer
 	{
 		public static readonly ConstructorInfo ExceptionCtorInfo = typeof(Exception).GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new Type[0], null);
 		public static readonly MethodInfo GetTypeIDMethodInfo = typeof(Serializer).GetMethod("GetTypeID", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(object) }, null);
-
-		public static bool GetPrimitives(Type containerType, Type type, out MethodInfo writer, out MethodInfo reader)
-		{
-			if (type.IsEnum)
-				type = Enum.GetUnderlyingType(type);
-
-			if (type.IsGenericType == false)
-			{
-				writer = containerType.GetMethod("WritePrimitive", BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
-					new Type[] { typeof(Stream), type }, null);
-
-				reader = containerType.GetMethod("ReadPrimitive", BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
-					new Type[] { typeof(Stream), type.MakeByRefType() }, null);
-			}
-			else
-			{
-				var genType = type.GetGenericTypeDefinition();
-
-				writer = GetGenWriter(containerType, genType);
-				reader = GetGenReader(containerType, genType);
-			}
-
-			if (writer == null && reader == null)
-				return false;
-			else if (writer != null && reader != null)
-				return true;
-			else
-				throw new InvalidOperationException(String.Format("Missing a {0}Primitive() for {1}",
-					reader == null ? "Read" : "Write", type.FullName));
-		}
-
-		static MethodInfo GetGenWriter(Type containerType, Type genType)
-		{
-			var mis = containerType.GetMethods(BindingFlags.Static | BindingFlags.Public)
-				.Where(mi => mi.IsGenericMethod && mi.Name == "WritePrimitive");
-
-			foreach (var mi in mis)
-			{
-				var p = mi.GetParameters();
-
-				if (p.Length != 2)
-					continue;
-
-				if (p[0].ParameterType != typeof(Stream))
-					continue;
-
-				var paramType = p[1].ParameterType;
-
-				if (paramType.IsGenericType == false)
-					continue;
-
-				var genParamType = paramType.GetGenericTypeDefinition();
-
-				if (genType == genParamType)
-					return mi;
-			}
-
-			return null;
-		}
-
-		static MethodInfo GetGenReader(Type containerType, Type genType)
-		{
-			var mis = containerType.GetMethods(BindingFlags.Static | BindingFlags.Public)
-				.Where(mi => mi.IsGenericMethod && mi.Name == "ReadPrimitive");
-
-			foreach (var mi in mis)
-			{
-				var p = mi.GetParameters();
-
-				if (p.Length != 2)
-					continue;
-
-				if (p[0].ParameterType != typeof(Stream))
-					continue;
-
-				var paramType = p[1].ParameterType;
-
-				if (paramType.IsByRef == false)
-					continue;
-
-				paramType = paramType.GetElementType();
-
-				if (paramType.IsGenericType == false)
-					continue;
-
-				var genParamType = paramType.GetGenericTypeDefinition();
-
-				if (genType == genParamType)
-					return mi;
-			}
-
-			return null;
-		}
 
 		public static IEnumerable<FieldInfo> GetFieldInfos(Type type)
 		{
@@ -124,5 +32,50 @@ namespace NetSerializer
 				return baseFields.Concat(fields);
 			}
 		}
+
+		public static void GenSerializerCall(CodeGenContext ctx, ILGenerator il, Type type)
+		{
+			// We can call the Serializer method directly for:
+			// - Value types
+			// - Array types
+			// - Sealed types with static Serializer method, as the method will handle null
+			// Other reference types go through the SerializesSwitch
+
+			bool direct;
+
+			if (type.IsValueType || type.IsArray)
+				direct = true;
+			else if (type.IsSealed && ctx.IsGenerated(type) == false)
+				direct = true;
+			else
+				direct = false;
+
+			var method = direct ? ctx.GetWriterMethodInfo(type) : ctx.SerializerSwitchMethodInfo;
+
+			il.EmitCall(OpCodes.Call, method, null);
+		}
+
+		public static void GenDeserializerCall(CodeGenContext ctx, ILGenerator il, Type type)
+		{
+			// We can call the Deserializer method directly for:
+			// - Value types
+			// - Array types
+			// - Sealed types with static Deserializer method, as the method will handle null
+			// Other reference types go through the DeserializesSwitch
+
+			bool direct;
+
+			if (type.IsValueType || type.IsArray)
+				direct = true;
+			else if (type.IsSealed && ctx.IsGenerated(type) == false)
+				direct = true;
+			else
+				direct = false;
+
+			var method = direct ? ctx.GetReaderMethodInfo(type) : ctx.DeserializerSwitchMethodInfo;
+
+			il.EmitCall(OpCodes.Call, method, null);
+		}
+
 	}
 }

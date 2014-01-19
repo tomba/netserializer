@@ -7,22 +7,32 @@ using System.Text;
 
 namespace NetSerializer
 {
-	sealed class TypeData
+	public sealed class TypeData
 	{
-		public TypeData(ushort typeID)
+		public TypeData(ushort typeID, IDynamicTypeSerializer serializer)
 		{
 			this.TypeID = typeID;
+			this.TypeSerializer = serializer;
+		}
+
+		public TypeData(ushort typeID, MethodInfo writer, MethodInfo reader)
+		{
+			this.TypeID = typeID;
+			this.WriterMethodInfo = writer;
+			this.ReaderMethodInfo = reader;
 		}
 
 		public readonly ushort TypeID;
-		public bool IsDynamic;
+		public bool IsGenerated { get { return this.TypeSerializer != null; } }
+		public readonly IDynamicTypeSerializer TypeSerializer;
 		public MethodInfo WriterMethodInfo;
-		public ILGenerator WriterILGen;
 		public MethodInfo ReaderMethodInfo;
+
+		public ILGenerator WriterILGen;
 		public ILGenerator ReaderILGen;
 	}
 
-	sealed class CodeGenContext
+	public sealed class CodeGenContext
 	{
 		readonly Dictionary<Type, TypeData> m_typeMap;
 
@@ -41,24 +51,14 @@ namespace NetSerializer
 			return m_typeMap[type].WriterMethodInfo;
 		}
 
-		public ILGenerator GetWriterILGen(Type type)
-		{
-			return m_typeMap[type].WriterILGen;
-		}
-
 		public MethodInfo GetReaderMethodInfo(Type type)
 		{
 			return m_typeMap[type].ReaderMethodInfo;
 		}
 
-		public ILGenerator GetReaderILGen(Type type)
+		public bool IsGenerated(Type type)
 		{
-			return m_typeMap[type].ReaderILGen;
-		}
-
-		public bool IsDynamic(Type type)
-		{
-			return m_typeMap[type].IsDynamic;
+			return m_typeMap[type].IsGenerated;
 		}
 	}
 }
