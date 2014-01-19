@@ -667,4 +667,44 @@ namespace Test
 				((SimpleClass2)m_ifaceMsg).Compare((SimpleClass2)m.m_ifaceMsg);
 		}
 	}
+
+	[Serializable]
+	[ProtoContract]
+	sealed class CustomSerializersMessage : MessageBase
+	{
+		[ProtoMember(1)]
+		int[, ,] m_int3Arr;
+
+		public CustomSerializersMessage()
+		{
+		}
+
+		public CustomSerializersMessage(Random r)
+		{
+			int lx = r.Next(100) + 1;
+			int ly = r.Next(70) + 1;
+			int lz = r.Next(40) + 1;
+
+			m_int3Arr = new int[lz, ly, lx];
+
+			for (int z = 0; z < lz; ++z)
+				for (int y = 0; y < ly; ++y)
+					for (int x = 0; x < lx; ++x)
+						m_int3Arr[z, y, x] = r.Next();
+		}
+
+		public override void Compare(MessageBase msg)
+		{
+			var m = (CustomSerializersMessage)msg;
+
+			int lz = m_int3Arr.GetLength(0);
+			int ly = m_int3Arr.GetLength(1);
+			int lx = m_int3Arr.GetLength(2);
+
+			for (int z = 0; z < lz; ++z)
+				for (int y = 0; y < ly; ++y)
+					for (int x = 0; x < lx; ++x)
+						A(m_int3Arr[z, y, x] == m.m_int3Arr[z, y, x]);
+		}
+	}
 }

@@ -37,6 +37,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CustomSerializers.cs" />
     <Compile Include="PBNetTest.cs" />
     <Compile Include="PBMemStreamTest.cs" />
     <Compile Include="MemStreamTest.cs" />

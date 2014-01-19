@@ -37,7 +37,7 @@ namespace Test
 				.ToArray();
 
 			var sw = Stopwatch.StartNew();
-			Serializer.Initialize(types);
+			Serializer.Initialize(types, new ITypeSerializer[] { new CustomSerializers() });
 			sw.Stop();
 
 			Console.WriteLine("Serializer.Initialize() in {0} ms", sw.ElapsedMilliseconds);
@@ -62,6 +62,8 @@ namespace Test
 
 			RunTests(typeof(ByteArrayMessage), 5000);
 			RunTests(typeof(IntArrayMessage), 800);
+
+			RunTests(typeof(CustomSerializersMessage), 800);
 
 			//Console.WriteLine("Press enter to quit");
 			//Console.ReadLine();
