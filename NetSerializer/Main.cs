@@ -36,11 +36,20 @@ namespace NetSerializer
 
 		static bool s_initialized;
 
+		/// <summary>
+		/// Initialize NetSerializer
+		/// </summary>
+		/// <param name="rootTypes">Types to be (de)serialized</param>
 		public static void Initialize(Type[] rootTypes)
 		{
 			Initialize(rootTypes, new ITypeSerializer[0]);
 		}
 
+		/// <summary>
+		/// Initialize NetSerializer
+		/// </summary>
+		/// <param name="rootTypes">Types to be (de)serialized</param>
+		/// <param name="userTypeSerializers">Array of custom serializers</param>
 		public static void Initialize(Type[] rootTypes, ITypeSerializer[] userTypeSerializers)
 		{
 			if (s_initialized)
