@@ -15,7 +15,7 @@ namespace NetSerializer
 				return false;
 
 			if (type.GetArrayRank() != 1)
-				throw new Exception(String.Format("Multi-dim arrays not supported: {0}", type.FullName));
+				throw new NotSupportedException(String.Format("Multi-dim arrays not supported: {0}", type.FullName));
 
 			return true;
 		}

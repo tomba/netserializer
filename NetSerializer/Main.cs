@@ -46,6 +46,9 @@ namespace NetSerializer
 			if (s_initialized)
 				throw new InvalidOperationException("NetSerializer already initialized");
 
+			if (userTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
+				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or  IStaticTypeSerializer");
+
 			s_userTypeSerializers = userTypeSerializers;
 
 			var typeDataMap = GenerateTypeData(rootTypes);
