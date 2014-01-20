@@ -35,7 +35,7 @@ NetSerializer supports serializing the following types:
   Int64, UInt64, IntPtr, UIntPtr, Char, Double, and Single)
 - Strings
 - Enums
-- Arrays
+- Single dimensional arrays
 - Structs and classes marked as [Serializable]. Note that NetSerializer does
   _not_ support ISerializable, so not all classes marked with [Serializable]
   are supported.  However, NetSerializer has special support for the following
@@ -43,15 +43,8 @@ NetSerializer supports serializing the following types:
 - Dictionary<K,V>
 - DateTime
 
-If need be, adding similar special support for other ISerializable classes
-should be quite simple in many cases. For example, the code in Primitives.cs
-for serializing DateTime is:
-
-public static void WritePrimitive(Stream stream, DateTime value)
-{
-	long v = value.ToBinary();
-	WritePrimitive(stream, v);
-}
+NetSerializer also supports creating custom serializers. Custom serializers can
+be used to serialize types not directly supported by NetSerializer.
 
 Usage
 
@@ -61,8 +54,8 @@ serialize. Nothing else needs to be done for the types to be serialized.
 
 Then you need to initialize NetSerializer by giving it a list of types you will
 be serializing. NetSerializer will scan through the given types, and
-recursively all the types used by the given types, and create serializers and
-deserializers.
+recursively add all the types used by the given types, and create
+(de)serialization code.
 
 Initialization:
 
