@@ -34,7 +34,7 @@ namespace NetSerializer
 
 		static ITypeSerializer[] s_userTypeSerializers;
 
-		static bool s_initialized;
+		public static bool IsInitialized { get; private set; }
 
 		/// <summary>
 		/// Initialize NetSerializer
@@ -52,7 +52,7 @@ namespace NetSerializer
 		/// <param name="userTypeSerializers">Array of custom serializers</param>
 		public static void Initialize(Type[] rootTypes, ITypeSerializer[] userTypeSerializers)
 		{
-			if (s_initialized)
+			if (IsInitialized)
 				throw new InvalidOperationException("NetSerializer already initialized");
 
 			if (userTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
@@ -70,12 +70,12 @@ namespace NetSerializer
 			// Note: GenerateDebugAssembly overwrites some fields from typeDataMap
 			GenerateDebugAssembly(typeDataMap);
 #endif
-			s_initialized = true;
+			IsInitialized = true;
 		}
 
 		public static void Serialize(Stream stream, object data)
 		{
-			if (!s_initialized)
+			if (!IsInitialized)
 				throw new InvalidOperationException("NetSerializer not initialized");
 
 			s_serializerSwitch(stream, data);
@@ -83,7 +83,7 @@ namespace NetSerializer
 
 		public static object Deserialize(Stream stream)
 		{
-			if (!s_initialized)
+			if (!IsInitialized)
 				throw new InvalidOperationException("NetSerializer not initialized");
 
 			object o;
