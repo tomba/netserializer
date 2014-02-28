@@ -40,7 +40,7 @@ namespace NetSerializer
 		/// Initialize NetSerializer
 		/// </summary>
 		/// <param name="rootTypes">Types to be (de)serialized</param>
-		public static void Initialize(Type[] rootTypes)
+		public static void Initialize(IEnumerable<Type> rootTypes)
 		{
 			Initialize(rootTypes, new ITypeSerializer[0]);
 		}
@@ -50,7 +50,7 @@ namespace NetSerializer
 		/// </summary>
 		/// <param name="rootTypes">Types to be (de)serialized</param>
 		/// <param name="userTypeSerializers">Array of custom serializers</param>
-		public static void Initialize(Type[] rootTypes, ITypeSerializer[] userTypeSerializers)
+		public static void Initialize(IEnumerable<Type> rootTypes, ITypeSerializer[] userTypeSerializers)
 		{
 			if (IsInitialized)
 				throw new InvalidOperationException("NetSerializer already initialized");
@@ -103,7 +103,7 @@ namespace NetSerializer
 			return o;
 		}
 
-		static Dictionary<Type, TypeData> GenerateTypeData(Type[] rootTypes)
+		static Dictionary<Type, TypeData> GenerateTypeData(IEnumerable<Type> rootTypes)
 		{
 			var map = new Dictionary<Type, TypeData>();
 			var stack = new Stack<Type>(PrimitivesSerializer.GetSupportedTypes().Concat(rootTypes));
