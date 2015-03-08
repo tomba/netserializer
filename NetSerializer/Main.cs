@@ -21,8 +21,8 @@ namespace NetSerializer
 		delegate void SerializerSwitch(Serializer serializer, Stream stream, object ob);
 		delegate void DeserializerSwitch(Serializer serializer, Stream stream, out object ob);
 
-		static SerializerSwitch s_serializerSwitch;
-		static DeserializerSwitch s_deserializerSwitch;
+		SerializerSwitch s_serializerSwitch;
+		DeserializerSwitch s_deserializerSwitch;
 
 		static ITypeSerializer[] s_typeSerializers = new ITypeSerializer[] {
 			new ObjectSerializer(),
@@ -33,7 +33,7 @@ namespace NetSerializer
 			new GenericSerializer(),
 		};
 
-		static ITypeSerializer[] s_userTypeSerializers;
+		ITypeSerializer[] s_userTypeSerializers;
 
 		/// <summary>
 		/// Initialize NetSerializer
@@ -80,7 +80,7 @@ namespace NetSerializer
 			return o;
 		}
 
-		static Dictionary<Type, TypeData> GenerateTypeData(IEnumerable<Type> rootTypes)
+		Dictionary<Type, TypeData> GenerateTypeData(IEnumerable<Type> rootTypes)
 		{
 			var map = new Dictionary<Type, TypeData>();
 			var stack = new Stack<Type>(PrimitivesSerializer.GetSupportedTypes().Concat(rootTypes));
@@ -147,7 +147,7 @@ namespace NetSerializer
 			return map;
 		}
 
-		static void GenerateDynamic(Dictionary<Type, TypeData> map)
+		void GenerateDynamic(Dictionary<Type, TypeData> map)
 		{
 			/* generate stubs */
 			foreach (var kvp in map)
