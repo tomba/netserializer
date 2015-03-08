@@ -18,8 +18,8 @@ namespace NetSerializer
 	{
 		static Dictionary<Type, ushort> s_typeIDMap;
 
-		delegate void SerializerSwitch(Stream stream, object ob);
-		delegate void DeserializerSwitch(Stream stream, out object ob);
+		delegate void SerializerSwitch(Serializer serializer, Stream stream, object ob);
+		delegate void DeserializerSwitch(Serializer serializer, Stream stream, out object ob);
 
 		static SerializerSwitch s_serializerSwitch;
 		static DeserializerSwitch s_deserializerSwitch;
@@ -34,8 +34,6 @@ namespace NetSerializer
 		};
 
 		static ITypeSerializer[] s_userTypeSerializers;
-
-		public static bool IsInitialized { get; private set; }
 
 		/// <summary>
 		/// Initialize NetSerializer
@@ -53,9 +51,6 @@ namespace NetSerializer
 		/// <param name="userTypeSerializers">Array of custom serializers</param>
 		public Serializer(IEnumerable<Type> rootTypes, ITypeSerializer[] userTypeSerializers)
 		{
-			if (IsInitialized)
-				throw new InvalidOperationException("NetSerializer already initialized");
-
 			if (userTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
 				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or  IStaticTypeSerializer");
 
@@ -71,46 +66,17 @@ namespace NetSerializer
 			// Note: GenerateDebugAssembly overwrites some fields from typeDataMap
 			GenerateDebugAssembly(typeDataMap);
 #endif
-			IsInitialized = true;
 		}
 
 		public void Serialize(Stream stream, object data)
 		{
-			SerializeStatic(stream, data);
+			s_serializerSwitch(this, stream, data);
 		}
 
 		public object Deserialize(Stream stream)
 		{
-			return DeserializeStatic(stream);
-		}
-
-		static void SerializeStatic(Stream stream, object data)
-		{
-			if (!IsInitialized)
-				throw new InvalidOperationException("NetSerializer not initialized");
-
-			s_serializerSwitch(stream, data);
-		}
-
-		static object DeserializeStatic(Stream stream)
-		{
-			if (!IsInitialized)
-				throw new InvalidOperationException("NetSerializer not initialized");
-
 			object o;
-			s_deserializerSwitch(stream, out o);
-			return o;
-		}
-
-		internal static void SerializeInternal(Stream stream, object data)
-		{
-			s_serializerSwitch(stream, data);
-		}
-
-		internal static object DeserializeInternal(Stream stream)
-		{
-			object o;
-			s_deserializerSwitch(stream, out o);
+			s_deserializerSwitch(this, stream, out o);
 			return o;
 		}
 

@@ -21,17 +21,17 @@ namespace NetSerializer
 		{
 			var map = ctx.TypeMap;
 
-			// arg0: Stream, arg1: object
+			// arg0: Serializer, arg1: Stream, arg2: object
 
 			var idLocal = il.DeclareLocal(typeof(ushort));
 
 			// get TypeID from object's Type
-			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ldarg_2);
 			il.EmitCall(OpCodes.Call, Helpers.GetTypeIDMethodInfo, null);
 			il.Emit(OpCodes.Stloc_S, idLocal);
 
 			// write typeID
-			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldloc_S, idLocal);
 			il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(ushort)), null);
 
@@ -59,8 +59,11 @@ namespace NetSerializer
 
 				il.MarkLabel(jumpTable[data.TypeID]);
 
-				il.Emit(OpCodes.Ldarg_0);
+				if (data.NeedsInstanceParameter)
+					il.Emit(OpCodes.Ldarg_0);
+
 				il.Emit(OpCodes.Ldarg_1);
+				il.Emit(OpCodes.Ldarg_2);
 				il.Emit(type.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, type);
 
 				il.EmitCall(OpCodes.Call, data.WriterMethodInfo, null);
@@ -73,12 +76,12 @@ namespace NetSerializer
 		{
 			var map = ctx.TypeMap;
 
-			// arg0: stream, arg1: out object
+			// arg0: Serializer, arg1: stream, arg2: out object
 
 			var idLocal = il.DeclareLocal(typeof(ushort));
 
 			// read typeID
-			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldloca_S, idLocal);
 			il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(typeof(ushort)), null);
 
@@ -97,7 +100,7 @@ namespace NetSerializer
 			/* null case */
 			il.MarkLabel(jumpTable[0]);
 
-			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ldarg_2);
 			il.Emit(OpCodes.Ldnull);
 			il.Emit(OpCodes.Stind_Ref);
 			il.Emit(OpCodes.Ret);
@@ -113,7 +116,10 @@ namespace NetSerializer
 				var local = il.DeclareLocal(type);
 
 				// call deserializer for this typeID
-				il.Emit(OpCodes.Ldarg_0);
+				if (data.NeedsInstanceParameter)
+					il.Emit(OpCodes.Ldarg_0);
+
+				il.Emit(OpCodes.Ldarg_1);
 				if (local.LocalIndex < 256)
 					il.Emit(OpCodes.Ldloca_S, local);
 				else
@@ -122,7 +128,7 @@ namespace NetSerializer
 				il.EmitCall(OpCodes.Call, data.ReaderMethodInfo, null);
 
 				// write result object to out object
-				il.Emit(OpCodes.Ldarg_1);
+				il.Emit(OpCodes.Ldarg_2);
 				if (local.LocalIndex < 256)
 					il.Emit(OpCodes.Ldloc_S, local);
 				else

@@ -33,13 +33,13 @@ namespace NetSerializer
 			}
 		}
 
-		public static void GenSerializerCall(CodeGenContext ctx, ILGenerator il, Type type)
+		public static bool CanCallDirect(CodeGenContext ctx, Type type)
 		{
-			// We can call the Serializer method directly for:
+			// We can call the (De)serializer method directly for:
 			// - Value types
 			// - Array types
-			// - Sealed types with static Serializer method, as the method will handle null
-			// Other reference types go through the SerializerSwitch
+			// - Sealed types with static (De)serializer method, as the method will handle null
+			// Other reference types go through the (De)serializerSwitch
 
 			bool direct;
 
@@ -50,32 +50,7 @@ namespace NetSerializer
 			else
 				direct = false;
 
-			var method = direct ? ctx.GetWriterMethodInfo(type) : ctx.SerializerSwitchMethodInfo;
-
-			il.EmitCall(OpCodes.Call, method, null);
+			return direct;
 		}
-
-		public static void GenDeserializerCall(CodeGenContext ctx, ILGenerator il, Type type)
-		{
-			// We can call the Deserializer method directly for:
-			// - Value types
-			// - Array types
-			// - Sealed types with static Deserializer method, as the method will handle null
-			// Other reference types go through the DeserializerSwitch
-
-			bool direct;
-
-			if (type.IsValueType || type.IsArray)
-				direct = true;
-			else if (type.IsSealed && ctx.IsGenerated(type) == false)
-				direct = true;
-			else
-				direct = false;
-
-			var method = direct ? ctx.GetReaderMethodInfo(type) : ctx.DeserializerSwitchMethodInfo;
-
-			il.EmitCall(OpCodes.Call, method, null);
-		}
-
 	}
 }

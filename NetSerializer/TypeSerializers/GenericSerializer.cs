@@ -32,7 +32,7 @@ namespace NetSerializer
 
 		public void GenerateWriterMethod(Type type, CodeGenContext ctx, ILGenerator il)
 		{
-			// arg0: Stream, arg1: value
+			// arg0: Serializer, arg1: Stream, arg2: value
 
 			var fields = Helpers.GetFieldInfos(type);
 
@@ -40,14 +40,25 @@ namespace NetSerializer
 			{
 				// Note: the user defined value type is not passed as reference. could cause perf problems with big structs
 
-				il.Emit(OpCodes.Ldarg_0);
+				var fieldType = field.FieldType;
+
+				bool direct = Helpers.CanCallDirect(ctx, fieldType);
+				if (!direct)
+					fieldType = typeof(object);
+
+				var data = ctx.GetTypeData(fieldType);
+
+				if (data.NeedsInstanceParameter)
+					il.Emit(OpCodes.Ldarg_0);
+
+				il.Emit(OpCodes.Ldarg_1);
 				if (type.IsValueType)
-					il.Emit(OpCodes.Ldarga_S, 1);
+					il.Emit(OpCodes.Ldarga_S, 2);
 				else
-					il.Emit(OpCodes.Ldarg_1);
+					il.Emit(OpCodes.Ldarg_2);
 				il.Emit(OpCodes.Ldfld, field);
 
-				Helpers.GenSerializerCall(ctx, il, field.FieldType);
+				il.EmitCall(OpCodes.Call, data.WriterMethodInfo, null);
 			}
 
 			il.Emit(OpCodes.Ret);
@@ -55,12 +66,12 @@ namespace NetSerializer
 
 		public void GenerateReaderMethod(Type type, CodeGenContext ctx, ILGenerator il)
 		{
-			// arg0: stream, arg1: out value
+			// arg0: Serializer, arg1: stream, arg2: out value
 
 			if (type.IsClass)
 			{
 				// instantiate empty class
-				il.Emit(OpCodes.Ldarg_1);
+				il.Emit(OpCodes.Ldarg_2);
 
 				var gtfh = typeof(Type).GetMethod("GetTypeFromHandle", BindingFlags.Public | BindingFlags.Static);
 				var guo = typeof(System.Runtime.Serialization.FormatterServices).GetMethod("GetUninitializedObject", BindingFlags.Public | BindingFlags.Static);
@@ -76,13 +87,24 @@ namespace NetSerializer
 
 			foreach (var field in fields)
 			{
-				il.Emit(OpCodes.Ldarg_0);
+				var fieldType = field.FieldType;
+
+				bool direct = Helpers.CanCallDirect(ctx, fieldType);
+				if (!direct)
+					fieldType = typeof(object);
+
+				var data = ctx.GetTypeData(fieldType);
+
+				if (data.NeedsInstanceParameter)
+					il.Emit(OpCodes.Ldarg_0);
+
 				il.Emit(OpCodes.Ldarg_1);
+				il.Emit(OpCodes.Ldarg_2);
 				if (type.IsClass)
 					il.Emit(OpCodes.Ldind_Ref);
 				il.Emit(OpCodes.Ldflda, field);
 
-				Helpers.GenDeserializerCall(ctx, il, field.FieldType);
+				il.EmitCall(OpCodes.Call, data.ReaderMethodInfo, null);
 			}
 
 			if (typeof(System.Runtime.Serialization.IDeserializationCallback).IsAssignableFrom(type))
@@ -91,7 +113,7 @@ namespace NetSerializer
 										BindingFlags.Instance | BindingFlags.Public,
 										null, new[] { typeof(Object) }, null);
 
-				il.Emit(OpCodes.Ldarg_1);
+				il.Emit(OpCodes.Ldarg_2);
 				il.Emit(OpCodes.Ldnull);
 				il.Emit(OpCodes.Constrained, type);
 				il.Emit(OpCodes.Callvirt, miOnDeserialization);

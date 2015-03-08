@@ -13,6 +13,8 @@ namespace NetSerializer
 		{
 			this.TypeID = typeID;
 			this.TypeSerializer = serializer;
+
+			this.NeedsInstanceParameter = true;
 		}
 
 		public TypeData(ushort typeID, MethodInfo writer, MethodInfo reader)
@@ -20,6 +22,8 @@ namespace NetSerializer
 			this.TypeID = typeID;
 			this.WriterMethodInfo = writer;
 			this.ReaderMethodInfo = reader;
+
+			this.NeedsInstanceParameter = writer.GetParameters().Length == 3;
 		}
 
 		public readonly ushort TypeID;
@@ -27,6 +31,8 @@ namespace NetSerializer
 		public readonly IDynamicTypeSerializer TypeSerializer;
 		public MethodInfo WriterMethodInfo;
 		public MethodInfo ReaderMethodInfo;
+
+		public bool NeedsInstanceParameter { get; private set; }
 	}
 
 	public sealed class CodeGenContext
@@ -58,6 +64,11 @@ namespace NetSerializer
 		public bool IsGenerated(Type type)
 		{
 			return m_typeMap[type].IsGenerated;
+		}
+
+		public TypeData GetTypeData(Type type)
+		{
+			return m_typeMap[type];
 		}
 
 		public IDictionary<Type, TypeData> TypeMap { get { return m_typeMap; } }

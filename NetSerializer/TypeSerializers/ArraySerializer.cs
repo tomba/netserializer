@@ -31,11 +31,11 @@ namespace NetSerializer
 
 			var notNullLabel = il.DefineLabel();
 
-			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ldarg_2);
 			il.Emit(OpCodes.Brtrue_S, notNullLabel);
 
 			// if value == null, write 0
-			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldc_I4_0);
 			il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(uint)), null);
 			il.Emit(OpCodes.Ret);
@@ -43,8 +43,8 @@ namespace NetSerializer
 			il.MarkLabel(notNullLabel);
 
 			// write array len + 1
-			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ldarg_2);
 			il.Emit(OpCodes.Ldlen);
 			il.Emit(OpCodes.Ldc_I4_1);
 			il.Emit(OpCodes.Add);
@@ -65,13 +65,22 @@ namespace NetSerializer
 			// loop body
 			il.MarkLabel(loopBodyLabel);
 
+			bool direct = Helpers.CanCallDirect(ctx, elemType);
+			if (!direct)
+				elemType = typeof(object);
+
+			var data = ctx.GetTypeData(elemType);
+
+			if (data.NeedsInstanceParameter)
+				il.Emit(OpCodes.Ldarg_0);
+
 			// write element at index i
-			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ldarg_2);
 			il.Emit(OpCodes.Ldloc_S, idxLocal);
 			il.Emit(OpCodes.Ldelem, elemType);
 
-			Helpers.GenSerializerCall(ctx, il, elemType);
+			il.EmitCall(OpCodes.Call, data.WriterMethodInfo, null);
 
 			// i = i + 1
 			il.Emit(OpCodes.Ldloc_S, idxLocal);
@@ -83,7 +92,7 @@ namespace NetSerializer
 
 			// loop condition
 			il.Emit(OpCodes.Ldloc_S, idxLocal);
-			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ldarg_2);
 			il.Emit(OpCodes.Ldlen);
 			il.Emit(OpCodes.Conv_I4);
 			il.Emit(OpCodes.Clt);
@@ -99,7 +108,7 @@ namespace NetSerializer
 			var lenLocal = il.DeclareLocal(typeof(uint));
 
 			// read array len
-			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldloca_S, lenLocal);
 			il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(typeof(uint)), null);
 
@@ -109,7 +118,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldloc_S, lenLocal);
 			il.Emit(OpCodes.Brtrue_S, notNullLabel);
 
-			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ldarg_2);
 			il.Emit(OpCodes.Ldnull);
 			il.Emit(OpCodes.Stind_Ref);
 			il.Emit(OpCodes.Ret);
@@ -141,12 +150,22 @@ namespace NetSerializer
 			il.MarkLabel(loopBodyLabel);
 
 			// read element to arr[i]
-			il.Emit(OpCodes.Ldarg_0);
+
+			bool direct = Helpers.CanCallDirect(ctx, elemType);
+			if (!direct)
+				elemType = typeof(object);
+
+			var data = ctx.GetTypeData(elemType);
+
+			if (data.NeedsInstanceParameter)
+				il.Emit(OpCodes.Ldarg_0);
+
+			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldloc_S, arrLocal);
 			il.Emit(OpCodes.Ldloc_S, idxLocal);
 			il.Emit(OpCodes.Ldelema, elemType);
 
-			Helpers.GenDeserializerCall(ctx, il, elemType);
+			il.EmitCall(OpCodes.Call, data.ReaderMethodInfo, null);
 
 			// i = i + 1
 			il.Emit(OpCodes.Ldloc_S, idxLocal);
@@ -166,7 +185,7 @@ namespace NetSerializer
 
 
 			// store new array to the out value
-			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ldarg_2);
 			il.Emit(OpCodes.Ldloc_S, arrLocal);
 			il.Emit(OpCodes.Stind_Ref);
 

@@ -18,11 +18,12 @@ namespace NetSerializer
 		public static DynamicMethod GenerateDynamicSerializerStub(Type type)
 		{
 			var dm = new DynamicMethod("Serialize", null,
-				new Type[] { typeof(Stream), type },
+				new Type[] { typeof(Serializer), typeof(Stream), type },
 				typeof(Serializer), true);
 
-			dm.DefineParameter(1, ParameterAttributes.None, "stream");
-			dm.DefineParameter(2, ParameterAttributes.None, "value");
+			dm.DefineParameter(1, ParameterAttributes.None, "serializer");
+			dm.DefineParameter(2, ParameterAttributes.None, "stream");
+			dm.DefineParameter(3, ParameterAttributes.None, "value");
 
 			return dm;
 		}
@@ -30,9 +31,11 @@ namespace NetSerializer
 #if GENERATE_DEBUGGING_ASSEMBLY
 		public static MethodBuilder GenerateStaticSerializerStub(TypeBuilder tb, Type type)
 		{
-			var mb = tb.DefineMethod("Serialize", MethodAttributes.Public | MethodAttributes.Static, null, new Type[] { typeof(Stream), type });
-			mb.DefineParameter(1, ParameterAttributes.None, "stream");
-			mb.DefineParameter(2, ParameterAttributes.None, "value");
+			var mb = tb.DefineMethod("Serialize", MethodAttributes.Public | MethodAttributes.Static, null,
+				new Type[] { typeof(Serializer), typeof(Stream), type });
+			mb.DefineParameter(1, ParameterAttributes.None, "serializer");
+			mb.DefineParameter(2, ParameterAttributes.None, "stream");
+			mb.DefineParameter(3, ParameterAttributes.None, "value");
 			return mb;
 		}
 #endif
