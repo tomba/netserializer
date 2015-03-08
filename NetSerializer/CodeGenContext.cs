@@ -27,9 +27,6 @@ namespace NetSerializer
 		public readonly IDynamicTypeSerializer TypeSerializer;
 		public MethodInfo WriterMethodInfo;
 		public MethodInfo ReaderMethodInfo;
-
-		public ILGenerator WriterILGen;
-		public ILGenerator ReaderILGen;
 	}
 
 	public sealed class CodeGenContext

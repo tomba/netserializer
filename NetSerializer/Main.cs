@@ -192,13 +192,8 @@ namespace NetSerializer
 				if (!td.IsGenerated)
 					continue;
 
-				var writerDm = SerializerCodegen.GenerateDynamicSerializerStub(type);
-				td.WriterMethodInfo = writerDm;
-				td.WriterILGen = writerDm.GetILGenerator();
-
-				var readerDm = DeserializerCodegen.GenerateDynamicDeserializerStub(type);
-				td.ReaderMethodInfo = readerDm;
-				td.ReaderILGen = readerDm.GetILGenerator();
+				td.WriterMethodInfo = SerializerCodegen.GenerateDynamicSerializerStub(type);
+				td.ReaderMethodInfo = DeserializerCodegen.GenerateDynamicDeserializerStub(type);
 			}
 
 			var ctx = new CodeGenContext(map);
@@ -213,8 +208,11 @@ namespace NetSerializer
 				if (!td.IsGenerated)
 					continue;
 
-				td.TypeSerializer.GenerateWriterMethod(type, ctx, td.WriterILGen);
-				td.TypeSerializer.GenerateReaderMethod(type, ctx, td.ReaderILGen);
+				var writerDm = (DynamicMethod)td.WriterMethodInfo;
+				td.TypeSerializer.GenerateWriterMethod(type, ctx, writerDm.GetILGenerator());
+
+				var readerDm = (DynamicMethod)td.ReaderMethodInfo;
+				td.TypeSerializer.GenerateReaderMethod(type, ctx, readerDm.GetILGenerator());
 			}
 
 			var writer = (DynamicMethod)ctx.GetWriterMethodInfo(typeof(object));
@@ -240,13 +238,8 @@ namespace NetSerializer
 				if (!td.IsGenerated)
 					continue;
 
-				var mb = SerializerCodegen.GenerateStaticSerializerStub(tb, type);
-				td.WriterMethodInfo = mb;
-				td.WriterILGen = mb.GetILGenerator();
-
-				var dm = DeserializerCodegen.GenerateStaticDeserializerStub(tb, type);
-				td.ReaderMethodInfo = dm;
-				td.ReaderILGen = dm.GetILGenerator();
+				td.WriterMethodInfo = SerializerCodegen.GenerateStaticSerializerStub(tb, type);
+				td.ReaderMethodInfo = DeserializerCodegen.GenerateStaticDeserializerStub(tb, type);
 			}
 
 			var ctx = new CodeGenContext(map);
@@ -261,8 +254,11 @@ namespace NetSerializer
 				if (!td.IsGenerated)
 					continue;
 
-				td.TypeSerializer.GenerateWriterMethod(type, ctx, td.WriterILGen);
-				td.TypeSerializer.GenerateReaderMethod(type, ctx, td.ReaderILGen);
+				var writerMb = (MethodBuilder)td.WriterMethodInfo;
+				td.TypeSerializer.GenerateWriterMethod(type, ctx, writerMb.GetILGenerator());
+
+				var readerMb = (MethodBuilder)td.ReaderMethodInfo;
+				td.TypeSerializer.GenerateReaderMethod(type, ctx, readerMb.GetILGenerator());
 			}
 
 			tb.CreateType();
