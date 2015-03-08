@@ -14,7 +14,7 @@ using System.Diagnostics;
 
 namespace NetSerializer
 {
-	public static partial class Serializer
+	public partial class Serializer
 	{
 		static Dictionary<Type, ushort> s_typeIDMap;
 
@@ -41,9 +41,9 @@ namespace NetSerializer
 		/// Initialize NetSerializer
 		/// </summary>
 		/// <param name="rootTypes">Types to be (de)serialized</param>
-		public static void Initialize(IEnumerable<Type> rootTypes)
+		public Serializer(IEnumerable<Type> rootTypes)
+			: this(rootTypes, new ITypeSerializer[0])
 		{
-			Initialize(rootTypes, new ITypeSerializer[0]);
 		}
 
 		/// <summary>
@@ -51,7 +51,7 @@ namespace NetSerializer
 		/// </summary>
 		/// <param name="rootTypes">Types to be (de)serialized</param>
 		/// <param name="userTypeSerializers">Array of custom serializers</param>
-		public static void Initialize(IEnumerable<Type> rootTypes, ITypeSerializer[] userTypeSerializers)
+		public Serializer(IEnumerable<Type> rootTypes, ITypeSerializer[] userTypeSerializers)
 		{
 			if (IsInitialized)
 				throw new InvalidOperationException("NetSerializer already initialized");
@@ -74,7 +74,17 @@ namespace NetSerializer
 			IsInitialized = true;
 		}
 
-		public static void Serialize(Stream stream, object data)
+		public void Serialize(Stream stream, object data)
+		{
+			SerializeStatic(stream, data);
+		}
+
+		public object Deserialize(Stream stream)
+		{
+			return DeserializeStatic(stream);
+		}
+
+		static void SerializeStatic(Stream stream, object data)
 		{
 			if (!IsInitialized)
 				throw new InvalidOperationException("NetSerializer not initialized");
@@ -82,7 +92,7 @@ namespace NetSerializer
 			s_serializerSwitch(stream, data);
 		}
 
-		public static object Deserialize(Stream stream)
+		static object DeserializeStatic(Stream stream)
 		{
 			if (!IsInitialized)
 				throw new InvalidOperationException("NetSerializer not initialized");
