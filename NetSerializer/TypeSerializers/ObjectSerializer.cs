@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
 
 namespace NetSerializer
@@ -19,6 +20,9 @@ namespace NetSerializer
 
 		public void GenerateWriterMethod(Type obtype, CodeGenContext ctx, ILGenerator il)
 		{
+			var getTypeIDMethodInfo = typeof(Serializer).GetMethod("GetTypeID", BindingFlags.NonPublic | BindingFlags.Instance, null,
+				new Type[] { typeof(object) }, null);
+
 			var map = ctx.TypeMap;
 
 			// arg0: Serializer, arg1: Stream, arg2: object
@@ -26,8 +30,9 @@ namespace NetSerializer
 			var idLocal = il.DeclareLocal(typeof(ushort));
 
 			// get TypeID from object's Type
+			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldarg_2);
-			il.EmitCall(OpCodes.Call, Helpers.GetTypeIDMethodInfo, null);
+			il.EmitCall(OpCodes.Call, getTypeIDMethodInfo, null);
 			il.Emit(OpCodes.Stloc_S, idLocal);
 
 			// write typeID

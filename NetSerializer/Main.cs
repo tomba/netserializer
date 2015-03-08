@@ -16,7 +16,7 @@ namespace NetSerializer
 {
 	public partial class Serializer
 	{
-		static Dictionary<Type, ushort> s_typeIDMap;
+		Dictionary<Type, ushort> s_typeIDMap;
 
 		delegate void SerializerSwitch(Serializer serializer, Stream stream, object ob);
 		delegate void DeserializerSwitch(Serializer serializer, Stream stream, out object ob);
@@ -233,7 +233,7 @@ namespace NetSerializer
 #endif
 
 		/* called from the dynamically generated code */
-		static ushort GetTypeID(object ob)
+		ushort GetTypeID(object ob)
 		{
 			ushort id;
 
