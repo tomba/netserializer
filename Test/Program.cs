@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NetSerializer;
 using System.IO;
 using System.Diagnostics;
+using NS = NetSerializer;
 
 namespace Test
 {
@@ -27,6 +27,7 @@ namespace Test
 	{
 		static bool s_runProtoBufTests = false;
 		static bool s_quickRun = false;
+		internal static NS.Serializer Serializer;
 
 		static void Main(string[] args)
 		{
@@ -37,7 +38,7 @@ namespace Test
 				.ToArray();
 
 			var sw = Stopwatch.StartNew();
-			Serializer.Initialize(types, new ITypeSerializer[] { new CustomSerializers() });
+			Program.Serializer = new NS.Serializer(types, new NS.ITypeSerializer[] { new CustomSerializers() });
 			sw.Stop();
 
 			Console.WriteLine("Serializer.Initialize() in {0} ms", sw.ElapsedMilliseconds);

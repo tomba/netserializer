@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using NetSerializer;
 
 namespace Test
 {
@@ -27,7 +26,7 @@ namespace Test
 			m_stream.Position = 0;
 
 			foreach (var msg in msgs)
-				Serializer.Serialize(m_stream, msg);
+				Program.Serializer.Serialize(m_stream, msg);
 
 			m_stream.Flush();
 
@@ -41,7 +40,7 @@ namespace Test
 			m_stream.Position = 0;
 
 			for (int i = 0; i < numMessages; ++i)
-				m_received[i] = (MessageBase)Serializer.Deserialize(m_stream);
+				m_received[i] = (MessageBase)Program.Serializer.Deserialize(m_stream);
 
 			return m_received;
 		}

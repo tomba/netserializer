@@ -60,7 +60,7 @@ namespace Test
 			using (var bufStream = new BufferedStream(stream))
 			{
 				for (int i = 0; i < m_received.Length; ++i)
-					m_received[i] = (MessageBase)Serializer.Deserialize(bufStream);
+					m_received[i] = (MessageBase)Program.Serializer.Deserialize(bufStream);
 			}
 
 			listener.Stop();
@@ -77,7 +77,7 @@ namespace Test
 				m_ev.WaitOne();
 
 				for (int i = 0; i < m_sent.Length; ++i)
-					Serializer.Serialize(bufStream, m_sent[i]);
+					Program.Serializer.Serialize(bufStream, m_sent[i]);
 			}
 
 			c.Close();
