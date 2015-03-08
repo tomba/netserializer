@@ -14,15 +14,15 @@ using System.Diagnostics;
 
 namespace NetSerializer
 {
-	public partial class Serializer
+	public class Serializer
 	{
-		Dictionary<Type, ushort> s_typeIDMap;
+		Dictionary<Type, ushort> m_typeIDMap;
 
 		delegate void SerializerSwitch(Serializer serializer, Stream stream, object ob);
 		delegate void DeserializerSwitch(Serializer serializer, Stream stream, out object ob);
 
-		SerializerSwitch s_serializerSwitch;
-		DeserializerSwitch s_deserializerSwitch;
+		SerializerSwitch m_serializerSwitch;
+		DeserializerSwitch m_deserializerSwitch;
 
 		static ITypeSerializer[] s_typeSerializers = new ITypeSerializer[] {
 			new ObjectSerializer(),
@@ -33,7 +33,7 @@ namespace NetSerializer
 			new GenericSerializer(),
 		};
 
-		ITypeSerializer[] s_userTypeSerializers;
+		ITypeSerializer[] m_userTypeSerializers;
 
 		/// <summary>
 		/// Initialize NetSerializer
@@ -54,13 +54,13 @@ namespace NetSerializer
 			if (userTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
 				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or  IStaticTypeSerializer");
 
-			s_userTypeSerializers = userTypeSerializers;
+			m_userTypeSerializers = userTypeSerializers;
 
 			var typeDataMap = GenerateTypeData(rootTypes);
 
 			GenerateDynamic(typeDataMap);
 
-			s_typeIDMap = typeDataMap.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.TypeID);
+			m_typeIDMap = typeDataMap.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.TypeID);
 
 #if GENERATE_DEBUGGING_ASSEMBLY
 			// Note: GenerateDebugAssembly overwrites some fields from typeDataMap
@@ -70,13 +70,13 @@ namespace NetSerializer
 
 		public void Serialize(Stream stream, object data)
 		{
-			s_serializerSwitch(this, stream, data);
+			m_serializerSwitch(this, stream, data);
 		}
 
 		public object Deserialize(Stream stream)
 		{
 			object o;
-			s_deserializerSwitch(this, stream, out o);
+			m_deserializerSwitch(this, stream, out o);
 			return o;
 		}
 
@@ -103,7 +103,7 @@ namespace NetSerializer
 				if (type.ContainsGenericParameters)
 					throw new NotSupportedException(String.Format("Type {0} contains generic parameters", type.FullName));
 
-				var serializer = s_userTypeSerializers.FirstOrDefault(h => h.Handles(type));
+				var serializer = m_userTypeSerializers.FirstOrDefault(h => h.Handles(type));
 
 				if (serializer == null)
 					serializer = s_typeSerializers.FirstOrDefault(h => h.Handles(type));
@@ -184,8 +184,8 @@ namespace NetSerializer
 			var writer = (DynamicMethod)ctx.GetWriterMethodInfo(typeof(object));
 			var reader = (DynamicMethod)ctx.GetReaderMethodInfo(typeof(object));
 
-			s_serializerSwitch = (SerializerSwitch)writer.CreateDelegate(typeof(SerializerSwitch));
-			s_deserializerSwitch = (DeserializerSwitch)reader.CreateDelegate(typeof(DeserializerSwitch));
+			m_serializerSwitch = (SerializerSwitch)writer.CreateDelegate(typeof(SerializerSwitch));
+			m_deserializerSwitch = (DeserializerSwitch)reader.CreateDelegate(typeof(DeserializerSwitch));
 		}
 
 #if GENERATE_DEBUGGING_ASSEMBLY
@@ -242,7 +242,7 @@ namespace NetSerializer
 
 			var type = ob.GetType();
 
-			if (s_typeIDMap.TryGetValue(type, out id) == false)
+			if (m_typeIDMap.TryGetValue(type, out id) == false)
 				throw new InvalidOperationException(String.Format("Unknown type {0}", type.FullName));
 
 			return id;
