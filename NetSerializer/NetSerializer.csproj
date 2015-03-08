@@ -46,6 +46,7 @@
     <Compile Include="ITypeSerializer.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Primitives.cs" />
+    <Compile Include="TypeSerializers\ObjectSerializer.cs" />
     <Compile Include="TypeSerializers\PrimitivesSerializer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SerializerCodegen.cs" />

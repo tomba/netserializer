@@ -25,6 +25,7 @@ namespace NetSerializer
 		static DeserializerSwitch s_deserializerSwitch;
 
 		static ITypeSerializer[] s_typeSerializers = new ITypeSerializer[] {
+			new ObjectSerializer(),
 			new PrimitivesSerializer(),
 			new ArraySerializer(),
 			new EnumSerializer(),
@@ -108,6 +109,8 @@ namespace NetSerializer
 			var map = new Dictionary<Type, TypeData>();
 			var stack = new Stack<Type>(PrimitivesSerializer.GetSupportedTypes().Concat(rootTypes));
 
+			stack.Push(typeof(object));
+
 			// TypeID 0 is reserved for null
 			ushort typeID = 1;
 
@@ -188,21 +191,7 @@ namespace NetSerializer
 				td.ReaderILGen = readerDm.GetILGenerator();
 			}
 
-			var serializerSwitchMethod = new DynamicMethod("SerializerSwitch", null,
-				new Type[] { typeof(Stream), typeof(object) },
-				typeof(Serializer), true);
-			serializerSwitchMethod.DefineParameter(1, ParameterAttributes.None, "stream");
-			serializerSwitchMethod.DefineParameter(2, ParameterAttributes.None, "value");
-			var serializerSwitchMethodInfo = serializerSwitchMethod;
-
-			var deserializerSwitchMethod = new DynamicMethod("DeserializerSwitch", null,
-				new Type[] { typeof(Stream), typeof(object).MakeByRefType() },
-				typeof(Serializer), true);
-			deserializerSwitchMethod.DefineParameter(1, ParameterAttributes.None, "stream");
-			deserializerSwitchMethod.DefineParameter(2, ParameterAttributes.Out, "value");
-			var deserializerSwitchMethodInfo = deserializerSwitchMethod;
-
-			var ctx = new CodeGenContext(map, serializerSwitchMethodInfo, deserializerSwitchMethodInfo);
+			var ctx = new CodeGenContext(map);
 
 			/* generate bodies */
 
@@ -218,13 +207,11 @@ namespace NetSerializer
 				td.TypeSerializer.GenerateReaderMethod(type, ctx, td.ReaderILGen);
 			}
 
-			var ilGen = serializerSwitchMethod.GetILGenerator();
-			SerializerCodegen.GenerateSerializerSwitch(ctx, ilGen, map);
-			s_serializerSwitch = (SerializerSwitch)serializerSwitchMethod.CreateDelegate(typeof(SerializerSwitch));
+			var writer = (DynamicMethod)ctx.GetWriterMethodInfo(typeof(object));
+			var reader = (DynamicMethod)ctx.GetReaderMethodInfo(typeof(object));
 
-			ilGen = deserializerSwitchMethod.GetILGenerator();
-			DeserializerCodegen.GenerateDeserializerSwitch(ctx, ilGen, map);
-			s_deserializerSwitch = (DeserializerSwitch)deserializerSwitchMethod.CreateDelegate(typeof(DeserializerSwitch));
+			s_serializerSwitch = (SerializerSwitch)writer.CreateDelegate(typeof(SerializerSwitch));
+			s_deserializerSwitch = (DeserializerSwitch)reader.CreateDelegate(typeof(DeserializerSwitch));
 		}
 
 #if GENERATE_DEBUGGING_ASSEMBLY
@@ -252,17 +239,7 @@ namespace NetSerializer
 				td.ReaderILGen = dm.GetILGenerator();
 			}
 
-			var serializerSwitchMethod = tb.DefineMethod("SerializerSwitch", MethodAttributes.Public | MethodAttributes.Static, null, new Type[] { typeof(Stream), typeof(object) });
-			serializerSwitchMethod.DefineParameter(1, ParameterAttributes.None, "stream");
-			serializerSwitchMethod.DefineParameter(2, ParameterAttributes.None, "value");
-			var serializerSwitchMethodInfo = serializerSwitchMethod;
-
-			var deserializerSwitchMethod = tb.DefineMethod("DeserializerSwitch", MethodAttributes.Public | MethodAttributes.Static, null, new Type[] { typeof(Stream), typeof(object).MakeByRefType() });
-			deserializerSwitchMethod.DefineParameter(1, ParameterAttributes.None, "stream");
-			deserializerSwitchMethod.DefineParameter(2, ParameterAttributes.Out, "value");
-			var deserializerSwitchMethodInfo = deserializerSwitchMethod;
-
-			var ctx = new CodeGenContext(map, serializerSwitchMethodInfo, deserializerSwitchMethodInfo);
+			var ctx = new CodeGenContext(map);
 
 			/* generate bodies */
 
@@ -277,12 +254,6 @@ namespace NetSerializer
 				td.TypeSerializer.GenerateWriterMethod(type, ctx, td.WriterILGen);
 				td.TypeSerializer.GenerateReaderMethod(type, ctx, td.ReaderILGen);
 			}
-
-			var ilGen = serializerSwitchMethod.GetILGenerator();
-			SerializerCodegen.GenerateSerializerSwitch(ctx, ilGen, map);
-
-			ilGen = deserializerSwitchMethod.GetILGenerator();
-			DeserializerCodegen.GenerateDeserializerSwitch(ctx, ilGen, map);
 
 			tb.CreateType();
 			ab.Save("NetSerializerDebug.dll");

@@ -36,11 +36,13 @@ namespace NetSerializer
 	{
 		readonly Dictionary<Type, TypeData> m_typeMap;
 
-		public CodeGenContext(Dictionary<Type, TypeData> typeMap, MethodInfo serializerSwitch, MethodInfo deserializerSwitch)
+		public CodeGenContext(Dictionary<Type, TypeData> typeMap)
 		{
 			m_typeMap = typeMap;
-			this.SerializerSwitchMethodInfo = serializerSwitch;
-			this.DeserializerSwitchMethodInfo = deserializerSwitch;
+
+			var td = m_typeMap[typeof(object)];
+			this.SerializerSwitchMethodInfo = td.WriterMethodInfo;
+			this.DeserializerSwitchMethodInfo = td.ReaderMethodInfo;
 		}
 
 		public MethodInfo SerializerSwitchMethodInfo { get; private set; }
@@ -60,5 +62,7 @@ namespace NetSerializer
 		{
 			return m_typeMap[type].IsGenerated;
 		}
+
+		public IDictionary<Type, TypeData> TypeMap { get { return m_typeMap; } }
 	}
 }
