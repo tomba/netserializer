@@ -39,7 +39,7 @@ namespace NetSerializer
 			// - Value types
 			// - Array types
 			// - Sealed types with static Serializer method, as the method will handle null
-			// Other reference types go through the SerializesSwitch
+			// Other reference types go through the SerializerSwitch
 
 			bool direct;
 
@@ -61,7 +61,7 @@ namespace NetSerializer
 			// - Value types
 			// - Array types
 			// - Sealed types with static Deserializer method, as the method will handle null
-			// Other reference types go through the DeserializesSwitch
+			// Other reference types go through the DeserializerSwitch
 
 			bool direct;
 
