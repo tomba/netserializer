@@ -24,20 +24,18 @@ namespace Test
 	{
 		public abstract void Compare(MessageBase msg);
 
-		protected static MyRandom s_rand = new MyRandom(123);
-
 		protected static void A(bool b)
 		{
 			if (!b)
 				throw new Exception();
 		}
 
-		public static MessageBase[] CreateMessages(Type type, int numMessages)
+		public static MessageBase[] CreateMessages(MyRandom rand, Type type, int numMessages)
 		{
 			var arr = new MessageBase[numMessages];
 
 			for (int i = 0; i < numMessages; ++i)
-				arr[i] = (MessageBase)Activator.CreateInstance(type, s_rand);
+				arr[i] = (MessageBase)Activator.CreateInstance(type, rand);
 
 			return arr;
 		}

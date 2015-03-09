@@ -44,26 +44,28 @@ namespace Test
 
 			Warmup(serializer);
 
-			RunTests(serializer, typeof(U8Message), 6000000);
-			RunTests(serializer, typeof(S16Message), 6000000);
-			RunTests(serializer, typeof(S32Message), 6000000);
-			RunTests(serializer, typeof(S64Message), 5000000);
+			MyRandom rand = new MyRandom(123);
 
-			RunTests(serializer, typeof(PrimitivesMessage), 1000000);
-			RunTests(serializer, typeof(DictionaryMessage), 5000);
+			RunTests(serializer, rand, typeof(U8Message), 6000000);
+			RunTests(serializer, rand, typeof(S16Message), 6000000);
+			RunTests(serializer, rand, typeof(S32Message), 6000000);
+			RunTests(serializer, rand, typeof(S64Message), 5000000);
 
-			RunTests(serializer, typeof(ComplexMessage), 1000000);
+			RunTests(serializer, rand, typeof(PrimitivesMessage), 1000000);
+			RunTests(serializer, rand, typeof(DictionaryMessage), 5000);
 
-			RunTests(serializer, typeof(StringMessage), 600000);
+			RunTests(serializer, rand, typeof(ComplexMessage), 1000000);
 
-			RunTests(serializer, typeof(StructMessage), 2000000);
+			RunTests(serializer, rand, typeof(StringMessage), 600000);
 
-			RunTests(serializer, typeof(BoxedPrimitivesMessage), 2000000);
+			RunTests(serializer, rand, typeof(StructMessage), 2000000);
 
-			RunTests(serializer, typeof(ByteArrayMessage), 5000);
-			RunTests(serializer, typeof(IntArrayMessage), 800);
+			RunTests(serializer, rand, typeof(BoxedPrimitivesMessage), 2000000);
 
-			RunTests(serializer, typeof(CustomSerializersMessage), 800);
+			RunTests(serializer, rand, typeof(ByteArrayMessage), 5000);
+			RunTests(serializer, rand, typeof(IntArrayMessage), 800);
+
+			RunTests(serializer, rand, typeof(CustomSerializersMessage), 800);
 
 			//Console.WriteLine("Press enter to quit");
 			//Console.ReadLine();
@@ -89,7 +91,7 @@ namespace Test
 			}
 		}
 
-		static void RunTests(NS.Serializer serializer, Type msgType, int numMessages)
+		static void RunTests(NS.Serializer serializer, MyRandom rand, Type msgType, int numMessages)
 		{
 			if (s_quickRun)
 				numMessages = 50;
@@ -98,7 +100,7 @@ namespace Test
 
 			bool protobufCompatible = msgType.GetCustomAttributes(typeof(ProtoBuf.ProtoContractAttribute), false).Any();
 
-			var msgs = MessageBase.CreateMessages(msgType, numMessages);
+			var msgs = MessageBase.CreateMessages(rand, msgType, numMessages);
 
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
