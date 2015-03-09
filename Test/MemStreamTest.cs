@@ -3,13 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using NS = NetSerializer;
 
 namespace Test
 {
 	class MemStreamTest : IMemStreamTest
 	{
+		NS.Serializer m_serializer;
 		MessageBase[] m_received;
 		MemoryStream m_stream;
+
+		public MemStreamTest(NS.Serializer serializer)
+		{
+			m_serializer = serializer;
+		}
 
 		public string Framework { get { return "NetSerializer"; } }
 
@@ -26,7 +33,7 @@ namespace Test
 			m_stream.Position = 0;
 
 			foreach (var msg in msgs)
-				Program.Serializer.Serialize(m_stream, msg);
+				m_serializer.Serialize(m_stream, msg);
 
 			m_stream.Flush();
 
@@ -40,7 +47,7 @@ namespace Test
 			m_stream.Position = 0;
 
 			for (int i = 0; i < numMessages; ++i)
-				m_received[i] = (MessageBase)Program.Serializer.Deserialize(m_stream);
+				m_received[i] = (MessageBase)m_serializer.Deserialize(m_stream);
 
 			return m_received;
 		}

@@ -27,7 +27,6 @@ namespace Test
 	{
 		static bool s_runProtoBufTests = false;
 		static bool s_quickRun = false;
-		internal static NS.Serializer Serializer;
 
 		static void Main(string[] args)
 		{
@@ -38,45 +37,45 @@ namespace Test
 				.ToArray();
 
 			var sw = Stopwatch.StartNew();
-			Program.Serializer = new NS.Serializer(types, new NS.ITypeSerializer[] { new CustomSerializers() });
+			var serializer = new NS.Serializer(types, new NS.ITypeSerializer[] { new CustomSerializers() });
 			sw.Stop();
 
 			Console.WriteLine("Serializer.Initialize() in {0} ms", sw.ElapsedMilliseconds);
 
-			Warmup();
+			Warmup(serializer);
 
-			RunTests(typeof(U8Message), 6000000);
-			RunTests(typeof(S16Message), 6000000);
-			RunTests(typeof(S32Message), 6000000);
-			RunTests(typeof(S64Message), 5000000);
+			RunTests(serializer, typeof(U8Message), 6000000);
+			RunTests(serializer, typeof(S16Message), 6000000);
+			RunTests(serializer, typeof(S32Message), 6000000);
+			RunTests(serializer, typeof(S64Message), 5000000);
 
-			RunTests(typeof(PrimitivesMessage), 1000000);
-			RunTests(typeof(DictionaryMessage), 5000);
+			RunTests(serializer, typeof(PrimitivesMessage), 1000000);
+			RunTests(serializer, typeof(DictionaryMessage), 5000);
 
-			RunTests(typeof(ComplexMessage), 1000000);
+			RunTests(serializer, typeof(ComplexMessage), 1000000);
 
-			RunTests(typeof(StringMessage), 600000);
+			RunTests(serializer, typeof(StringMessage), 600000);
 
-			RunTests(typeof(StructMessage), 2000000);
+			RunTests(serializer, typeof(StructMessage), 2000000);
 
-			RunTests(typeof(BoxedPrimitivesMessage), 2000000);
+			RunTests(serializer, typeof(BoxedPrimitivesMessage), 2000000);
 
-			RunTests(typeof(ByteArrayMessage), 5000);
-			RunTests(typeof(IntArrayMessage), 800);
+			RunTests(serializer, typeof(ByteArrayMessage), 5000);
+			RunTests(serializer, typeof(IntArrayMessage), 800);
 
-			RunTests(typeof(CustomSerializersMessage), 800);
+			RunTests(serializer, typeof(CustomSerializersMessage), 800);
 
 			//Console.WriteLine("Press enter to quit");
 			//Console.ReadLine();
 		}
 
-		static void Warmup()
+		static void Warmup(NS.Serializer serializer)
 		{
 			var msgs = new MessageBase[] { new S16Message(), new ComplexMessage(), new IntArrayMessage() };
 
 			IMemStreamTest t;
 
-			t = new MemStreamTest();
+			t = new MemStreamTest(serializer);
 			t.Prepare(msgs.Length);
 			t.Serialize(msgs);
 			t.Deserialize();
@@ -90,7 +89,7 @@ namespace Test
 			}
 		}
 
-		static void RunTests(Type msgType, int numMessages)
+		static void RunTests(NS.Serializer serializer, Type msgType, int numMessages)
 		{
 			if (s_quickRun)
 				numMessages = 50;
@@ -105,11 +104,11 @@ namespace Test
 			GC.WaitForPendingFinalizers();
 			GC.Collect();
 
-			Test(new MemStreamTest(), msgs);
+			Test(new MemStreamTest(serializer), msgs);
 			if (s_runProtoBufTests && protobufCompatible)
 				Test(new PBMemStreamTest(), msgs);
 
-			Test(new NetTest(), msgs);
+			Test(new NetTest(serializer), msgs);
 			if (s_runProtoBufTests && protobufCompatible)
 				Test(new PBNetTest(), msgs);
 		}

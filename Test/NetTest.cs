@@ -7,12 +7,14 @@ using System.Net.Sockets;
 using System.Net;
 using System.Diagnostics;
 using System.IO;
-using NetSerializer;
+using NS = NetSerializer;
 
 namespace Test
 {
 	class NetTest : INetTest
 	{
+		NS.Serializer m_serializer;
+
 		MessageBase[] m_sent;
 		MessageBase[] m_received;
 
@@ -20,6 +22,11 @@ namespace Test
 		Thread m_client;
 
 		ManualResetEvent m_ev;
+
+		public NetTest(NS.Serializer serializer)
+		{
+			m_serializer = serializer;
+		}
 
 		public string Framework { get { return "NetSerializer"; } }
 
@@ -60,7 +67,7 @@ namespace Test
 			using (var bufStream = new BufferedStream(stream))
 			{
 				for (int i = 0; i < m_received.Length; ++i)
-					m_received[i] = (MessageBase)Program.Serializer.Deserialize(bufStream);
+					m_received[i] = (MessageBase)m_serializer.Deserialize(bufStream);
 			}
 
 			listener.Stop();
@@ -77,7 +84,7 @@ namespace Test
 				m_ev.WaitOne();
 
 				for (int i = 0; i < m_sent.Length; ++i)
-					Program.Serializer.Serialize(bufStream, m_sent[i]);
+					m_serializer.Serialize(bufStream, m_sent[i]);
 			}
 
 			c.Close();
