@@ -59,15 +59,15 @@ recursively add all the types used by the given types, and create
 
 Initialization:
 
-	NetSerializer.Serializer.Initialize(types);
+	var ser = new Serializer(types);
 
 Serializing:
 
-	NetSerializer.Serializer.Serialize(stream, ob);
+	ser.Serialize(stream, ob);
 
 Deserializing:
 
-	(YourType)NetSerializer.Serializer.Deserialize(stream);
+	(YourType)ser.Deserialize(stream);
 
 
 Performance
