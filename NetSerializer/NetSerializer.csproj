@@ -43,7 +43,7 @@
     <Compile Include="TypeSerializers\EnumSerializer.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="ITypeSerializer.cs" />
-    <Compile Include="Main.cs" />
+    <Compile Include="Serializer.cs" />
     <Compile Include="Primitives.cs" />
     <Compile Include="TypeSerializers\ObjectSerializer.cs" />
     <Compile Include="TypeSerializers\PrimitivesSerializer.cs" />
