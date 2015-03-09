@@ -24,12 +24,7 @@ namespace Test
 	{
 		public abstract void Compare(MessageBase msg);
 
-		protected static Random s_rand = new Random(123);
-
-		public static void ResetSeed()
-		{
-			s_rand = new Random(123);
-		}
+		protected static MyRandom s_rand = new MyRandom(123);
 
 		protected static void A(bool b)
 		{
@@ -46,14 +41,6 @@ namespace Test
 
 			return arr;
 		}
-
-		static byte[] r64buf = new byte[8];
-		protected static long GetRandomInt64(Random random)
-		{
-			// XXX produces quite big numbers
-			random.NextBytes(r64buf);
-			return BitConverter.ToInt64(r64buf, 0);
-		}
 	}
 
 	[Serializable]
@@ -67,7 +54,7 @@ namespace Test
 		{
 		}
 
-		public U8Message(Random r)
+		public U8Message(MyRandom r)
 		{
 			m_val = (byte)r.Next();
 		}
@@ -90,7 +77,7 @@ namespace Test
 		{
 		}
 
-		public S16Message(Random r)
+		public S16Message(MyRandom r)
 		{
 			m_val = (short)r.Next();
 		}
@@ -113,7 +100,7 @@ namespace Test
 		{
 		}
 
-		public S32Message(Random r)
+		public S32Message(MyRandom r)
 		{
 			m_val = (int)r.Next();
 		}
@@ -161,14 +148,14 @@ namespace Test
 		{
 		}
 
-		public StructMessage(Random r)
+		public StructMessage(MyRandom r)
 		{
 			m_struct1.m_byte = (byte)r.Next();
-			m_struct1.m_int = r.Next();
-			m_struct1.m_long = (long)r.Next() + (long)r.Next();
+			m_struct1.m_int = (int)r.Next();
+			m_struct1.m_long = (long)r.Next();
 
 			m_struct2.m_string = new string((char)r.Next((int)'a', (int)'z'), r.Next(0, 20));
-			m_struct2.m_int = r.Next();
+			m_struct2.m_int = (int)r.Next();
 		}
 
 		public override void Compare(MessageBase msg)
@@ -191,9 +178,9 @@ namespace Test
 		{
 		}
 
-		public S64Message(Random r)
+		public S64Message(MyRandom r)
 		{
-			m_val = GetRandomInt64(r);
+			m_val = (long)r.Next();
 		}
 
 		public override void Compare(MessageBase msg)
@@ -254,7 +241,7 @@ namespace Test
 		{
 		}
 
-		public PrimitivesMessage(Random r)
+		public PrimitivesMessage(MyRandom r)
 		{
 			m_bool = (r.Next() & 1) == 1;
 			m_byte = (byte)r.Next();
@@ -267,7 +254,7 @@ namespace Test
 			m_ulong = (ulong)r.Next();
 			m_long = (long)r.Next();
 
-			m_int = r.Next();
+			m_int = (int)r.Next();
 
 			m_single = (float)r.NextDouble();
 			m_double = r.NextDouble();
@@ -317,14 +304,14 @@ namespace Test
 		{
 		}
 
-		public BoxedPrimitivesMessage(Random r)
+		public BoxedPrimitivesMessage(MyRandom r)
 		{
 			m_bool = (r.Next() & 1) == 1;
 			m_byte = (byte)r.Next();
 			m_int = (int)r.Next();
 			m_long = (long)r.Next();
 
-			m_int = r.Next();
+			m_int = (int)r.Next();
 
 			m_enum = (MyEnum)r.Next(0, 6);
 		}
@@ -354,7 +341,7 @@ namespace Test
 		{
 		}
 
-		public ByteArrayMessage(Random r)
+		public ByteArrayMessage(MyRandom r)
 		{
 			int len = r.Next(100000);
 
@@ -397,7 +384,7 @@ namespace Test
 		{
 		}
 
-		public IntArrayMessage(Random r)
+		public IntArrayMessage(MyRandom r)
 		{
 			int len = r.Next(100000);
 
@@ -409,7 +396,7 @@ namespace Test
 			{
 				m_intArr = new int[len - 1];
 				for (int i = 0; i < m_intArr.Length; ++i)
-					m_intArr[i] = r.Next();
+					m_intArr[i] = (int)r.Next();
 			}
 		}
 
@@ -440,7 +427,7 @@ namespace Test
 		{
 		}
 
-		public StringMessage(Random r)
+		public StringMessage(MyRandom r)
 		{
 			int len = r.Next(100);
 
@@ -472,9 +459,9 @@ namespace Test
 		{
 		}
 
-		protected SimpleClassBase(Random r)
+		protected SimpleClassBase(MyRandom r)
 		{
-			m_val = r.Next();
+			m_val = (int)r.Next();
 		}
 
 		public void Compare(SimpleClassBase other)
@@ -495,7 +482,7 @@ namespace Test
 		{
 		}
 
-		public SimpleClass(Random r)
+		public SimpleClass(MyRandom r)
 			: base(r)
 		{
 			m_val = (long)r.Next();
@@ -527,7 +514,7 @@ namespace Test
 		{
 		}
 
-		public SimpleClass2(Random r)
+		public SimpleClass2(MyRandom r)
 		{
 			m_val = (long)r.Next();
 		}
@@ -553,14 +540,14 @@ namespace Test
 		{
 		}
 
-		public DictionaryMessage(Random r)
+		public DictionaryMessage(MyRandom r)
 		{
 			var len = r.Next(0, 1000);
 			if (len > 0)
 			{
 				m_intMap = new Dictionary<int, int>(len);
 				for (int i = 0; i < len; ++i)
-					m_intMap[r.Next()] = r.Next();
+					m_intMap[(int)r.Next()] = (int)r.Next();
 			}
 
 			len = r.Next(0, 1000);
@@ -619,7 +606,7 @@ namespace Test
 		{
 		}
 
-		public ComplexMessage(Random r)
+		public ComplexMessage(MyRandom r)
 		{
 			if (r.Next(100) == 0)
 				m_msg = null;
@@ -679,7 +666,7 @@ namespace Test
 		{
 		}
 
-		public CustomSerializersMessage(Random r)
+		public CustomSerializersMessage(MyRandom r)
 		{
 			int lx = r.Next(100) + 1;
 			int ly = r.Next(70) + 1;
@@ -690,7 +677,7 @@ namespace Test
 			for (int z = 0; z < lz; ++z)
 				for (int y = 0; y < ly; ++y)
 					for (int x = 0; x < lx; ++x)
-						m_int3Arr[z, y, x] = r.Next();
+						m_int3Arr[z, y, x] = (int)r.Next();
 		}
 
 		public override void Compare(MessageBase msg)
