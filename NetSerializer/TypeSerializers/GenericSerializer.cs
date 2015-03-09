@@ -44,6 +44,8 @@ namespace NetSerializer
 
 			var fields = Helpers.GetFieldInfos(type);
 
+			bool gotRef = type.IsValueType == false || ctx.GetTypeData(type).WriterUsesByRef;
+
 			foreach (var field in fields)
 			{
 				// Note: the user defined value type is not passed as reference. could cause perf problems with big structs
@@ -56,11 +58,15 @@ namespace NetSerializer
 					il.Emit(OpCodes.Ldarg_0);
 
 				il.Emit(OpCodes.Ldarg_1);
-				if (type.IsValueType)
-					il.Emit(OpCodes.Ldarga_S, 2);
-				else
+				if (gotRef)
 					il.Emit(OpCodes.Ldarg_2);
-				il.Emit(OpCodes.Ldfld, field);
+				else
+					il.Emit(OpCodes.Ldarga_S, 2);
+
+				if (data.WriterUsesByRef)
+					il.Emit(OpCodes.Ldflda, field);
+				else
+					il.Emit(OpCodes.Ldfld, field);
 
 				il.Emit(OpCodes.Call, data.WriterMethodInfo);
 			}

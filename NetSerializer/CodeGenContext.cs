@@ -17,12 +17,13 @@ namespace NetSerializer
 {
 	public sealed class TypeData
 	{
-		public TypeData(ushort typeID, IDynamicTypeSerializer serializer)
+		public TypeData(ushort typeID, IDynamicTypeSerializer serializer, bool writerUsesByRef)
 		{
 			this.TypeID = typeID;
 			this.TypeSerializer = serializer;
 
 			this.NeedsInstanceParameter = true;
+			this.WriterUsesByRef = writerUsesByRef;
 		}
 
 		public TypeData(ushort typeID, MethodInfo writer, MethodInfo reader)
@@ -32,6 +33,7 @@ namespace NetSerializer
 			this.ReaderMethodInfo = reader;
 
 			this.NeedsInstanceParameter = writer.GetParameters().Length == 3;
+			this.WriterUsesByRef = false; // XXX
 		}
 
 		public readonly ushort TypeID;
@@ -40,6 +42,7 @@ namespace NetSerializer
 		public MethodInfo WriterMethodInfo;
 		public MethodInfo ReaderMethodInfo;
 
+		public bool WriterUsesByRef { get; private set; }
 		public bool NeedsInstanceParameter { get; private set; }
 	}
 

@@ -83,7 +83,11 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldarg_2);
 			il.Emit(OpCodes.Ldloc_S, idxLocal);
-			il.Emit(OpCodes.Ldelem, elemType);
+
+			if (data.WriterUsesByRef)
+				il.Emit(OpCodes.Ldelema, elemType);
+			else
+				il.Emit(OpCodes.Ldelem, elemType);
 
 			il.Emit(OpCodes.Call, data.WriterMethodInfo);
 

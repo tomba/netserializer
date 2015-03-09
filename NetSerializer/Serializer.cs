@@ -176,7 +176,7 @@ namespace NetSerializer
 				{
 					var dts = (IDynamicTypeSerializer)serializer;
 
-					typeData = new TypeData(typeID++, dts);
+					typeData = new TypeData(typeID++, dts, type.IsValueType);
 				}
 				else
 				{
@@ -200,7 +200,7 @@ namespace NetSerializer
 				if (!td.IsGenerated)
 					continue;
 
-				td.WriterMethodInfo = Helpers.GenerateDynamicSerializerStub(type);
+				td.WriterMethodInfo = Helpers.GenerateDynamicSerializerStub(type, td.WriterUsesByRef);
 				td.ReaderMethodInfo = Helpers.GenerateDynamicDeserializerStub(type);
 			}
 
@@ -233,7 +233,7 @@ namespace NetSerializer
 				var type = kvp.Key;
 				var data = kvp.Value;
 
-				var writer = Helpers.GenerateDynamicSerializerStub(typeof(object));
+				var writer = Helpers.GenerateDynamicSerializerStub(typeof(object), false);
 				Helpers.GenerateSerializerTrampoline(writer.GetILGenerator(), type, data);
 				m_serializerTrampolines[data.TypeID] = (SerializeDelegate)writer.CreateDelegate(typeof(SerializeDelegate));
 
@@ -259,7 +259,7 @@ namespace NetSerializer
 				if (!td.IsGenerated)
 					continue;
 
-				td.WriterMethodInfo = Helpers.GenerateStaticSerializerStub(tb, type);
+				td.WriterMethodInfo = Helpers.GenerateStaticSerializerStub(tb, type, td.WriterUsesByRef);
 				td.ReaderMethodInfo = Helpers.GenerateStaticDeserializerStub(tb, type);
 			}
 
@@ -288,7 +288,7 @@ namespace NetSerializer
 				var type = kvp.Key;
 				var data = kvp.Value;
 
-				var writerMethod = Helpers.GenerateStaticSerializerStub(tb, typeof(object));
+				var writerMethod = Helpers.GenerateStaticSerializerStub(tb, typeof(object), false);
 				Helpers.GenerateSerializerTrampoline(writerMethod.GetILGenerator(), type, data);
 
 				var readerMethod = Helpers.GenerateStaticDeserializerStub(tb, typeof(object));
