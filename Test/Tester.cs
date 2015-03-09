@@ -31,6 +31,11 @@ namespace Test
 			m_serializer = CreateSerializer();
 		}
 
+		public Tester(NS.Serializer serializer)
+		{
+			m_serializer = serializer;
+		}
+
 		public void Run()
 		{
 			Warmup();
