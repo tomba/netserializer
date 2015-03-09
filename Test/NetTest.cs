@@ -23,6 +23,9 @@ namespace Test
 
 		ManualResetEvent m_ev;
 
+		TcpListener m_listener;
+		int m_port;
+
 		public NetTest(NS.Serializer serializer)
 		{
 			m_serializer = serializer;
@@ -35,6 +38,10 @@ namespace Test
 			m_received = new MessageBase[numMessages];
 
 			m_ev = new ManualResetEvent(false);
+
+			m_listener = new TcpListener(IPAddress.Loopback, 0);
+			m_listener.Start();
+			m_port = ((IPEndPoint)m_listener.LocalEndpoint).Port;
 
 			m_server = new Thread(ServerMain);
 			m_server.Start();
@@ -54,14 +61,14 @@ namespace Test
 			m_client.Join();
 			m_server.Join();
 
+			m_listener.Stop();
+
 			return m_received;
 		}
 
 		void ServerMain()
 		{
-			var listener = new TcpListener(IPAddress.Loopback, 9999);
-			listener.Start();
-			var c = listener.AcceptTcpClient();
+			var c = m_listener.AcceptTcpClient();
 
 			using (var stream = c.GetStream())
 			using (var bufStream = new BufferedStream(stream))
@@ -69,14 +76,12 @@ namespace Test
 				for (int i = 0; i < m_received.Length; ++i)
 					m_received[i] = (MessageBase)m_serializer.Deserialize(bufStream);
 			}
-
-			listener.Stop();
 		}
 
 		void ClientMain()
 		{
 			var c = new TcpClient();
-			c.Connect(IPAddress.Loopback, 9999);
+			c.Connect(IPAddress.Loopback, m_port);
 
 			using (var netStream = c.GetStream())
 			using (var bufStream = new BufferedStream(netStream))
