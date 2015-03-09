@@ -34,8 +34,6 @@ namespace NetSerializer
 
 		public void GetStaticMethods(Type type, out MethodInfo writer, out MethodInfo reader)
 		{
-			var containerType = typeof(Primitives);
-
 			writer = Primitives.GetWritePrimitive(type);
 			reader = Primitives.GetReaderPrimitive(type);
 		}
