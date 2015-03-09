@@ -65,11 +65,7 @@ namespace NetSerializer
 			// loop body
 			il.MarkLabel(loopBodyLabel);
 
-			bool direct = Helpers.CanCallDirect(ctx, elemType);
-			if (!direct)
-				elemType = typeof(object);
-
-			var data = ctx.GetTypeData(elemType);
+			var data = ctx.GetTypeDataForCall(elemType);
 
 			if (data.NeedsInstanceParameter)
 				il.Emit(OpCodes.Ldarg_0);
@@ -151,11 +147,7 @@ namespace NetSerializer
 
 			// read element to arr[i]
 
-			bool direct = Helpers.CanCallDirect(ctx, elemType);
-			if (!direct)
-				elemType = typeof(object);
-
-			var data = ctx.GetTypeData(elemType);
+			var data = ctx.GetTypeDataForCall(elemType);
 
 			if (data.NeedsInstanceParameter)
 				il.Emit(OpCodes.Ldarg_0);

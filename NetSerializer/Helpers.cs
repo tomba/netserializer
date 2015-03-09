@@ -31,25 +31,5 @@ namespace NetSerializer
 				return baseFields.Concat(fields);
 			}
 		}
-
-		public static bool CanCallDirect(CodeGenContext ctx, Type type)
-		{
-			// We can call the (De)serializer method directly for:
-			// - Value types
-			// - Array types
-			// - Sealed types with static (De)serializer method, as the method will handle null
-			// Other reference types go through the (De)serializerSwitch
-
-			bool direct;
-
-			if (type.IsValueType || type.IsArray)
-				direct = true;
-			else if (type.IsSealed && ctx.IsGenerated(type) == false)
-				direct = true;
-			else
-				direct = false;
-
-			return direct;
-		}
 	}
 }

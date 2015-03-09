@@ -42,11 +42,7 @@ namespace NetSerializer
 
 				var fieldType = field.FieldType;
 
-				bool direct = Helpers.CanCallDirect(ctx, fieldType);
-				if (!direct)
-					fieldType = typeof(object);
-
-				var data = ctx.GetTypeData(fieldType);
+				var data = ctx.GetTypeDataForCall(fieldType);
 
 				if (data.NeedsInstanceParameter)
 					il.Emit(OpCodes.Ldarg_0);
@@ -89,11 +85,7 @@ namespace NetSerializer
 			{
 				var fieldType = field.FieldType;
 
-				bool direct = Helpers.CanCallDirect(ctx, fieldType);
-				if (!direct)
-					fieldType = typeof(object);
-
-				var data = ctx.GetTypeData(fieldType);
+				var data = ctx.GetTypeDataForCall(fieldType);
 
 				if (data.NeedsInstanceParameter)
 					il.Emit(OpCodes.Ldarg_0);

@@ -66,11 +66,40 @@ namespace NetSerializer
 			return m_typeMap[type].IsGenerated;
 		}
 
+		public IDictionary<Type, TypeData> TypeMap { get { return m_typeMap; } }
+
+		bool CanCallDirect(Type type)
+		{
+			// We can call the (De)serializer method directly for:
+			// - Value types
+			// - Array types
+			// - Sealed types with static (De)serializer method, as the method will handle null
+			// Other reference types go through the (De)serializerSwitch
+
+			bool direct;
+
+			if (type.IsValueType || type.IsArray)
+				direct = true;
+			else if (type.IsSealed && IsGenerated(type) == false)
+				direct = true;
+			else
+				direct = false;
+
+			return direct;
+		}
+
 		public TypeData GetTypeData(Type type)
 		{
 			return m_typeMap[type];
 		}
 
-		public IDictionary<Type, TypeData> TypeMap { get { return m_typeMap; } }
+		public TypeData GetTypeDataForCall(Type type)
+		{
+			bool direct = CanCallDirect(type);
+			if (!direct)
+				type = typeof(object);
+
+			return GetTypeData(type);
+		}
 	}
 }
