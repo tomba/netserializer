@@ -15,8 +15,6 @@ namespace Test
 
 		static void Main(string[] args)
 		{
-			System.Threading.Thread.CurrentThread.Priority = System.Threading.ThreadPriority.Highest;
-
 			var types = typeof(MessageBase).Assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(MessageBase)))
 				.Concat(new Type[] { typeof(SimpleClass), typeof(SimpleClass2) })
 				.ToArray();
