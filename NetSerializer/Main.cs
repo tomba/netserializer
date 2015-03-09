@@ -158,8 +158,8 @@ namespace NetSerializer
 				if (!td.IsGenerated)
 					continue;
 
-				td.WriterMethodInfo = SerializerCodegen.GenerateDynamicSerializerStub(type);
-				td.ReaderMethodInfo = DeserializerCodegen.GenerateDynamicDeserializerStub(type);
+				td.WriterMethodInfo = Helpers.GenerateDynamicSerializerStub(type);
+				td.ReaderMethodInfo = Helpers.GenerateDynamicDeserializerStub(type);
 			}
 
 			var ctx = new CodeGenContext(map);
@@ -204,8 +204,8 @@ namespace NetSerializer
 				if (!td.IsGenerated)
 					continue;
 
-				td.WriterMethodInfo = SerializerCodegen.GenerateStaticSerializerStub(tb, type);
-				td.ReaderMethodInfo = DeserializerCodegen.GenerateStaticDeserializerStub(tb, type);
+				td.WriterMethodInfo = Helpers.GenerateStaticSerializerStub(tb, type);
+				td.ReaderMethodInfo = Helpers.GenerateStaticDeserializerStub(tb, type);
 			}
 
 			var ctx = new CodeGenContext(map);
