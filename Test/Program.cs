@@ -44,21 +44,21 @@ namespace Test
 
 			Warmup();
 
-			RunTests(typeof(U8Message), 2000000);
-			RunTests(typeof(S16Message), 2000000);
-			RunTests(typeof(S32Message), 2000000);
-			RunTests(typeof(S64Message), 2000000);
+			RunTests(typeof(U8Message), 6000000);
+			RunTests(typeof(S16Message), 6000000);
+			RunTests(typeof(S32Message), 6000000);
+			RunTests(typeof(S64Message), 5000000);
 
 			RunTests(typeof(PrimitivesMessage), 1000000);
 			RunTests(typeof(DictionaryMessage), 5000);
 
 			RunTests(typeof(ComplexMessage), 1000000);
 
-			RunTests(typeof(StringMessage), 200000);
+			RunTests(typeof(StringMessage), 600000);
 
-			RunTests(typeof(StructMessage), 1000000);
+			RunTests(typeof(StructMessage), 2000000);
 
-			RunTests(typeof(BoxedPrimitivesMessage), 1000000);
+			RunTests(typeof(BoxedPrimitivesMessage), 2000000);
 
 			RunTests(typeof(ByteArrayMessage), 5000);
 			RunTests(typeof(IntArrayMessage), 800);
