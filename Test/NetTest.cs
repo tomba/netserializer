@@ -11,6 +11,13 @@ using NS = NetSerializer;
 
 namespace Test
 {
+	interface INetTest
+	{
+		string Framework { get; }
+		void Prepare(int numMessages);
+		MessageBase[] Test(MessageBase[] msgs);
+	}
+
 	class NetTest : INetTest
 	{
 		NS.Serializer m_serializer;

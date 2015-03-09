@@ -8,21 +8,6 @@ using NS = NetSerializer;
 
 namespace Test
 {
-	interface INetTest
-	{
-		string Framework { get; }
-		void Prepare(int numMessages);
-		MessageBase[] Test(MessageBase[] msgs);
-	}
-
-	interface IMemStreamTest
-	{
-		string Framework { get; }
-		void Prepare(int numMessages);
-		long Serialize(MessageBase[] msgs);
-		MessageBase[] Deserialize();
-	}
-
 	static class Program
 	{
 		static bool s_runProtoBufTests = false;

@@ -7,6 +7,14 @@ using NS = NetSerializer;
 
 namespace Test
 {
+	interface IMemStreamTest
+	{
+		string Framework { get; }
+		void Prepare(int numMessages);
+		long Serialize(MessageBase[] msgs);
+		MessageBase[] Deserialize();
+	}
+
 	class MemStreamTest : IMemStreamTest
 	{
 		NS.Serializer m_serializer;
