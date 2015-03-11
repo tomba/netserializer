@@ -79,6 +79,7 @@ namespace NetSerializer
 				il.Emit(OpCodes.Ldarg_2);
 				il.Emit(type.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, type);
 
+				il.Emit(OpCodes.Tailcall);
 				il.Emit(OpCodes.Call, data.WriterMethodInfo);
 
 				il.Emit(OpCodes.Ret);

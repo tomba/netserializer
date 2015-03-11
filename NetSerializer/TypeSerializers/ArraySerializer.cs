@@ -45,6 +45,7 @@ namespace NetSerializer
 			// if value == null, write 0
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldc_I4_0);
+			il.Emit(OpCodes.Tailcall);
 			il.Emit(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(uint)));
 			il.Emit(OpCodes.Ret);
 
