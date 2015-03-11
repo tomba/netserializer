@@ -45,7 +45,7 @@ namespace NetSerializer
 			// if value == null, write 0
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldc_I4_0);
-			il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(uint)), null);
+			il.Emit(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(uint)));
 			il.Emit(OpCodes.Ret);
 
 			il.MarkLabel(notNullLabel);
@@ -56,7 +56,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldlen);
 			il.Emit(OpCodes.Ldc_I4_1);
 			il.Emit(OpCodes.Add);
-			il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(uint)), null);
+			il.Emit(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(uint)));
 
 			// declare i
 			var idxLocal = il.DeclareLocal(typeof(int));
@@ -84,7 +84,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldloc_S, idxLocal);
 			il.Emit(OpCodes.Ldelem, elemType);
 
-			il.EmitCall(OpCodes.Call, data.WriterMethodInfo, null);
+			il.Emit(OpCodes.Call, data.WriterMethodInfo);
 
 			// i = i + 1
 			il.Emit(OpCodes.Ldloc_S, idxLocal);
@@ -114,7 +114,7 @@ namespace NetSerializer
 			// read array len
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldloca_S, lenLocal);
-			il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(typeof(uint)), null);
+			il.Emit(OpCodes.Call, ctx.GetReaderMethodInfo(typeof(uint)));
 
 			var notNullLabel = il.DefineLabel();
 
@@ -165,7 +165,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldloc_S, idxLocal);
 			il.Emit(OpCodes.Ldelema, elemType);
 
-			il.EmitCall(OpCodes.Call, data.ReaderMethodInfo, null);
+			il.Emit(OpCodes.Call, data.ReaderMethodInfo);
 
 			// i = i + 1
 			il.Emit(OpCodes.Ldloc_S, idxLocal);

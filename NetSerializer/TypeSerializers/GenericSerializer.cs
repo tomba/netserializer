@@ -62,7 +62,7 @@ namespace NetSerializer
 					il.Emit(OpCodes.Ldarg_2);
 				il.Emit(OpCodes.Ldfld, field);
 
-				il.EmitCall(OpCodes.Call, data.WriterMethodInfo, null);
+				il.Emit(OpCodes.Call, data.WriterMethodInfo);
 			}
 
 			il.Emit(OpCodes.Ret);
@@ -104,7 +104,7 @@ namespace NetSerializer
 					il.Emit(OpCodes.Ldind_Ref);
 				il.Emit(OpCodes.Ldflda, field);
 
-				il.EmitCall(OpCodes.Call, data.ReaderMethodInfo, null);
+				il.Emit(OpCodes.Call, data.ReaderMethodInfo);
 			}
 
 			if (typeof(System.Runtime.Serialization.IDeserializationCallback).IsAssignableFrom(type))

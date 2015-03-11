@@ -40,13 +40,13 @@ namespace NetSerializer
 			// get TypeID from object's Type
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldarg_2);
-			il.EmitCall(OpCodes.Call, getTypeIDMethodInfo, null);
+			il.Emit(OpCodes.Call, getTypeIDMethodInfo);
 			il.Emit(OpCodes.Stloc_S, idLocal);
 
 			// write typeID
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldloc_S, idLocal);
-			il.EmitCall(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(ushort)), null);
+			il.Emit(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(ushort)));
 
 			// +1 for 0 (null)
 			var jumpTable = new Label[map.Count + 1];
@@ -79,7 +79,7 @@ namespace NetSerializer
 				il.Emit(OpCodes.Ldarg_2);
 				il.Emit(type.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, type);
 
-				il.EmitCall(OpCodes.Call, data.WriterMethodInfo, null);
+				il.Emit(OpCodes.Call, data.WriterMethodInfo);
 
 				il.Emit(OpCodes.Ret);
 			}
@@ -96,7 +96,7 @@ namespace NetSerializer
 			// read typeID
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldloca_S, idLocal);
-			il.EmitCall(OpCodes.Call, ctx.GetReaderMethodInfo(typeof(ushort)), null);
+			il.Emit(OpCodes.Call, ctx.GetReaderMethodInfo(typeof(ushort)));
 
 			// +1 for 0 (null)
 			var jumpTable = new Label[map.Count + 1];
@@ -138,7 +138,7 @@ namespace NetSerializer
 				else
 					il.Emit(OpCodes.Ldloca, local);
 
-				il.EmitCall(OpCodes.Call, data.ReaderMethodInfo, null);
+				il.Emit(OpCodes.Call, data.ReaderMethodInfo);
 
 				// write result object to out object
 				il.Emit(OpCodes.Ldarg_2);
