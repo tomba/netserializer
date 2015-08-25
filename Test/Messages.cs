@@ -654,10 +654,8 @@ namespace Test
 	}
 
 	[Serializable]
-	[ProtoContract]
 	sealed class CustomSerializersMessage : MessageBase
 	{
-		[ProtoMember(1)]
 		int[, ,] m_int3Arr;
 
 		public CustomSerializersMessage()
