@@ -13,6 +13,7 @@ namespace Test
 	{
 		internal static bool RunProtoBufTests = false;
 		internal static bool QuickRun = false;
+		internal static bool EnableResultCheck = false;
 
 		const int NumThreads = 1;
 		static bool ShareSerializer = false;

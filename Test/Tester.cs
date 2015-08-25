@@ -163,12 +163,15 @@ namespace Test
 				Console.WriteLine("{0,-13} | {1,-21} | {2,10} | {3,3} {4,3} {5,3} | {6,10} |",
 					test.Framework, "MemStream Deserialize", sw.ElapsedMilliseconds, c0, c1, c2, "");
 
-				for (int i = 0; i < msgs.Length; ++i)
+				if (Program.EnableResultCheck)
 				{
-					var msg1 = msgs[i];
-					var msg2 = received[i];
+					for (int i = 0; i < msgs.Length; ++i)
+					{
+						var msg1 = msgs[i];
+						var msg2 = received[i];
 
-					msg1.Compare(msg2);
+						msg1.Compare(msg2);
+					}
 				}
 			}
 		}
@@ -198,12 +201,15 @@ namespace Test
 			Console.WriteLine("{0,-13} | {1,-21} | {2,10} | {3,3} {4,3} {5,3} | {6,10} |",
 				test.Framework, "NetTest", sw.ElapsedMilliseconds, c0, c1, c2, "");
 
-			for (int i = 0; i < msgs.Length; ++i)
+			if (Program.EnableResultCheck)
 			{
-				var msg1 = msgs[i];
-				var msg2 = received[i];
+				for (int i = 0; i < msgs.Length; ++i)
+				{
+					var msg1 = msgs[i];
+					var msg2 = received[i];
 
-				msg1.Compare(msg2);
+					msg1.Compare(msg2);
+				}
 			}
 		}
 	}
