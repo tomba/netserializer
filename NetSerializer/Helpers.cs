@@ -86,5 +86,42 @@ namespace NetSerializer
 			return mb;
 		}
 #endif
+		public static void GenerateSerializerTrampoline(ILGenerator il, Type type, TypeData data)
+		{
+			if (data.NeedsInstanceParameter)
+				il.Emit(OpCodes.Ldarg_0);
+
+			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ldarg_2);
+			il.Emit(type.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, type);
+
+			il.Emit(OpCodes.Tailcall);
+			il.Emit(OpCodes.Call, data.WriterMethodInfo);
+
+			il.Emit(OpCodes.Ret);
+		}
+
+		public static void GenerateDeserializerTrampoline(ILGenerator il, Type type, TypeData data)
+		{
+			var local = il.DeclareLocal(type);
+
+			// call deserializer for this typeID
+			if (data.NeedsInstanceParameter)
+				il.Emit(OpCodes.Ldarg_0);
+
+			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ldloca_S, local);
+
+			il.Emit(OpCodes.Call, data.ReaderMethodInfo);
+
+			// write result object to out object
+			il.Emit(OpCodes.Ldarg_2);
+			il.Emit(OpCodes.Ldloc_S, local);
+			if (type.IsValueType)
+				il.Emit(OpCodes.Box, type);
+			il.Emit(OpCodes.Stind_Ref);
+
+			il.Emit(OpCodes.Ret);
+		}
 	}
 }

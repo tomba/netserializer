@@ -20,11 +20,11 @@ namespace NetSerializer
 	{
 		Dictionary<Type, ushort> m_typeIDMap;
 
-		delegate void SerializerSwitch(Serializer serializer, Stream stream, object ob);
-		delegate void DeserializerSwitch(Serializer serializer, Stream stream, out object ob);
+		SerializeDelegate[] m_serializerTrampolines;
+		DeserializeDelegate[] m_deserializerTrampolines;
 
-		SerializerSwitch m_serializerSwitch;
-		DeserializerSwitch m_deserializerSwitch;
+		delegate void SerializeDelegate(Serializer serializer, Stream stream, object ob);
+		delegate void DeserializeDelegate(Serializer serializer, Stream stream, out object ob);
 
 		static ITypeSerializer[] s_typeSerializers = new ITypeSerializer[] {
 			new ObjectSerializer(),
@@ -72,14 +72,54 @@ namespace NetSerializer
 
 		public void Serialize(Stream stream, object data)
 		{
-			m_serializerSwitch(this, stream, data);
+			Serialize(this, stream, data);
 		}
 
 		public object Deserialize(Stream stream)
 		{
 			object o;
-			m_deserializerSwitch(this, stream, out o);
+			Deserialize(this, stream, out o);
 			return o;
+		}
+
+		public void Deserialize(Stream stream, out object ob)
+		{
+			Deserialize(this, stream, out ob);
+		}
+
+		static void Serialize(Serializer serializer, Stream stream, object ob)
+		{
+			if (ob == null)
+			{
+				Primitives.WritePrimitive(stream, 0);
+				return;
+			}
+
+			var type = ob.GetType();
+
+			ushort id;
+
+			if (serializer.m_typeIDMap.TryGetValue(type, out id) == false)
+				throw new InvalidOperationException(String.Format("Unknown type {0}", type.FullName));
+
+			Primitives.WritePrimitive(stream, id);
+
+			serializer.m_serializerTrampolines[id](serializer, stream, ob);
+		}
+
+		static void Deserialize(Serializer serializer, Stream stream, out object ob)
+		{
+			ushort id;
+
+			Primitives.ReadPrimitive(stream, out id);
+
+			if (id == 0)
+			{
+				ob = null;
+				return;
+			}
+
+			serializer.m_deserializerTrampolines[id](serializer, stream, out ob);
 		}
 
 		Dictionary<Type, TypeData> GenerateTypeData(IEnumerable<Type> rootTypes)
@@ -183,11 +223,24 @@ namespace NetSerializer
 				td.TypeSerializer.GenerateReaderMethod(type, ctx, readerDm.GetILGenerator());
 			}
 
-			var writer = (DynamicMethod)ctx.GetWriterMethodInfo(typeof(object));
-			var reader = (DynamicMethod)ctx.GetReaderMethodInfo(typeof(object));
+			/* generate trampolines */
 
-			m_serializerSwitch = (SerializerSwitch)writer.CreateDelegate(typeof(SerializerSwitch));
-			m_deserializerSwitch = (DeserializerSwitch)reader.CreateDelegate(typeof(DeserializerSwitch));
+			m_serializerTrampolines = new SerializeDelegate[map.Count + 1];
+			m_deserializerTrampolines = new DeserializeDelegate[map.Count + 1];
+
+			foreach (var kvp in map)
+			{
+				var type = kvp.Key;
+				var data = kvp.Value;
+
+				var writer = Helpers.GenerateDynamicSerializerStub(typeof(object));
+				Helpers.GenerateSerializerTrampoline(writer.GetILGenerator(), type, data);
+				m_serializerTrampolines[data.TypeID] = (SerializeDelegate)writer.CreateDelegate(typeof(SerializeDelegate));
+
+				var reader = Helpers.GenerateDynamicDeserializerStub(typeof(object));
+				Helpers.GenerateDeserializerTrampoline(reader.GetILGenerator(), type, data);
+				m_deserializerTrampolines[data.TypeID] = (DeserializeDelegate)reader.CreateDelegate(typeof(DeserializeDelegate));
+			}
 		}
 
 #if GENERATE_DEBUGGING_ASSEMBLY
@@ -229,25 +282,22 @@ namespace NetSerializer
 				td.TypeSerializer.GenerateReaderMethod(type, ctx, readerMb.GetILGenerator());
 			}
 
+			/* generate trampolines */
+			foreach (var kvp in map)
+			{
+				var type = kvp.Key;
+				var data = kvp.Value;
+
+				var writerMethod = Helpers.GenerateStaticSerializerStub(tb, typeof(object));
+				Helpers.GenerateSerializerTrampoline(writerMethod.GetILGenerator(), type, data);
+
+				var readerMethod = Helpers.GenerateStaticDeserializerStub(tb, typeof(object));
+				Helpers.GenerateDeserializerTrampoline(readerMethod.GetILGenerator(), type, data);
+			}
+
 			tb.CreateType();
 			ab.Save("NetSerializerDebug.dll");
 		}
 #endif
-
-		/* called from the dynamically generated code */
-		ushort GetTypeID(object ob)
-		{
-			ushort id;
-
-			if (ob == null)
-				return 0;
-
-			var type = ob.GetType();
-
-			if (m_typeIDMap.TryGetValue(type, out id) == false)
-				throw new InvalidOperationException(String.Format("Unknown type {0}", type.FullName));
-
-			return id;
-		}
 	}
 }
