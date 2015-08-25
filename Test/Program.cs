@@ -15,13 +15,42 @@ namespace Test
 		internal static bool QuickRun = false;
 		internal static bool EnableResultCheck = false;
 
-		const int NumThreads = 1;
+		static int NumThreads = 1;
 		static bool ShareSerializer = false;
 
 		static NS.Serializer s_sharedSerializer;
 
 		static void Main(string[] args)
 		{
+			bool show_help = false;
+
+			var p = new Mono.Options.OptionSet() {
+				{ "q|quick", "quick run", _ => QuickRun = true },
+				{ "p|protobuf", "run protobuf tests", _ => RunProtoBufTests = true },
+				{ "v|verify", "verify results", _ => EnableResultCheck = true },
+				{ "threads=", "number of threads", (int v) => NumThreads = v },
+				{ "share", "share serializer between threads", _ => ShareSerializer = true },
+				{ "h|help",  "show help", _ => show_help = true },
+			};
+
+			List<string> extra;
+
+			try
+			{
+				extra = p.Parse(args);
+			}
+			catch (Mono.Options.OptionException e)
+			{
+				Console.WriteLine(e.Message);
+				return;
+			}
+
+			if (show_help || extra.Count > 0)
+			{
+				p.WriteOptionDescriptions(Console.Out);
+				return;
+			}
+
 			if (ShareSerializer)
 				s_sharedSerializer = Tester.CreateSerializer();
 
