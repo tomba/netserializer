@@ -103,12 +103,13 @@ namespace Test
 			GC.Collect();
 
 			Test(new MemStreamTest(m_serializer), msgs);
-			if (Program.RunProtoBufTests && protobufCompatible)
-				Test(new PBMemStreamTest(), msgs);
-
 			Test(new NetTest(m_serializer), msgs);
+
 			if (Program.RunProtoBufTests && protobufCompatible)
+			{
+				Test(new PBMemStreamTest(), msgs);
 				Test(new PBNetTest(), msgs);
+			}
 		}
 
 		static void Test(IMemStreamTest test, MessageBase[] msgs)
