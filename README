@@ -77,11 +77,9 @@ Protobuf-net is a fast Protocol Buffers compatible serializer, which was the
 best serializer I could find out there when I considered the serializer for
 my use case.
 
-
 The table lists the time it takes run the test, the number of GC collections
 (per generation) that happened during the test, and the size of the
 outputted serialized data (when available).
-
 
 There are three tests:
 
@@ -100,110 +98,112 @@ The tests are ran for different kinds of datasets. These datasets are composed
 of objects of the same type. However, each object is initialized with random
 data. The types used in the datasets are:
 
-- U8NullMessage - contains a single byte field, initialized always to 0
+- U8Message - contains a single byte field
 - S16Message - contains a single short field
 - S32Message - contains a single int field
-- U32Message - contains a single uint field
 - S64Message - contains a single long field
 - PrimitivesMessage - contains multiple fields of primitive types
+- DictionaryMessage - contains a few Dictionaries
 - ComplexMessage - contains fields with interface and abstract references
 - StringMessage - contains random length string
+- StructMessage - contains a few structs
 - ByteArrayMessage - contains random length byte array
 - IntArrayMessage - contains random length int array
 
 The details of the tests can be found from the source code. The tests were run
-on a 32bit Windows XP laptop.
+on a 64bit Windows 10 laptop.
 
 
                                       |  time (ms) |    GC coll. |   size (B) |
-== 2000000 U8NullMessage ==
-NetSerializer | MemStream Serialize   |        320 |   0   0   0 |    4000000 |
-NetSerializer | MemStream Deserialize |        872 |   4   2   0 |            |
-protobuf-net  | MemStream Serialize   |       1068 | 137   0   0 |    6000000 |
-protobuf-net  | MemStream Deserialize |       1892 |  42  16   0 |            |
-NetSerializer | NetTest               |        495 |   4   2   0 |            |
-protobuf-net  | NetTest               |      10801 | 222  66   1 |            |
+== 6000000 U8Message ==
+NetSerializer | MemStream Serialize   |        369 |   0   0   0 |   12000000 |
+NetSerializer | MemStream Deserialize |        987 |  24  12   1 |            |
+NetSerializer | NetTest               |       1253 |  24  12   1 |            |
+protobuf-net  | MemStream Serialize   |       1692 | 289   0   0 |   31084229 |
+protobuf-net  | MemStream Deserialize |       3645 |  24  12   1 |            |
+protobuf-net  | NetTest               |       4506 | 170  43   1 |            |
 
-== 2000000 S16Message ==
-NetSerializer | MemStream Serialize   |        244 |   0   0   0 |    7496110 |
-NetSerializer | MemStream Deserialize |        609 |   6   4   1 |            |
-protobuf-net  | MemStream Serialize   |        853 | 138   1   1 |   20492059 |
-protobuf-net  | MemStream Deserialize |       2701 |  43  11   1 |            |
-NetSerializer | NetTest               |        730 |   5   4   0 |            |
-protobuf-net  | NetTest               |      11143 | 217  51   1 |            |
+== 6000000 S16Message ==
+NetSerializer | MemStream Serialize   |        468 |   0   0   0 |   20427894 |
+NetSerializer | MemStream Deserialize |       1203 |  24  12   1 |            |
+NetSerializer | NetTest               |       1341 |  24  12   1 |            |
+protobuf-net  | MemStream Serialize   |       1734 | 289   0   0 |   52482244 |
+protobuf-net  | MemStream Deserialize |       3651 |  24  12   1 |            |
+protobuf-net  | NetTest               |       4416 | 169  43   1 |            |
 
-== 2000000 S32Message ==
-NetSerializer | MemStream Serialize   |        420 |   0   0   0 |   11874526 |
-NetSerializer | MemStream Deserialize |        795 |   4   3   0 |            |
-protobuf-net  | MemStream Serialize   |        928 | 138   1   1 |   17748783 |
-protobuf-net  | MemStream Deserialize |       2477 |  43  11   1 |            |
-NetSerializer | NetTest               |        803 |   4   3   0 |            |
-protobuf-net  | NetTest               |      10917 | 216  47   1 |            |
+== 6000000 S32Message ==
+NetSerializer | MemStream Serialize   |        498 |   0   0   0 |   27982635 |
+NetSerializer | MemStream Deserialize |       1223 |  24  12   1 |            |
+NetSerializer | NetTest               |       1421 |  24  12   1 |            |
+protobuf-net  | MemStream Serialize   |       1750 | 289   0   0 |   51654177 |
+protobuf-net  | MemStream Deserialize |       3699 |  24  12   1 |            |
+protobuf-net  | NetTest               |       4494 | 170  43   1 |            |
 
-== 2000000 U32Message ==
-NetSerializer | MemStream Serialize   |        382 |   0   0   0 |   11748852 |
-NetSerializer | MemStream Deserialize |        633 |   4   3   0 |            |
-protobuf-net  | MemStream Serialize   |       1182 | 138   1   1 |   17748852 |
-protobuf-net  | MemStream Deserialize |       2526 |  43  11   1 |            |
-NetSerializer | NetTest               |        726 |   4   3   0 |            |
-protobuf-net  | NetTest               |      11198 | 216  47   1 |            |
-
-== 2000000 S64Message ==
-NetSerializer | MemStream Serialize   |        393 |   1   1   1 |   20992943 |
-NetSerializer | MemStream Deserialize |        647 |   5   4   0 |            |
-protobuf-net  | MemStream Serialize   |       1229 | 138   1   1 |   26992398 |
-protobuf-net  | MemStream Deserialize |       2493 |  44  16   1 |            |
-NetSerializer | NetTest               |        932 |   6   3   0 |            |
-protobuf-net  | NetTest               |      11649 |  81  30   1 |            |
+== 5000000 S64Message ==
+NetSerializer | MemStream Serialize   |        454 |   0   0   0 |   27502929 |
+NetSerializer | MemStream Deserialize |       1015 |  19   9   0 |            |
+NetSerializer | NetTest               |       1226 |  20  10   1 |            |
+protobuf-net  | MemStream Serialize   |       1497 | 241   0   0 |   40624074 |
+protobuf-net  | MemStream Deserialize |       3068 |  19   9   0 |            |
+protobuf-net  | NetTest               |       3769 | 142  36   1 |            |
 
 == 1000000 PrimitivesMessage ==
-NetSerializer | MemStream Serialize   |        986 |   1   1   1 |   45867626 |
-NetSerializer | MemStream Deserialize |       1055 |  10   6   0 |            |
-protobuf-net  | MemStream Serialize   |       1160 |  70   2   2 |   65223933 |
-protobuf-net  | MemStream Deserialize |       1997 |  29  21   1 |            |
-NetSerializer | NetTest               |        990 |  10   5   0 |            |
-protobuf-net  | NetTest               |       6621 |  75  31   1 |            |
+NetSerializer | MemStream Serialize   |        830 |  14   2   2 |   52288890 |
+NetSerializer | MemStream Deserialize |        944 |  19   6   0 |            |
+NetSerializer | NetTest               |       1231 |  26   7   1 |            |
+protobuf-net  | MemStream Serialize   |        800 |  50   2   2 |   72591287 |
+protobuf-net  | MemStream Deserialize |       1131 |  13   6   0 |            |
+protobuf-net  | NetTest               |       1392 |  38  10   1 |            |
 
-== 300000 ComplexMessage ==
-NetSerializer | MemStream Serialize   |        401 |   0   0   0 |   22147415 |
-NetSerializer | MemStream Deserialize |        788 |  15   9   0 |            |
-protobuf-net  | MemStream Serialize   |        897 |  21   1   1 |   43046672 |
-protobuf-net  | MemStream Deserialize |       2285 |  58  44   1 |            |
-NetSerializer | NetTest               |       1110 |  16  13   0 |            |
-protobuf-net  | NetTest               |       3853 |  65  27   2 |            |
+== 5000 DictionaryMessage ==
+NetSerializer | MemStream Serialize   |        704 |  18   0   0 |   42731220 |
+NetSerializer | MemStream Deserialize |       1231 |  53  19   1 |            |
+NetSerializer | NetTest               |       1727 |  65  22   1 |            |
+protobuf-net  | MemStream Serialize   |       1024 | 105   0   0 |   71101535 |
+protobuf-net  | MemStream Deserialize |       3086 | 115  31   1 |            |
+protobuf-net  | NetTest               |       2761 | 217  39   0 |            |
 
-== 200000 StringMessage ==
-NetSerializer | MemStream Serialize   |        487 |  73   1   1 |  100256848 |
-NetSerializer | MemStream Deserialize |        744 |  70  44   1 |            |
-protobuf-net  | MemStream Serialize   |        479 |  14   1   1 |  101206237 |
-protobuf-net  | MemStream Deserialize |        909 |  44  24   1 |            |
-NetSerializer | NetTest               |       1101 | 120  65   1 |            |
-protobuf-net  | NetTest               |       2283 |  47  27   1 |            |
+== 1000000 ComplexMessage ==
+NetSerializer | MemStream Serialize   |        775 |   0   0   0 |   27997927 |
+NetSerializer | MemStream Deserialize |       1011 |  26  13   1 |            |
+NetSerializer | NetTest               |       1220 |  26  12   1 |            |
+protobuf-net  | MemStream Serialize   |        913 |  48   0   0 |   50853349 |
+protobuf-net  | MemStream Deserialize |       2142 |  26  12   1 |            |
+protobuf-net  | NetTest               |       2374 |  51  18   1 |            |
+
+== 600000 StringMessage ==
+NetSerializer | MemStream Serialize   |        163 |   0   0   0 |   30905071 |
+NetSerializer | MemStream Deserialize |        331 |  14   6   0 |            |
+NetSerializer | NetTest               |        441 |  15   8   1 |            |
+protobuf-net  | MemStream Serialize   |        308 |  30   1   1 |   32105223 |
+protobuf-net  | MemStream Deserialize |       1321 |  14   6   0 |            |
+protobuf-net  | NetTest               |        798 |  30   9   1 |            |
+
+== 2000000 StructMessage ==
+NetSerializer | MemStream Serialize   |        598 |   0   0   0 |   50560829 |
+NetSerializer | MemStream Deserialize |       1153 |  31  15   1 |            |
+NetSerializer | NetTest               |       1387 |  32  16   1 |            |
+protobuf-net  | MemStream Serialize   |       1448 | 138   1   1 |   74056319 |
+protobuf-net  | MemStream Deserialize |       5379 |  72  19   1 |            |
+protobuf-net  | NetTest               |       3106 | 142  46   0 |            |
 
 == 5000 ByteArrayMessage ==
-NetSerializer | MemStream Serialize   |        387 |   1   1   1 |  253320407 |
-NetSerializer | MemStream Deserialize |        356 |  33  20   1 |            |
-protobuf-net  | MemStream Serialize   |        789 | 170   5   3 |  253353761 |
-protobuf-net  | MemStream Deserialize |        441 |  33  24   1 |            |
-NetSerializer | NetTest               |       1300 |  34  22   1 |            |
-protobuf-net  | NetTest               |       1285 |  83  34   3 |            |
+NetSerializer | MemStream Serialize   |        294 |   1   1   1 |  249332892 |
+NetSerializer | MemStream Deserialize |        141 |  29  15   1 |            |
+NetSerializer | NetTest               |        430 |  30  14   1 |            |
+protobuf-net  | MemStream Serialize   |        654 |  88   6   3 |  249366259 |
+protobuf-net  | MemStream Deserialize |        160 |  29  15   1 |            |
+protobuf-net  | NetTest               |        735 |  90  21   2 |            |
 
 == 800 IntArrayMessage ==
-NetSerializer | MemStream Serialize   |       2040 |   1   1   1 |  198093146 |
-NetSerializer | MemStream Deserialize |       1464 |   2   1   1 |            |
-protobuf-net  | MemStream Serialize   |       2212 |  65   3   3 |  235691847 |
-protobuf-net  | MemStream Deserialize |       1862 |  20   3   1 |            |
-NetSerializer | NetTest               |       2220 |   3   2   1 |            |
-protobuf-net  | NetTest               |       2906 |  76   6   3 |            |
+NetSerializer | MemStream Serialize   |       1153 |   0   0   0 |  147703547 |
+NetSerializer | MemStream Deserialize |        863 |   1   0   0 |            |
+NetSerializer | NetTest               |       1540 |   1   0   0 |            |
+protobuf-net  | MemStream Serialize   |       1431 |  33   3   2 |  236205801 |
+protobuf-net  | MemStream Deserialize |       1334 |  21   2   0 |            |
+protobuf-net  | NetTest               |       2001 |  52   3   2 |            |
 
 As can be seen from the tests, NetSerializer is clearly faster and has smaller
 memory footprint in about all of the cases. For example, the tests with
 ComplexMessages show NetSerializer's MemStream Serialize cause zero garbage
-collections, even though 22MB of data is being serialized.
-
-The speed of the serializer depends, of course, very much on the data being
-serialized. For some particular payloads it may well be that protobuf-net is
-faster than NetSerializer. However, I believe that those cases can always be
-optimized and in the end NetSerializer will be faster, due to the minimalistic
-design of NetSerializer.
-
+collections, even though more than 20MB of data is being serialized.
