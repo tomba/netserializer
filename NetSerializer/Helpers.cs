@@ -103,23 +103,37 @@ namespace NetSerializer
 
 		public static void GenerateDeserializerTrampoline(ILGenerator il, Type type, TypeData data)
 		{
-			var local = il.DeclareLocal(type);
-
-			// call deserializer for this typeID
-			if (data.NeedsInstanceParameter)
-				il.Emit(OpCodes.Ldarg_0);
-
-			il.Emit(OpCodes.Ldarg_1);
-			il.Emit(OpCodes.Ldloca_S, local);
-
-			il.Emit(OpCodes.Call, data.ReaderMethodInfo);
-
-			// write result object to out object
-			il.Emit(OpCodes.Ldarg_2);
-			il.Emit(OpCodes.Ldloc_S, local);
 			if (type.IsValueType)
+			{
+				var local = il.DeclareLocal(type);
+
+				// call deserializer for this typeID
+				if (data.NeedsInstanceParameter)
+					il.Emit(OpCodes.Ldarg_0);
+
+				il.Emit(OpCodes.Ldarg_1);
+				il.Emit(OpCodes.Ldloca_S, local);
+
+				il.Emit(OpCodes.Call, data.ReaderMethodInfo);
+
+				// write result object to out object
+				il.Emit(OpCodes.Ldarg_2);
+				il.Emit(OpCodes.Ldloc_0);
 				il.Emit(OpCodes.Box, type);
-			il.Emit(OpCodes.Stind_Ref);
+				il.Emit(OpCodes.Stind_Ref);
+			}
+			else
+			{
+				// call deserializer for this typeID
+				if (data.NeedsInstanceParameter)
+					il.Emit(OpCodes.Ldarg_0);
+
+				il.Emit(OpCodes.Ldarg_1);
+				il.Emit(OpCodes.Ldarg_2);
+
+				il.Emit(OpCodes.Tailcall);
+				il.Emit(OpCodes.Call, data.ReaderMethodInfo);
+			}
 
 			il.Emit(OpCodes.Ret);
 		}
