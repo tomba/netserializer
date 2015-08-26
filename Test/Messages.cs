@@ -30,12 +30,17 @@ namespace Test
 				throw new Exception();
 		}
 
+		delegate MessageBase CreateDelegate(MyRandom r);
+
 		public static MessageBase[] CreateMessages(MyRandom rand, Type type, int numMessages)
 		{
 			var arr = new MessageBase[numMessages];
 
+			var method = type.GetMethod("Create", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+			var create = (CreateDelegate)Delegate.CreateDelegate(typeof(CreateDelegate), method);
+
 			for (int i = 0; i < numMessages; ++i)
-				arr[i] = (MessageBase)Activator.CreateInstance(type, rand);
+				arr[i] = create(rand);
 
 			return arr;
 		}
@@ -55,6 +60,11 @@ namespace Test
 		public U8Message(MyRandom r)
 		{
 			m_val = (byte)r.Next();
+		}
+
+		public static U8Message Create(MyRandom r)
+		{
+			return new U8Message(r);
 		}
 
 		public override void Compare(MessageBase msg)
@@ -80,6 +90,11 @@ namespace Test
 			m_val = (short)r.Next();
 		}
 
+		public static S16Message Create(MyRandom r)
+		{
+			return new S16Message(r);
+		}
+
 		public override void Compare(MessageBase msg)
 		{
 			var m = (S16Message)msg;
@@ -101,6 +116,11 @@ namespace Test
 		public S32Message(MyRandom r)
 		{
 			m_val = (int)r.Next();
+		}
+
+		public static S32Message Create(MyRandom r)
+		{
+			return new S32Message(r);
 		}
 
 		public override void Compare(MessageBase msg)
@@ -156,6 +176,11 @@ namespace Test
 			m_struct2.m_int = (int)r.Next();
 		}
 
+		public static StructMessage Create(MyRandom r)
+		{
+			return new StructMessage(r);
+		}
+
 		public override void Compare(MessageBase msg)
 		{
 			var m = (StructMessage)msg;
@@ -179,6 +204,11 @@ namespace Test
 		public S64Message(MyRandom r)
 		{
 			m_val = (long)r.Next();
+		}
+
+		public static S64Message Create(MyRandom r)
+		{
+			return new S64Message(r);
 		}
 
 		public override void Compare(MessageBase msg)
@@ -262,6 +292,11 @@ namespace Test
 			m_date = DateTime.Now;
 		}
 
+		public static PrimitivesMessage Create(MyRandom r)
+		{
+			return new PrimitivesMessage(r);
+		}
+
 		public override void Compare(MessageBase msg)
 		{
 			var m = (PrimitivesMessage)msg;
@@ -314,6 +349,11 @@ namespace Test
 			m_enum = (MyEnum)r.Next(0, 6);
 		}
 
+		public static BoxedPrimitivesMessage Create(MyRandom r)
+		{
+			return new BoxedPrimitivesMessage(r);
+		}
+
 		public override void Compare(MessageBase msg)
 		{
 			var m = (BoxedPrimitivesMessage)msg;
@@ -353,6 +393,11 @@ namespace Test
 				for (int i = 0; i < m_byteArr.Length; ++i)
 					m_byteArr[i] = (byte)i;
 			}
+		}
+
+		public static ByteArrayMessage Create(MyRandom r)
+		{
+			return new ByteArrayMessage(r);
 		}
 
 		public override void Compare(MessageBase msg)
@@ -398,6 +443,11 @@ namespace Test
 			}
 		}
 
+		public static IntArrayMessage Create(MyRandom r)
+		{
+			return new IntArrayMessage(r);
+		}
+
 		public override void Compare(MessageBase msg)
 		{
 			var m = (IntArrayMessage)msg;
@@ -434,6 +484,11 @@ namespace Test
 			else
 				//m_string = new string((char)r.Next(0xD7FF), len - 1);
 				m_string = new string((char)r.Next((int)'a', (int)'z'), len - 1);
+		}
+
+		public static StringMessage Create(MyRandom r)
+		{
+			return new StringMessage(r);
 		}
 
 		public override void Compare(MessageBase msg)
@@ -486,6 +541,11 @@ namespace Test
 			m_val = (long)r.Next();
 		}
 
+		public static SimpleClass Create(MyRandom r)
+		{
+			return new SimpleClass(r);
+		}
+
 		public void Compare(SimpleClass other)
 		{
 			if (m_val != other.m_val)
@@ -515,6 +575,11 @@ namespace Test
 		public SimpleClass2(MyRandom r)
 		{
 			m_val = (long)r.Next();
+		}
+
+		public static SimpleClass2 Create(MyRandom r)
+		{
+			return new SimpleClass2(r);
 		}
 
 		public void Compare(SimpleClass2 other)
@@ -558,6 +623,11 @@ namespace Test
 					m_obMap[str] = new SimpleClass2(r);
 				}
 			}
+		}
+
+		public static DictionaryMessage Create(MyRandom r)
+		{
+			return new DictionaryMessage(r);
 		}
 
 		public override void Compare(MessageBase msg)
@@ -627,6 +697,11 @@ namespace Test
 				m_ifaceMsg = new SimpleClass2(r);
 		}
 
+		public static ComplexMessage Create(MyRandom r)
+		{
+			return new ComplexMessage(r);
+		}
+
 		public override void Compare(MessageBase msg)
 		{
 			var m = (ComplexMessage)msg;
@@ -674,6 +749,11 @@ namespace Test
 				for (int y = 0; y < ly; ++y)
 					for (int x = 0; x < lx; ++x)
 						m_int3Arr[z, y, x] = (int)r.Next();
+		}
+
+		public static CustomSerializersMessage Create(MyRandom r)
+		{
+			return new CustomSerializersMessage(r);
 		}
 
 		public override void Compare(MessageBase msg)
