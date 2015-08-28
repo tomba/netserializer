@@ -28,6 +28,7 @@ namespace NetSerializer
 				typeof(string),
 				typeof(DateTime),
 				typeof(byte[]),
+				typeof(Decimal),
 			};
 
 		public bool Handles(Type type)

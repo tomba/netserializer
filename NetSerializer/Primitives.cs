@@ -272,6 +272,52 @@ namespace NetSerializer
 			value = DateTime.FromBinary(v);
 		}
 
+		[ThreadStatic]
+		static int[] s_decimalBitsArray;
+
+		public static void WritePrimitive(Stream stream, decimal value)
+		{
+			int[] bits = Decimal.GetBits(value);
+
+			ulong low = (uint)bits[0];
+			ulong mid = ((ulong)(uint)bits[1]) << 32;
+			ulong lowmid = low | mid;
+
+			uint high = (uint)bits[2];
+
+			uint scale = ((uint)bits[3] >> 15) & 0x01fe;
+			uint sign = ((uint)bits[3]) >> 31;
+			uint scaleSign = scale | sign;
+
+			WritePrimitive(stream, lowmid);
+			WritePrimitive(stream, high);
+			WritePrimitive(stream, scaleSign);
+		}
+
+		public static void ReadPrimitive(Stream stream, out decimal value)
+		{
+			ulong lowmid;
+			uint high, scaleSign;
+
+			ReadPrimitive(stream, out lowmid);
+			ReadPrimitive(stream, out high);
+			ReadPrimitive(stream, out scaleSign);
+
+			int scale = (int)((scaleSign & ~1) << 15);
+			int sign = (int)((scaleSign & 1) << 31);
+
+			var arr = s_decimalBitsArray;
+			if (arr == null)
+				arr = s_decimalBitsArray = new int[4];
+
+			arr[0] = (int)lowmid;
+			arr[1] = (int)(lowmid >> 32);
+			arr[2] = (int)high;
+			arr[3] = scale | sign;
+
+			value = new Decimal(arr);
+		}
+
 #if NO_UNSAFE
 		public static void WritePrimitive(Stream stream, string value)
 		{
