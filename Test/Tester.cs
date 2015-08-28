@@ -48,6 +48,7 @@ namespace Test
 			RunTests(rand, typeof(S64Message), 5000000);
 
 			RunTests(rand, typeof(DecimalMessage), 3000000);
+			RunTests(rand, typeof(NullableDecimalMessage), 3000000);
 
 			RunTests(rand, typeof(PrimitivesMessage), 1000000);
 			RunTests(rand, typeof(DictionaryMessage), 5000);

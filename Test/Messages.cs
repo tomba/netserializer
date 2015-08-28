@@ -21,6 +21,7 @@ namespace Test
 	[ProtoInclude(10, typeof(DictionaryMessage))]
 	[ProtoInclude(11, typeof(StructMessage))]
 	[ProtoInclude(12, typeof(DecimalMessage))]
+	[ProtoInclude(13, typeof(NullableDecimalMessage))]
 	abstract class MessageBase
 	{
 		public abstract void Compare(MessageBase msg);
@@ -164,6 +165,46 @@ namespace Test
 		public override void Compare(MessageBase msg)
 		{
 			var m = (DecimalMessage)msg;
+			A(m_val == m.m_val);
+		}
+	}
+
+	[Serializable]
+	[ProtoContract]
+	sealed class NullableDecimalMessage : MessageBase
+	{
+		[ProtoMember(1)]
+		decimal? m_val;
+
+		public NullableDecimalMessage()
+		{
+		}
+
+		public NullableDecimalMessage(MyRandom r)
+		{
+			if (r.Next(100) != 0)
+				return;
+
+			int[] bits = new int[4];
+			bits[0] = (int)r.Next();
+			bits[1] = (int)r.Next();
+			bits[2] = (int)r.Next();
+
+			uint exp = ((uint)r.Next(29)) << 16;
+			exp |= ((r.Next() & 1) == 0 ? 0u : 1u) << 31;
+			bits[3] = (int)exp;
+
+			m_val = new decimal(bits);
+		}
+
+		public static NullableDecimalMessage Create(MyRandom r)
+		{
+			return new NullableDecimalMessage(r);
+		}
+
+		public override void Compare(MessageBase msg)
+		{
+			var m = (NullableDecimalMessage)msg;
 			A(m_val == m.m_val);
 		}
 	}
