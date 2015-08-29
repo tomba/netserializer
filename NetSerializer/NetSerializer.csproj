@@ -38,6 +38,7 @@
   <ItemGroup>
     <Compile Include="TypeSerializers\ArraySerializer.cs" />
     <Compile Include="CodeGenContext.cs" />
+    <Compile Include="TypeSerializers\NullableSerializer.cs" />
     <Compile Include="TypeSerializers\DictionarySerializer.cs" />
     <Compile Include="TypeSerializers\GenericSerializer.cs" />
     <Compile Include="TypeSerializers\EnumSerializer.cs" />
