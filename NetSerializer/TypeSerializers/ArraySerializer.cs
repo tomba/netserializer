@@ -30,10 +30,11 @@ namespace NetSerializer
 
 		public IEnumerable<Type> GetSubtypes(Type type)
 		{
+			yield return typeof(uint);
 			yield return type.GetElementType();
 		}
 
-		public void GenerateWriterMethod(Type type, CodeGenContext ctx, ILGenerator il)
+		public void GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il)
 		{
 			var elemType = type.GetElementType();
 
@@ -46,7 +47,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldc_I4_0);
 			//il.Emit(OpCodes.Tailcall);
-			il.Emit(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(uint)));
+			il.Emit(OpCodes.Call, serializer.GetDirectWriter(typeof(uint)));
 			il.Emit(OpCodes.Ret);
 
 			il.MarkLabel(notNullLabel);
@@ -57,7 +58,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldlen);
 			il.Emit(OpCodes.Ldc_I4_1);
 			il.Emit(OpCodes.Add);
-			il.Emit(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(uint)));
+			il.Emit(OpCodes.Call, serializer.GetDirectWriter(typeof(uint)));
 
 			// declare i
 			var idxLocal = il.DeclareLocal(typeof(int));
@@ -74,9 +75,9 @@ namespace NetSerializer
 			// loop body
 			il.MarkLabel(loopBodyLabel);
 
-			var data = ctx.GetTypeDataForCall(elemType);
+			var data = serializer.GetIndirectData(elemType);
 
-			if (data.NeedsInstanceParameter)
+			if (data.WriterNeedsInstance)
 				il.Emit(OpCodes.Ldarg_0);
 
 			// write element at index i
@@ -105,7 +106,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ret);
 		}
 
-		public void GenerateReaderMethod(Type type, CodeGenContext ctx, ILGenerator il)
+		public void GenerateReaderMethod(Serializer serializer, Type type, ILGenerator il)
 		{
 			var elemType = type.GetElementType();
 
@@ -114,7 +115,7 @@ namespace NetSerializer
 			// read array len
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldloca_S, lenLocal);
-			il.Emit(OpCodes.Call, ctx.GetReaderMethodInfo(typeof(uint)));
+			il.Emit(OpCodes.Call, serializer.GetDirectReader(typeof(uint)));
 
 			var notNullLabel = il.DefineLabel();
 
@@ -155,9 +156,9 @@ namespace NetSerializer
 
 			// read element to arr[i]
 
-			var data = ctx.GetTypeDataForCall(elemType);
+			var data = serializer.GetIndirectData(elemType);
 
-			if (data.NeedsInstanceParameter)
+			if (data.ReaderNeedsInstance)
 				il.Emit(OpCodes.Ldarg_0);
 
 			il.Emit(OpCodes.Ldarg_1);

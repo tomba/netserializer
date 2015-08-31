@@ -8,6 +8,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -25,10 +26,49 @@ namespace NetSerializer
 			return new Type[0];
 		}
 
-		public void GetStaticMethods(Type type, out MethodInfo writer, out MethodInfo reader)
+		public MethodInfo GetStaticWriter(Type type)
 		{
-			writer = typeof(Serializer).GetMethod("Serialize", BindingFlags.Static | BindingFlags.NonPublic);
-			reader = typeof(Serializer).GetMethod("Deserialize", BindingFlags.Static | BindingFlags.NonPublic);
+			return typeof(ObjectSerializer).GetMethod("Serialize", BindingFlags.Static | BindingFlags.Public);
+		}
+
+		public MethodInfo GetStaticReader(Type type)
+		{
+			return typeof(ObjectSerializer).GetMethod("Deserialize", BindingFlags.Static | BindingFlags.Public);
+		}
+
+		public static void Serialize(Serializer serializer, Stream stream, object ob)
+		{
+			if (ob == null)
+			{
+				Primitives.WritePrimitive(stream, (ushort)0);
+				return;
+			}
+
+			var type = ob.GetType();
+
+			SerializeDelegate<object> del;
+
+			ushort id = serializer.GetTypeIdAndSerializer(type, out del);
+
+			Primitives.WritePrimitive(stream, id);
+
+			del(serializer, stream, ob);
+		}
+
+		public static void Deserialize(Serializer serializer, Stream stream, out object ob)
+		{
+			ushort id;
+
+			Primitives.ReadPrimitive(stream, out id);
+
+			if (id == 0)
+			{
+				ob = null;
+				return;
+			}
+
+			var del = serializer.GetDeserializeTrampolineFromId(id);
+			del(serializer, stream, out ob);
 		}
 	}
 }

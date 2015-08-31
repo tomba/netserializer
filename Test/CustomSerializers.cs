@@ -20,13 +20,16 @@ namespace Test
 			yield break;
 		}
 
-		public void GetStaticMethods(Type type, out MethodInfo writer, out MethodInfo reader)
+		public MethodInfo GetStaticWriter(Type type)
 		{
-			writer = typeof(TriDimArrayCustomSerializer).GetMethod("WritePrimitive",
+			return typeof(TriDimArrayCustomSerializer).GetMethod("WritePrimitive",
 				BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.ExactBinding, null,
 				new Type[] { typeof(Stream), type }, null);
+		}
 
-			reader = typeof(TriDimArrayCustomSerializer).GetMethod("ReadPrimitive",
+		public MethodInfo GetStaticReader(Type type)
+		{
+			return typeof(TriDimArrayCustomSerializer).GetMethod("ReadPrimitive",
 				BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.ExactBinding, null,
 				new Type[] { typeof(Stream), type.MakeByRefType() }, null);
 		}

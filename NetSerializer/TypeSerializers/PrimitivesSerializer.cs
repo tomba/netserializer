@@ -41,10 +41,14 @@ namespace NetSerializer
 			yield break;
 		}
 
-		public void GetStaticMethods(Type type, out MethodInfo writer, out MethodInfo reader)
+		public MethodInfo GetStaticWriter(Type type)
 		{
-			writer = Primitives.GetWritePrimitive(type);
-			reader = Primitives.GetReaderPrimitive(type);
+			return Primitives.GetWritePrimitive(type);
+		}
+
+		public MethodInfo GetStaticReader(Type type)
+		{
+			return Primitives.GetReaderPrimitive(type);
 		}
 
 		public static IEnumerable<Type> GetSupportedTypes()

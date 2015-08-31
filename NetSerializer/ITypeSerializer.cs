@@ -29,9 +29,14 @@ namespace NetSerializer
 	public interface IStaticTypeSerializer : ITypeSerializer
 	{
 		/// <summary>
-		/// Get static methods used to serialize and deserialize the given type
+		/// Get static method used to serialize the given type
 		/// </summary>
-		void GetStaticMethods(Type type, out MethodInfo writer, out MethodInfo reader);
+		MethodInfo GetStaticWriter(Type type);
+
+		/// <summary>
+		/// Get static method used to deserialize the given type
+		/// </summary>
+		MethodInfo GetStaticReader(Type type);
 	}
 
 	public interface IDynamicTypeSerializer : ITypeSerializer
@@ -39,11 +44,11 @@ namespace NetSerializer
 		/// <summary>
 		/// Generate code to serialize the given type
 		/// </summary>
-		void GenerateWriterMethod(Type type, CodeGenContext ctx, ILGenerator il);
+		void GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il);
 
 		/// <summary>
 		/// Generate code to deserialize the given type
 		/// </summary>
-		void GenerateReaderMethod(Type type, CodeGenContext ctx, ILGenerator il);
+		void GenerateReaderMethod(Serializer serializer, Type type, ILGenerator il);
 	}
 }

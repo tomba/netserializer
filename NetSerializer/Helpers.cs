@@ -84,31 +84,94 @@ namespace NetSerializer
 			return mb;
 		}
 #endif
-		public static void GenerateSerializerTrampoline(ILGenerator il, Type type, TypeData data)
+
+		/// <summary>
+		/// Create delegate that calls writer either directly, or via a trampoline
+		/// </summary>
+		public static Delegate CreateSerializeDelegate(Type paramType, TypeData data)
 		{
-			if (data.NeedsInstanceParameter)
+			Type writerType = data.Type;
+
+			if (paramType != writerType && paramType != typeof(object))
+				throw new Exception();
+
+			bool needTypeConv = paramType != writerType;
+			bool needsInstanceParameter = data.WriterNeedsInstance;
+
+			var delegateType = typeof(SerializeDelegate<>).MakeGenericType(paramType);
+
+			// Can we call the writer directly?
+
+			if (!needTypeConv && needsInstanceParameter)
+			{
+				var dynamicWriter = data.WriterMethodInfo as DynamicMethod;
+
+				if (dynamicWriter != null)
+					return dynamicWriter.CreateDelegate(delegateType);
+				else
+					return Delegate.CreateDelegate(delegateType, data.WriterMethodInfo);
+			}
+
+			// Create a trampoline
+
+			var wrapper = Helpers.GenerateDynamicSerializerStub(paramType);
+			var il = wrapper.GetILGenerator();
+
+			if (needsInstanceParameter)
 				il.Emit(OpCodes.Ldarg_0);
 
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldarg_2);
-			il.Emit(type.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, type);
+			if (needTypeConv)
+				il.Emit(writerType.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, writerType);
 
 			// XXX tailcall causes slowdowns with large valuetypes
 			//il.Emit(OpCodes.Tailcall);
 			il.Emit(OpCodes.Call, data.WriterMethodInfo);
 
 			il.Emit(OpCodes.Ret);
+
+			return wrapper.CreateDelegate(delegateType);
 		}
 
-		public static void GenerateDeserializerTrampoline(ILGenerator il, Type type, TypeData data)
+		/// <summary>
+		/// Create delegate that calls reader either directly, or via a trampoline
+		/// </summary>
+		public static Delegate CreateDeserializeDelegate(Type paramType, TypeData data)
 		{
-			if (type.IsValueType)
-			{
-				var local = il.DeclareLocal(type);
+			Type readerType = data.Type;
 
-				// call deserializer for this typeID
-				if (data.NeedsInstanceParameter)
-					il.Emit(OpCodes.Ldarg_0);
+			if (paramType != readerType && paramType != typeof(object))
+				throw new Exception();
+
+			bool needTypeConv = paramType != readerType;
+			bool needsInstanceParameter = data.ReaderNeedsInstance;
+
+			var delegateType = typeof(DeserializeDelegate<>).MakeGenericType(paramType);
+
+			// Can we call the reader directly?
+
+			if (!needTypeConv && needsInstanceParameter)
+			{
+				var dynamicReader = data.ReaderMethodInfo as DynamicMethod;
+
+				if (dynamicReader != null)
+					return dynamicReader.CreateDelegate(delegateType);
+				else
+					return Delegate.CreateDelegate(delegateType, data.ReaderMethodInfo);
+			}
+
+			// Create a trampoline
+
+			var wrapper = GenerateDynamicDeserializerStub(paramType);
+			var il = wrapper.GetILGenerator();
+
+			if (needsInstanceParameter)
+				il.Emit(OpCodes.Ldarg_0);
+
+			if (needTypeConv && readerType.IsValueType)
+			{
+				var local = il.DeclareLocal(readerType);
 
 				il.Emit(OpCodes.Ldarg_1);
 				il.Emit(OpCodes.Ldloca_S, local);
@@ -118,15 +181,11 @@ namespace NetSerializer
 				// write result object to out object
 				il.Emit(OpCodes.Ldarg_2);
 				il.Emit(OpCodes.Ldloc_0);
-				il.Emit(OpCodes.Box, type);
+				il.Emit(OpCodes.Box, readerType);
 				il.Emit(OpCodes.Stind_Ref);
 			}
 			else
 			{
-				// call deserializer for this typeID
-				if (data.NeedsInstanceParameter)
-					il.Emit(OpCodes.Ldarg_0);
-
 				il.Emit(OpCodes.Ldarg_1);
 				il.Emit(OpCodes.Ldarg_2);
 
@@ -136,6 +195,8 @@ namespace NetSerializer
 			}
 
 			il.Emit(OpCodes.Ret);
+
+			return wrapper.CreateDelegate(delegateType);
 		}
 	}
 }

@@ -7,107 +7,84 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
 
 namespace NetSerializer
 {
-	public sealed class TypeData
+	sealed class TypeData
 	{
-		public TypeData(ushort typeID, IDynamicTypeSerializer serializer)
+		public TypeData(Type type, ushort typeID, ITypeSerializer typeSerializer)
 		{
+			this.Type = type;
 			this.TypeID = typeID;
-			this.TypeSerializer = serializer;
-
-			this.NeedsInstanceParameter = true;
+			this.TypeSerializer = typeSerializer;
 		}
 
-		public TypeData(ushort typeID, MethodInfo writer, MethodInfo reader)
-		{
-			this.TypeID = typeID;
-			this.WriterMethodInfo = writer;
-			this.ReaderMethodInfo = reader;
+		public Type Type { get; private set; }
+		public ushort TypeID { get; private set; }
 
-			this.NeedsInstanceParameter = writer.GetParameters().Length == 3;
-		}
+		public ITypeSerializer TypeSerializer { get; private set; }
 
-		public readonly ushort TypeID;
-		public bool IsGenerated { get { return this.TypeSerializer != null; } }
-		public readonly IDynamicTypeSerializer TypeSerializer;
 		public MethodInfo WriterMethodInfo;
 		public MethodInfo ReaderMethodInfo;
 
-		public bool NeedsInstanceParameter { get; private set; }
-	}
+		public SerializeDelegate<object> WriterTrampolineDelegate;
+		public Delegate WriterDirectDelegate;
 
-	public sealed class CodeGenContext
-	{
-		readonly Dictionary<Type, TypeData> m_typeMap;
+		public DeserializeDelegate<object> ReaderTrampolineDelegate;
+		public Delegate ReaderDirectDelegate;
 
-		public CodeGenContext(Dictionary<Type, TypeData> typeMap)
+		public bool WriterNeedsInstance
 		{
-			m_typeMap = typeMap;
-
-			var td = m_typeMap[typeof(object)];
-			this.SerializerSwitchMethodInfo = td.WriterMethodInfo;
-			this.DeserializerSwitchMethodInfo = td.ReaderMethodInfo;
+			get
+			{
+#if GENERATE_DEBUGGING_ASSEMBLY
+				if (this.WriterMethodInfo is MethodBuilder)
+					return this.WriterNeedsInstanceDebug;
+#endif
+				return this.WriterMethodInfo.GetParameters().Length == 3;
+			}
 		}
 
-		public MethodInfo SerializerSwitchMethodInfo { get; private set; }
-		public MethodInfo DeserializerSwitchMethodInfo { get; private set; }
-
-		public MethodInfo GetWriterMethodInfo(Type type)
+		public bool ReaderNeedsInstance
 		{
-			return m_typeMap[type].WriterMethodInfo;
+			get
+			{
+#if GENERATE_DEBUGGING_ASSEMBLY
+				if (this.ReaderMethodInfo is MethodBuilder)
+					return this.ReaderNeedsInstanceDebug;
+#endif
+				return this.ReaderMethodInfo.GetParameters().Length == 3;
+			}
 		}
 
-		public MethodInfo GetReaderMethodInfo(Type type)
+#if GENERATE_DEBUGGING_ASSEMBLY
+		// MethodBuilder doesn't support GetParameters(), so we need to track this separately
+		public bool WriterNeedsInstanceDebug;
+		public bool ReaderNeedsInstanceDebug;
+#endif
+
+		public bool CanCallDirect
 		{
-			return m_typeMap[type].ReaderMethodInfo;
-		}
+			get
+			{
+				// We can call the (De)serializer method directly for:
+				// - Value types
+				// - Array types
+				// - Sealed types with static (De)serializer method, as the method will handle null
+				// Other types go through the ObjectSerializer
 
-		public bool IsGenerated(Type type)
-		{
-			return m_typeMap[type].IsGenerated;
-		}
+				var type = this.Type;
 
-		public IDictionary<Type, TypeData> TypeMap { get { return m_typeMap; } }
+				if (type.IsValueType || type.IsArray)
+					return true;
 
-		bool CanCallDirect(Type type)
-		{
-			// We can call the (De)serializer method directly for:
-			// - Value types
-			// - Array types
-			// - Sealed types with static (De)serializer method, as the method will handle null
-			// Other reference types go through the (De)serializerSwitch
+				if (type.IsSealed && (this.TypeSerializer is IStaticTypeSerializer))
+					return true;
 
-			bool direct;
-
-			if (type.IsValueType || type.IsArray)
-				direct = true;
-			else if (type.IsSealed && IsGenerated(type) == false)
-				direct = true;
-			else
-				direct = false;
-
-			return direct;
-		}
-
-		public TypeData GetTypeData(Type type)
-		{
-			return m_typeMap[type];
-		}
-
-		public TypeData GetTypeDataForCall(Type type)
-		{
-			bool direct = CanCallDirect(type);
-			if (!direct)
-				type = typeof(object);
-
-			return GetTypeData(type);
+				return false;
+			}
 		}
 	}
 }

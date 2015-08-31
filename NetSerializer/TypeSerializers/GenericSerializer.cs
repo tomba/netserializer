@@ -38,7 +38,7 @@ namespace NetSerializer
 				yield return field.FieldType;
 		}
 
-		public void GenerateWriterMethod(Type type, CodeGenContext ctx, ILGenerator il)
+		public void GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il)
 		{
 			// arg0: Serializer, arg1: Stream, arg2: value
 
@@ -50,9 +50,9 @@ namespace NetSerializer
 
 				var fieldType = field.FieldType;
 
-				var data = ctx.GetTypeDataForCall(fieldType);
+				var data = serializer.GetIndirectData(fieldType);
 
-				if (data.NeedsInstanceParameter)
+				if (data.WriterNeedsInstance)
 					il.Emit(OpCodes.Ldarg_0);
 
 				il.Emit(OpCodes.Ldarg_1);
@@ -68,7 +68,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ret);
 		}
 
-		public void GenerateReaderMethod(Type type, CodeGenContext ctx, ILGenerator il)
+		public void GenerateReaderMethod(Serializer serializer, Type type, ILGenerator il)
 		{
 			// arg0: Serializer, arg1: stream, arg2: out value
 
@@ -93,9 +93,9 @@ namespace NetSerializer
 			{
 				var fieldType = field.FieldType;
 
-				var data = ctx.GetTypeDataForCall(fieldType);
+				var data = serializer.GetIndirectData(fieldType);
 
-				if (data.NeedsInstanceParameter)
+				if (data.ReaderNeedsInstance)
 					il.Emit(OpCodes.Ldarg_0);
 
 				il.Emit(OpCodes.Ldarg_1);

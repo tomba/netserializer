@@ -29,10 +29,11 @@ namespace NetSerializer
 		{
 			var genArgs = type.GetGenericArguments();
 
+			yield return typeof(bool);
 			yield return genArgs[0];
 		}
 
-		public void GenerateWriterMethod(Type type, CodeGenContext ctx, ILGenerator il)
+		public void GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il)
 		{
 			var valueType = type.GetGenericArguments()[0];
 
@@ -41,18 +42,18 @@ namespace NetSerializer
 			MethodInfo getHasValue = type.GetProperty("HasValue").GetGetMethod();
 			MethodInfo getValue = type.GetProperty("Value").GetGetMethod();
 
-			var data = ctx.GetTypeDataForCall(valueType);
+			var data = serializer.GetIndirectData(valueType);
 
 			il.Emit(OpCodes.Ldarg_1);       // Stream
 			il.Emit(OpCodes.Ldarga_S, 2);   // &value
 			il.Emit(OpCodes.Call, getHasValue);
-			il.Emit(OpCodes.Call, ctx.GetWriterMethodInfo(typeof(bool)));
+			il.Emit(OpCodes.Call, serializer.GetDirectWriter(typeof(bool)));
 
 			il.Emit(OpCodes.Ldarga_S, 2);   // &value
 			il.Emit(OpCodes.Call, getHasValue);
 			il.Emit(OpCodes.Brfalse_S, noValueLabel);
 
-			if (data.NeedsInstanceParameter)
+			if (data.WriterNeedsInstance)
 				il.Emit(OpCodes.Ldarg_0);   // Serializer
 			il.Emit(OpCodes.Ldarg_1);       // Stream
 			il.Emit(OpCodes.Ldarga_S, 2);   // &value
@@ -66,7 +67,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ret);
 		}
 
-		public void GenerateReaderMethod(Type type, CodeGenContext ctx, ILGenerator il)
+		public void GenerateReaderMethod(Serializer serializer, Type type, ILGenerator il)
 		{
 			var valueType = type.GetGenericArguments()[0];
 
@@ -75,12 +76,12 @@ namespace NetSerializer
 
 			var notNullLabel = il.DefineLabel();
 
-			var data = ctx.GetTypeDataForCall(valueType);
+			var data = serializer.GetIndirectData(valueType);
 
 			// read array len
 			il.Emit(OpCodes.Ldarg_1);                   // Stream
 			il.Emit(OpCodes.Ldloca_S, hasValueLocal);   // &hasValue
-			il.Emit(OpCodes.Call, ctx.GetReaderMethodInfo(typeof(bool)));
+			il.Emit(OpCodes.Call, serializer.GetDirectReader(typeof(bool)));
 
 			// if hasValue == 0, return null
 			il.Emit(OpCodes.Ldloc_S, hasValueLocal);
@@ -93,7 +94,7 @@ namespace NetSerializer
 			// hasValue == 1
 			il.MarkLabel(notNullLabel);
 
-			if (data.NeedsInstanceParameter)
+			if (data.ReaderNeedsInstance)
 				il.Emit(OpCodes.Ldarg_0);   // Serializer
 			il.Emit(OpCodes.Ldarg_1);       // Stream
 			il.Emit(OpCodes.Ldloca_S, valueLocal);

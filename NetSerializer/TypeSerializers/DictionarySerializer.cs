@@ -39,7 +39,7 @@ namespace NetSerializer
 			yield return serializedType;
 		}
 
-		public void GetStaticMethods(Type type, out MethodInfo writer, out MethodInfo reader)
+		public MethodInfo GetStaticWriter(Type type)
 		{
 			Debug.Assert(type.IsGenericType);
 
@@ -52,13 +52,35 @@ namespace NetSerializer
 
 			var containerType = this.GetType();
 
-			writer = GetGenWriter(containerType, genTypeDef);
-			reader = GetGenReader(containerType, genTypeDef);
+			var writer = GetGenWriter(containerType, genTypeDef);
 
 			var genArgs = type.GetGenericArguments();
 
 			writer = writer.MakeGenericMethod(genArgs);
+
+			return writer;
+		}
+
+		public MethodInfo GetStaticReader(Type type)
+		{
+			Debug.Assert(type.IsGenericType);
+
+			if (!type.IsGenericType)
+				throw new Exception();
+
+			var genTypeDef = type.GetGenericTypeDefinition();
+
+			Debug.Assert(genTypeDef == typeof(Dictionary<,>));
+
+			var containerType = this.GetType();
+
+			var reader = GetGenReader(containerType, genTypeDef);
+
+			var genArgs = type.GetGenericArguments();
+
 			reader = reader.MakeGenericMethod(genArgs);
+
+			return reader;
 		}
 
 		static MethodInfo GetGenWriter(Type containerType, Type genType)

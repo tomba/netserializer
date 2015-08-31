@@ -30,14 +30,22 @@ namespace NetSerializer
 			yield return underlyingType;
 		}
 
-		public void GetStaticMethods(Type type, out MethodInfo writer, out MethodInfo reader)
+		public MethodInfo GetStaticWriter(Type type)
 		{
 			Debug.Assert(type.IsEnum);
 
 			var underlyingType = Enum.GetUnderlyingType(type);
 
-			writer = Primitives.GetWritePrimitive(underlyingType);
-			reader = Primitives.GetReaderPrimitive(underlyingType);
+			return Primitives.GetWritePrimitive(underlyingType);
+		}
+
+		public MethodInfo GetStaticReader(Type type)
+		{
+			Debug.Assert(type.IsEnum);
+
+			var underlyingType = Enum.GetUnderlyingType(type);
+
+			return Primitives.GetReaderPrimitive(underlyingType);
 		}
 	}
 }
