@@ -97,6 +97,8 @@ namespace Test
 
 			/* Serialize part */
 			{
+				Console.Out.Flush();
+
 				GC.Collect();
 				GC.WaitForPendingFinalizers();
 				GC.Collect();
@@ -122,6 +124,8 @@ namespace Test
 			/* Deerialize part */
 
 			{
+				Console.Out.Flush();
+
 				GC.Collect();
 				GC.WaitForPendingFinalizers();
 				GC.Collect();
@@ -159,6 +163,8 @@ namespace Test
 		static void Test(INetTest test, MessageBase[] msgs)
 		{
 			test.Prepare(msgs.Length);
+
+			Console.Out.Flush();
 
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
