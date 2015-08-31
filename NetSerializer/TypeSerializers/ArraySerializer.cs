@@ -100,8 +100,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldarg_2);
 			il.Emit(OpCodes.Ldlen);
 			il.Emit(OpCodes.Conv_I4);
-			il.Emit(OpCodes.Clt);
-			il.Emit(OpCodes.Brtrue_S, loopBodyLabel);
+			il.Emit(OpCodes.Blt_S, loopBodyLabel);
 
 			il.Emit(OpCodes.Ret);
 		}
@@ -181,8 +180,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldloc_S, arrLocal);
 			il.Emit(OpCodes.Ldlen);
 			il.Emit(OpCodes.Conv_I4);
-			il.Emit(OpCodes.Clt);
-			il.Emit(OpCodes.Brtrue_S, loopBodyLabel);
+			il.Emit(OpCodes.Blt_S, loopBodyLabel);
 
 
 			// store new array to the out value
