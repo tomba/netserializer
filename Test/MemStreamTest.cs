@@ -10,6 +10,7 @@ namespace Test
 	interface IMemStreamTest
 	{
 		string Framework { get; }
+		void Warmup(MessageBase[] msgs);
 		void Prepare(int numMessages);
 		long Serialize(MessageBase[] msgs);
 		MessageBase[] Deserialize();
@@ -27,6 +28,20 @@ namespace Test
 		}
 
 		public string Framework { get { return "NetSerializer"; } }
+
+		public void Warmup(MessageBase[] msgs)
+		{
+			using (var stream = new MemoryStream())
+			{
+				int n = msgs.Length > 10 ? 10 : msgs.Length;
+
+				for (int i = 0; i < n; ++i)
+					m_serializer.Serialize(stream, msgs[i]);
+				stream.Position = 0;
+				for (int i = 0; i < n; ++i)
+					m_serializer.Deserialize(stream);
+			}
+		}
 
 		public void Prepare(int numMessages)
 		{

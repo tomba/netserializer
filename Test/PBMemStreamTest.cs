@@ -14,6 +14,20 @@ namespace Test
 
 		public string Framework { get { return "protobuf-net"; } }
 
+		public void Warmup(MessageBase[] msgs)
+		{
+			using (var stream = new MemoryStream())
+			{
+				int n = msgs.Length > 10 ? 10 : msgs.Length;
+
+				for (int i = 0; i < n; ++i)
+					Serializer.SerializeWithLengthPrefix(stream, msgs[i], PrefixStyle.Base128);
+				stream.Position = 0;
+				for (int i = 0; i < n; ++i)
+					Serializer.DeserializeWithLengthPrefix<MessageBase>(stream, PrefixStyle.Base128);
+			}
+		}
+
 		public void Prepare(int numMessages)
 		{
 			m_received = new MessageBase[numMessages];

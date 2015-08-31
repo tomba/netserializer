@@ -38,8 +38,6 @@ namespace Test
 
 		public void Run()
 		{
-			Warmup();
-
 			MyRandom rand = new MyRandom(123);
 
 			RunTests(rand, typeof(U8Message), 6000000);
@@ -70,26 +68,6 @@ namespace Test
 			//Console.ReadLine();
 		}
 
-		void Warmup()
-		{
-			var msgs = new MessageBase[] { new S16Message(), new ComplexMessage(), new IntArrayMessage() };
-
-			IMemStreamTest t;
-
-			t = new MemStreamTest(m_serializer);
-			t.Prepare(msgs.Length);
-			t.Serialize(msgs);
-			t.Deserialize();
-
-			if (Program.RunProtoBufTests)
-			{
-				t = new PBMemStreamTest();
-				t.Prepare(msgs.Length);
-				t.Serialize(msgs);
-				t.Deserialize();
-			}
-		}
-
 		void RunTests(MyRandom rand, Type msgType, int numMessages)
 		{
 			if (Program.QuickRun)
@@ -100,10 +78,6 @@ namespace Test
 			bool protobufCompatible = msgType.GetCustomAttributes(typeof(ProtoBuf.ProtoContractAttribute), false).Any();
 
 			var msgs = MessageBase.CreateMessages(rand, msgType, numMessages);
-
-			GC.Collect();
-			GC.WaitForPendingFinalizers();
-			GC.Collect();
 
 			Test(new MemStreamTest(m_serializer), msgs);
 			Test(new NetTest(m_serializer), msgs);
@@ -117,6 +91,8 @@ namespace Test
 
 		static void Test(IMemStreamTest test, MessageBase[] msgs)
 		{
+			test.Warmup(msgs);
+
 			test.Prepare(msgs.Length);
 
 			/* Serialize part */
