@@ -22,6 +22,29 @@ namespace Test
 
 		static void Main(string[] args)
 		{
+			if (ParseArgs(args) == false)
+				return;
+
+			if (ShareSerializer)
+				s_sharedSerializer = Tester.CreateSerializer();
+
+			List<Thread> threads = new List<Thread>();
+
+			for (int i = 0; i < NumThreads; ++i)
+			{
+				var thread = new Thread(Test);
+				threads.Add(thread);
+			}
+
+			foreach (var thread in threads)
+				thread.Start();
+
+			foreach (var thread in threads)
+				thread.Join();
+		}
+
+		static bool ParseArgs(string[] args)
+		{
 			bool show_help = false;
 
 			var p = new Mono.Options.OptionSet() {
@@ -42,31 +65,16 @@ namespace Test
 			catch (Mono.Options.OptionException e)
 			{
 				Console.WriteLine(e.Message);
-				return;
+				return false;
 			}
 
 			if (show_help || extra.Count > 0)
 			{
 				p.WriteOptionDescriptions(Console.Out);
-				return;
+				return false;
 			}
 
-			if (ShareSerializer)
-				s_sharedSerializer = Tester.CreateSerializer();
-
-			List<Thread> threads = new List<Thread>();
-
-			for (int i = 0; i < NumThreads; ++i)
-			{
-				var thread = new Thread(Test);
-				threads.Add(thread);
-			}
-
-			foreach (var thread in threads)
-				thread.Start();
-
-			foreach (var thread in threads)
-				thread.Join();
+			return true;
 		}
 
 		static void Test()
