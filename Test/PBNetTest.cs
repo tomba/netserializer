@@ -13,6 +13,8 @@ namespace Test
 {
 	class PBNetTest : INetTest
 	{
+		int m_loops;
+
 		MessageBase[] m_sent;
 		MessageBase[] m_received;
 
@@ -23,9 +25,10 @@ namespace Test
 
 		public string Framework { get { return "protobuf-net"; } }
 
-		public void Prepare(int numMessages)
+		public void Prepare(int numMessages, int loops)
 		{
 			m_received = new MessageBase[numMessages];
+			m_loops = loops;
 
 			m_ev = new ManualResetEvent(false);
 
@@ -59,8 +62,9 @@ namespace Test
 			using (var stream = c.GetStream())
 			using (var bufStream = new BufferedStream(stream))
 			{
-				for (int i = 0; i < m_received.Length; ++i)
-					m_received[i] = Serializer.DeserializeWithLengthPrefix<MessageBase>(bufStream, PrefixStyle.Base128);
+				for (int l = 0; l < m_loops; ++l)
+					for (int i = 0; i < m_received.Length; ++i)
+						m_received[i] = Serializer.DeserializeWithLengthPrefix<MessageBase>(bufStream, PrefixStyle.Base128);
 			}
 
 			listener.Stop();
@@ -76,8 +80,9 @@ namespace Test
 			{
 				m_ev.WaitOne();
 
-				for (int i = 0; i < m_sent.Length; ++i)
-					Serializer.SerializeWithLengthPrefix<MessageBase>(bufStream, m_sent[i], PrefixStyle.Base128);
+				for (int l = 0; l < m_loops; ++l)
+					for (int i = 0; i < m_sent.Length; ++i)
+						Serializer.SerializeWithLengthPrefix<MessageBase>(bufStream, m_sent[i], PrefixStyle.Base128);
 			}
 
 			c.Close();

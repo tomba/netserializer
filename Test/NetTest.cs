@@ -14,7 +14,7 @@ namespace Test
 	interface INetTest
 	{
 		string Framework { get; }
-		void Prepare(int numMessages);
+		void Prepare(int numMessages, int loops);
 		MessageBase[] Test(MessageBase[] msgs);
 	}
 
@@ -22,6 +22,7 @@ namespace Test
 	{
 		NS.Serializer m_serializer;
 
+		int m_loops;
 		MessageBase[] m_sent;
 		MessageBase[] m_received;
 
@@ -40,9 +41,10 @@ namespace Test
 
 		public string Framework { get { return "NetSerializer"; } }
 
-		public void Prepare(int numMessages)
+		public void Prepare(int numMessages, int loops)
 		{
 			m_received = new MessageBase[numMessages];
+			m_loops = loops;
 
 			m_ev = new ManualResetEvent(false);
 
@@ -80,8 +82,9 @@ namespace Test
 			using (var stream = c.GetStream())
 			using (var bufStream = new BufferedStream(stream))
 			{
-				for (int i = 0; i < m_received.Length; ++i)
-					m_received[i] = (MessageBase)m_serializer.Deserialize(bufStream);
+				for (int l = 0; l < m_loops; ++l)
+					for (int i = 0; i < m_received.Length; ++i)
+						m_received[i] = (MessageBase)m_serializer.Deserialize(bufStream);
 			}
 		}
 
@@ -95,8 +98,9 @@ namespace Test
 			{
 				m_ev.WaitOne();
 
-				for (int i = 0; i < m_sent.Length; ++i)
-					m_serializer.Serialize(bufStream, m_sent[i]);
+				for (int l = 0; l < m_loops; ++l)
+					for (int i = 0; i < m_sent.Length; ++i)
+						m_serializer.Serialize(bufStream, m_sent[i]);
 			}
 
 			c.Close();

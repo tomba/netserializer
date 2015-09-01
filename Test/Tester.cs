@@ -36,60 +36,81 @@ namespace Test
 			m_serializer = serializer;
 		}
 
+		class TestSpec
+		{
+			public TestSpec(Type type, int num, int loops)
+			{
+				this.MessageType = type;
+				this.NumMessages = num;
+				this.Loops = loops;
+			}
+
+			public Type MessageType;
+			public int NumMessages;
+			public int Loops;
+		}
+
+		readonly TestSpec[] m_tests = new[]
+		{
+			new TestSpec(typeof(U8Message),	 100, 100000),
+			new TestSpec(typeof(S16Message), 100, 100000),
+			new TestSpec(typeof(S32Message), 100, 100000),
+			new TestSpec(typeof(S64Message), 100, 100000),
+
+			new TestSpec(typeof(DecimalMessage), 100, 50000),
+			new TestSpec(typeof(NullableDecimalMessage), 100, 100000),
+
+			new TestSpec(typeof(PrimitivesMessage), 100, 10000),
+			new TestSpec(typeof(DictionaryMessage), 10, 1000),
+			new TestSpec(typeof(ComplexMessage), 100, 10000),
+			new TestSpec(typeof(StringMessage), 100, 20000),
+			new TestSpec(typeof(StructMessage), 100, 20000),
+			new TestSpec(typeof(BoxedPrimitivesMessage), 100, 20000),
+
+			new TestSpec(typeof(ByteArrayMessage), 10000, 1),
+			new TestSpec(typeof(IntArrayMessage), 1000, 1),
+
+			new TestSpec(typeof(CustomSerializersMessage), 10, 100),
+		};
+
 		public void Run()
 		{
 			MyRandom rand = new MyRandom(123);
 
-			RunTests(rand, typeof(U8Message), 6000000);
-			RunTests(rand, typeof(S16Message), 6000000);
-			RunTests(rand, typeof(S32Message), 6000000);
-			RunTests(rand, typeof(S64Message), 5000000);
-
-			RunTests(rand, typeof(DecimalMessage), 3000000);
-			RunTests(rand, typeof(NullableDecimalMessage), 3000000);
-
-			RunTests(rand, typeof(PrimitivesMessage), 1000000);
-			RunTests(rand, typeof(DictionaryMessage), 5000);
-
-			RunTests(rand, typeof(ComplexMessage), 1000000);
-
-			RunTests(rand, typeof(StringMessage), 600000);
-
-			RunTests(rand, typeof(StructMessage), 2000000);
-
-			RunTests(rand, typeof(BoxedPrimitivesMessage), 2000000);
-
-			RunTests(rand, typeof(ByteArrayMessage), 5000);
-			RunTests(rand, typeof(IntArrayMessage), 800);
-
-			RunTests(rand, typeof(CustomSerializersMessage), 800);
+			foreach (var test in m_tests)
+			{
+				RunTests(rand, test.MessageType, test.NumMessages, test.Loops);
+			}
 
 			//Console.WriteLine("Press enter to quit");
 			//Console.ReadLine();
 		}
 
-		void RunTests(MyRandom rand, Type msgType, int numMessages)
+		void RunTests(MyRandom rand, Type msgType, int numMessages, int loops)
 		{
 			if (Program.QuickRun)
-				numMessages = 50;
+			{
+				numMessages = Math.Min(10, numMessages);
+				loops = 1;
+			}
 
-			Console.WriteLine("== {0} {1} ==", numMessages, msgType.Name);
+			Console.WriteLine("== {0} {1} x {2} ==", numMessages, msgType.Name, loops);
 
 			bool protobufCompatible = msgType.GetCustomAttributes(typeof(ProtoBuf.ProtoContractAttribute), false).Any();
 
 			var msgs = MessageBase.CreateMessages(rand, msgType, numMessages);
 
-			Test(new MemStreamTest(m_serializer), msgs);
-			Test(new NetTest(m_serializer), msgs);
+			Test(new MemStreamTest(m_serializer), msgs, loops);
+			Test(new NetTest(m_serializer), msgs, loops);
 
 			if (Program.RunProtoBufTests && protobufCompatible)
 			{
-				Test(new PBMemStreamTest(), msgs);
-				Test(new PBNetTest(), msgs);
+				Test(new PBMemStreamTest(), msgs, loops);
+				Test(new PBNetTest(), msgs, loops);
 			}
 		}
 
-		static void Test(IMemStreamTest test, MessageBase[] msgs)
+		static void Test(IMemStreamTest test, MessageBase[] msgs, int loops)
 		{
 			test.Warmup(msgs);
 
@@ -109,7 +130,9 @@ namespace Test
 
 				var sw = Stopwatch.StartNew();
 
-				long size = test.Serialize(msgs);
+				long size = 0;
+				for (int l = 0; l < loops; ++l)
+					size = test.Serialize(msgs);
 
 				sw.Stop();
 
@@ -136,7 +159,9 @@ namespace Test
 
 				var sw = Stopwatch.StartNew();
 
-				var received = test.Deserialize();
+				MessageBase[] received = null;
+				for (int l = 0; l < loops; ++l)
+					received = test.Deserialize();
 
 				sw.Stop();
 
@@ -160,9 +185,9 @@ namespace Test
 			}
 		}
 
-		static void Test(INetTest test, MessageBase[] msgs)
+		static void Test(INetTest test, MessageBase[] msgs, int loops)
 		{
-			test.Prepare(msgs.Length);
+			test.Prepare(msgs.Length, loops);
 
 			Console.Out.Flush();
 
