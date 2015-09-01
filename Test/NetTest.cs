@@ -7,20 +7,12 @@ using System.Net.Sockets;
 using System.Net;
 using System.Diagnostics;
 using System.IO;
-using NS = NetSerializer;
 
 namespace Test
 {
-	interface INetTest
+	class NetTest
 	{
-		string Framework { get; }
-		void Prepare(int numMessages, int loops);
-		MessageBase[] Test(MessageBase[] msgs);
-	}
-
-	class NetTest : INetTest
-	{
-		NS.Serializer m_serializer;
+		public ISerializerSpecimen Specimen { get; private set; }
 
 		int m_loops;
 		MessageBase[] m_sent;
@@ -34,12 +26,10 @@ namespace Test
 		TcpListener m_listener;
 		int m_port;
 
-		public NetTest(NS.Serializer serializer)
+		public NetTest(ISerializerSpecimen specimen)
 		{
-			m_serializer = serializer;
+			this.Specimen = specimen;
 		}
-
-		public string Framework { get { return "NetSerializer"; } }
 
 		public void Prepare(int numMessages, int loops)
 		{
@@ -83,8 +73,7 @@ namespace Test
 			using (var bufStream = new BufferedStream(stream))
 			{
 				for (int l = 0; l < m_loops; ++l)
-					for (int i = 0; i < m_received.Length; ++i)
-						m_received[i] = (MessageBase)m_serializer.Deserialize(bufStream);
+					this.Specimen.Deserialize(bufStream, m_received, m_received.Length);
 			}
 		}
 
@@ -99,8 +88,7 @@ namespace Test
 				m_ev.WaitOne();
 
 				for (int l = 0; l < m_loops; ++l)
-					for (int i = 0; i < m_sent.Length; ++i)
-						m_serializer.Serialize(bufStream, m_sent[i]);
+					this.Specimen.Serialize(bufStream, m_sent);
 			}
 
 			c.Close();

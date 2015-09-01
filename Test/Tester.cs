@@ -9,8 +9,6 @@ namespace Test
 {
 	class Tester
 	{
-		NS.Serializer m_serializer;
-
 		public static NS.Serializer CreateSerializer()
 		{
 			var types = typeof(MessageBase).Assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(MessageBase)))
@@ -26,14 +24,19 @@ namespace Test
 			return serializer;
 		}
 
+		List<ISerializerSpecimen> m_specimens = new List<ISerializerSpecimen>();
+
 		public Tester()
+			: this(CreateSerializer())
 		{
-			m_serializer = CreateSerializer();
 		}
 
 		public Tester(NS.Serializer serializer)
 		{
-			m_serializer = serializer;
+			m_specimens.Add(new NetSerializerSpecimen(serializer));
+
+			if (Program.RunProtoBufTests)
+				m_specimens.Add(new ProtobufSpecimen());
 		}
 
 		class TestSpec
@@ -52,7 +55,7 @@ namespace Test
 
 		readonly TestSpec[] m_tests = new[]
 		{
-			new TestSpec(typeof(U8Message),	 100, 100000),
+			new TestSpec(typeof(U8Message),  100, 100000),
 			new TestSpec(typeof(S16Message), 100, 100000),
 			new TestSpec(typeof(S32Message), 100, 100000),
 			new TestSpec(typeof(S64Message), 100, 100000),
@@ -96,21 +99,19 @@ namespace Test
 
 			Console.WriteLine("== {0} {1} x {2} ==", numMessages, msgType.Name, loops);
 
-			bool protobufCompatible = msgType.GetCustomAttributes(typeof(ProtoBuf.ProtoContractAttribute), false).Any();
-
 			var msgs = MessageBase.CreateMessages(rand, msgType, numMessages);
 
-			Test(new MemStreamTest(m_serializer), msgs, loops);
-			Test(new NetTest(m_serializer), msgs, loops);
-
-			if (Program.RunProtoBufTests && protobufCompatible)
+			foreach (var specimen in m_specimens)
 			{
-				Test(new PBMemStreamTest(), msgs, loops);
-				Test(new PBNetTest(), msgs, loops);
+				if (specimen.CanRun(msgType) == false)
+					continue;
+
+				Test(new MemStreamTest(specimen), msgs, loops);
+				Test(new NetTest(specimen), msgs, loops);
 			}
 		}
 
-		static void Test(IMemStreamTest test, MessageBase[] msgs, int loops)
+		static void Test(MemStreamTest test, MessageBase[] msgs, int loops)
 		{
 			test.Warmup(msgs);
 
@@ -141,7 +142,7 @@ namespace Test
 				c2 = GC.CollectionCount(2) - c2;
 
 				Console.WriteLine("{0,-13} | {1,-21} | {2,10} | {3,3} {4,3} {5,3} | {6,10} |",
-					test.Framework, "MemStream Serialize", sw.ElapsedMilliseconds, c0, c1, c2, size);
+					test.Specimen.Name, "MemStream Serialize", sw.ElapsedMilliseconds, c0, c1, c2, size);
 			}
 
 			/* Deerialize part */
@@ -170,7 +171,7 @@ namespace Test
 				c2 = GC.CollectionCount(2) - c2;
 
 				Console.WriteLine("{0,-13} | {1,-21} | {2,10} | {3,3} {4,3} {5,3} | {6,10} |",
-					test.Framework, "MemStream Deserialize", sw.ElapsedMilliseconds, c0, c1, c2, "");
+					test.Specimen.Name, "MemStream Deserialize", sw.ElapsedMilliseconds, c0, c1, c2, "");
 
 				if (Program.EnableResultCheck)
 				{
@@ -185,7 +186,7 @@ namespace Test
 			}
 		}
 
-		static void Test(INetTest test, MessageBase[] msgs, int loops)
+		static void Test(NetTest test, MessageBase[] msgs, int loops)
 		{
 			test.Prepare(msgs.Length, loops);
 
@@ -210,7 +211,7 @@ namespace Test
 			c2 = GC.CollectionCount(2) - c2;
 
 			Console.WriteLine("{0,-13} | {1,-21} | {2,10} | {3,3} {4,3} {5,3} | {6,10} |",
-				test.Framework, "NetTest", sw.ElapsedMilliseconds, c0, c1, c2, "");
+				test.Specimen.Name, "NetTest", sw.ElapsedMilliseconds, c0, c1, c2, "");
 
 			if (Program.EnableResultCheck)
 			{

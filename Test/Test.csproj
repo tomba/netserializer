@@ -40,14 +40,13 @@
   <ItemGroup>
     <Compile Include="CustomSerializers.cs" />
     <Compile Include="Mono.Options\Options.cs" />
-    <Compile Include="PBNetTest.cs" />
-    <Compile Include="PBMemStreamTest.cs" />
     <Compile Include="MemStreamTest.cs" />
     <Compile Include="Messages.cs" />
     <Compile Include="NetTest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MyRandom.cs" />
+    <Compile Include="SerializerSpecimen.cs" />
     <Compile Include="Tester.cs" />
   </ItemGroup>
   <ItemGroup>

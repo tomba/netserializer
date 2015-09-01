@@ -3,31 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using NS = NetSerializer;
 
 namespace Test
 {
-	interface IMemStreamTest
+	class MemStreamTest
 	{
-		string Framework { get; }
-		void Warmup(MessageBase[] msgs);
-		void Prepare(int numMessages);
-		long Serialize(MessageBase[] msgs);
-		MessageBase[] Deserialize();
-	}
-
-	class MemStreamTest : IMemStreamTest
-	{
-		NS.Serializer m_serializer;
 		MessageBase[] m_received;
 		MemoryStream m_stream;
 
-		public MemStreamTest(NS.Serializer serializer)
-		{
-			m_serializer = serializer;
-		}
+		public ISerializerSpecimen Specimen { get; private set; }
 
-		public string Framework { get { return "NetSerializer"; } }
+		public MemStreamTest(ISerializerSpecimen specimen)
+		{
+			this.Specimen = specimen;
+		}
 
 		public void Warmup(MessageBase[] msgs)
 		{
@@ -35,11 +24,13 @@ namespace Test
 			{
 				int n = msgs.Length > 10 ? 10 : msgs.Length;
 
-				for (int i = 0; i < n; ++i)
-					m_serializer.Serialize(stream, msgs[i]);
+				var arr = msgs.Take(n).ToArray();
+
+				this.Specimen.Serialize(stream, arr);
+
 				stream.Position = 0;
-				for (int i = 0; i < n; ++i)
-					m_serializer.Deserialize(stream);
+
+				this.Specimen.Deserialize(stream, arr, n);
 			}
 		}
 
@@ -55,8 +46,7 @@ namespace Test
 
 			m_stream.Position = 0;
 
-			foreach (var msg in msgs)
-				m_serializer.Serialize(m_stream, msg);
+			this.Specimen.Serialize(m_stream, msgs);
 
 			m_stream.Flush();
 
@@ -65,12 +55,9 @@ namespace Test
 
 		public MessageBase[] Deserialize()
 		{
-			int numMessages = m_received.Length;
-
 			m_stream.Position = 0;
 
-			for (int i = 0; i < numMessages; ++i)
-				m_received[i] = (MessageBase)m_serializer.Deserialize(m_stream);
+			this.Specimen.Deserialize(m_stream, m_received, m_received.Length);
 
 			return m_received;
 		}
