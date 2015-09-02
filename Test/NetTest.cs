@@ -31,10 +31,9 @@ namespace Test
 			this.Specimen = specimen;
 		}
 
-		public void Prepare(int numMessages, int loops)
+		public void Prepare(int numMessages)
 		{
 			m_received = new MessageBase[numMessages];
-			m_loops = loops;
 
 			m_ev = new ManualResetEvent(false);
 
@@ -51,9 +50,10 @@ namespace Test
 			m_client.Start();
 		}
 
-		public MessageBase[] Test(MessageBase[] msgs)
+		public MessageBase[] Test(MessageBase[] msgs, int loops)
 		{
 			m_sent = msgs;
+			m_loops = loops;
 
 			m_ev.Set();
 

@@ -175,21 +175,13 @@ namespace Test
 					test.Specimen.Name, "MemStream Deserialize", sw.ElapsedMilliseconds, c0, c1, c2, "");
 
 				if (Program.EnableResultCheck)
-				{
-					for (int i = 0; i < msgs.Length; ++i)
-					{
-						var msg1 = msgs[i];
-						var msg2 = received[i];
-
-						msg1.Compare(msg2);
-					}
-				}
+					CompareMessages(msgs, received);
 			}
 		}
 
 		static void Test(NetTest test, MessageBase[] msgs, int loops)
 		{
-			test.Prepare(msgs.Length, loops);
+			test.Prepare(msgs.Length);
 
 			Console.Out.Flush();
 
@@ -203,7 +195,7 @@ namespace Test
 
 			var sw = Stopwatch.StartNew();
 
-			var received = test.Test(msgs);
+			var received = test.Test(msgs, loops);
 
 			sw.Stop();
 
@@ -215,14 +207,20 @@ namespace Test
 				test.Specimen.Name, "NetTest", sw.ElapsedMilliseconds, c0, c1, c2, "");
 
 			if (Program.EnableResultCheck)
-			{
-				for (int i = 0; i < msgs.Length; ++i)
-				{
-					var msg1 = msgs[i];
-					var msg2 = received[i];
+				CompareMessages(msgs, received);
+		}
 
-					msg1.Compare(msg2);
-				}
+		static void CompareMessages(MessageBase[] msgs1, MessageBase[] msgs2)
+		{
+			if (msgs1.Length != msgs2.Length)
+				throw new Exception();
+
+			for (int i = 0; i < msgs1.Length; ++i)
+			{
+				var msg1 = msgs1[i];
+				var msg2 = msgs2[i];
+
+				msg1.Compare(msg2);
 			}
 		}
 	}
