@@ -78,18 +78,16 @@ namespace Test
 
 		public void Run()
 		{
-			MyRandom rand = new MyRandom(123);
-
 			foreach (var test in m_tests)
 			{
-				RunTests(rand, test.MessageType, test.NumMessages, test.Loops);
+				RunTests(test.MessageType, test.NumMessages, test.Loops);
 			}
 
 			//Console.WriteLine("Press enter to quit");
 			//Console.ReadLine();
 		}
 
-		void RunTests(MyRandom rand, Type msgType, int numMessages, int loops)
+		void RunTests(Type msgType, int numMessages, int loops)
 		{
 			if (Program.QuickRun)
 			{
@@ -98,6 +96,8 @@ namespace Test
 			}
 
 			Console.WriteLine("== {0} {1} x {2} ==", numMessages, msgType.Name, loops);
+
+			MyRandom rand = new MyRandom(123);
 
 			var msgs = MessageBase.CreateMessages(rand, msgType, numMessages);
 
