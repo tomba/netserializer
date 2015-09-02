@@ -8,11 +8,11 @@ using System.Text;
 
 namespace Test
 {
-	class CustomSerializers : IStaticTypeSerializer
+	class TriDimArrayCustomSerializer : IStaticTypeSerializer
 	{
 		public bool Handles(Type type)
 		{
-			return type == typeof(int[, ,]);
+			return type == typeof(int[,,]);
 		}
 
 		public IEnumerable<Type> GetSubtypes(Type type)
@@ -22,16 +22,16 @@ namespace Test
 
 		public void GetStaticMethods(Type type, out MethodInfo writer, out MethodInfo reader)
 		{
-			writer = typeof(CustomSerializers).GetMethod("WritePrimitive",
+			writer = typeof(TriDimArrayCustomSerializer).GetMethod("WritePrimitive",
 				BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.ExactBinding, null,
 				new Type[] { typeof(Stream), type }, null);
 
-			reader = typeof(CustomSerializers).GetMethod("ReadPrimitive",
+			reader = typeof(TriDimArrayCustomSerializer).GetMethod("ReadPrimitive",
 				BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.ExactBinding, null,
 				new Type[] { typeof(Stream), type.MakeByRefType() }, null);
 		}
 
-		static void WritePrimitive(Stream stream, int[, ,] value)
+		static void WritePrimitive(Stream stream, int[,,] value)
 		{
 			if (value == null)
 			{
@@ -53,7 +53,7 @@ namespace Test
 						Primitives.WritePrimitive(stream, value[z, y, x]);
 		}
 
-		static void ReadPrimitive(Stream stream, out int[, ,] value)
+		static void ReadPrimitive(Stream stream, out int[,,] value)
 		{
 			uint l1, l2, l3;
 

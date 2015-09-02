@@ -808,15 +808,15 @@ namespace Test
 	}
 
 	[Serializable]
-	sealed class CustomSerializersMessage : MessageBase
+	sealed class TriDimArrayCustomSerializersMessage : MessageBase
 	{
-		int[, ,] m_int3Arr;
+		int[,,] m_int3Arr;
 
-		public CustomSerializersMessage()
+		public TriDimArrayCustomSerializersMessage()
 		{
 		}
 
-		public CustomSerializersMessage(MyRandom r)
+		public TriDimArrayCustomSerializersMessage(MyRandom r)
 		{
 			int lx = r.Next(100) + 1;
 			int ly = r.Next(70) + 1;
@@ -830,14 +830,14 @@ namespace Test
 						m_int3Arr[z, y, x] = (int)r.Next();
 		}
 
-		public static CustomSerializersMessage Create(MyRandom r)
+		public static TriDimArrayCustomSerializersMessage Create(MyRandom r)
 		{
-			return new CustomSerializersMessage(r);
+			return new TriDimArrayCustomSerializersMessage(r);
 		}
 
 		public override void Compare(MessageBase msg)
 		{
-			var m = (CustomSerializersMessage)msg;
+			var m = (TriDimArrayCustomSerializersMessage)msg;
 
 			int lz = m_int3Arr.GetLength(0);
 			int ly = m_int3Arr.GetLength(1);

@@ -16,7 +16,7 @@ namespace Test
 				.ToArray();
 
 			var sw = Stopwatch.StartNew();
-			var serializer = new NS.Serializer(types, new NS.ITypeSerializer[] { new CustomSerializers() });
+			var serializer = new NS.Serializer(types, new NS.ITypeSerializer[] { new TriDimArrayCustomSerializer() });
 			sw.Stop();
 
 			Console.WriteLine("Serializer.Initialize() in {0} ms", sw.ElapsedMilliseconds);
@@ -73,7 +73,7 @@ namespace Test
 			new TestSpec(typeof(ByteArrayMessage), 10000, 1),
 			new TestSpec(typeof(IntArrayMessage), 1000, 1),
 
-			new TestSpec(typeof(CustomSerializersMessage), 10, 100),
+			new TestSpec(typeof(TriDimArrayCustomSerializersMessage), 10, 100),
 		};
 
 		public void Run()
