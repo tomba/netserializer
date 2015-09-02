@@ -115,7 +115,7 @@ namespace Test
 		{
 			test.Warmup(msgs);
 
-			test.Prepare(msgs.Length);
+			test.Prepare();
 
 			/* Serialize part */
 			{
@@ -148,6 +148,8 @@ namespace Test
 			/* Deerialize part */
 
 			{
+				MessageBase[] received = new MessageBase[msgs.Length];
+
 				Console.Out.Flush();
 
 				GC.Collect();
@@ -160,9 +162,8 @@ namespace Test
 
 				var sw = Stopwatch.StartNew();
 
-				MessageBase[] received = null;
 				for (int l = 0; l < loops; ++l)
-					received = test.Deserialize();
+					test.Deserialize(received);
 
 				sw.Stop();
 

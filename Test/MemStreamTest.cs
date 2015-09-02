@@ -8,7 +8,6 @@ namespace Test
 {
 	class MemStreamTest
 	{
-		MessageBase[] m_received;
 		MemoryStream m_stream;
 
 		public ISerializerSpecimen Specimen { get; private set; }
@@ -34,9 +33,8 @@ namespace Test
 			}
 		}
 
-		public void Prepare(int numMessages)
+		public void Prepare()
 		{
-			m_received = new MessageBase[numMessages];
 			m_stream = new MemoryStream();
 		}
 
@@ -53,13 +51,11 @@ namespace Test
 			return m_stream.Position;
 		}
 
-		public MessageBase[] Deserialize()
+		public void Deserialize(MessageBase[] msgs)
 		{
 			m_stream.Position = 0;
 
-			this.Specimen.Deserialize(m_stream, m_received, m_received.Length);
-
-			return m_received;
+			this.Specimen.Deserialize(m_stream, msgs, msgs.Length);
 		}
 	}
 }
