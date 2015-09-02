@@ -44,8 +44,6 @@ namespace Test
 			m_server = new Thread(ServerMain);
 			m_server.Start();
 
-			Thread.Sleep(100);
-
 			m_client = new Thread(ClientMain);
 			m_client.Start();
 		}
@@ -54,6 +52,8 @@ namespace Test
 		{
 			m_sent = msgs;
 			m_loops = loops;
+
+			Thread.MemoryBarrier();
 
 			m_ev.Set();
 
@@ -69,6 +69,8 @@ namespace Test
 		{
 			var c = m_listener.AcceptTcpClient();
 
+			m_ev.WaitOne();
+
 			using (var stream = c.GetStream())
 			using (var bufStream = new BufferedStream(stream))
 			{
@@ -82,11 +84,11 @@ namespace Test
 			var c = new TcpClient();
 			c.Connect(IPAddress.Loopback, m_port);
 
+			m_ev.WaitOne();
+
 			using (var netStream = c.GetStream())
 			using (var bufStream = new BufferedStream(netStream))
 			{
-				m_ev.WaitOne();
-
 				for (int l = 0; l < m_loops; ++l)
 					this.Specimen.Serialize(bufStream, m_sent);
 			}
