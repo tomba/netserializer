@@ -79,14 +79,15 @@ namespace Test
 		{
 			MyRandom rand = new MyRandom(123);
 
+			var arr = this.Messages.Take(this.NumMessages > 10 ? 10 : 1).ToArray();
+			specimen.Warmup(arr);
+
 			Test(new MemStreamTest<T>(specimen), this.Messages, this.Loops);
 			Test(new NetTest<T>(specimen), this.Messages, this.Loops);
 		}
 
 		void Test(MemStreamTest<T> test, T[] msgs, int loops)
 		{
-			test.Warmup(msgs);
-
 			test.Prepare();
 
 			/* Serialize part */

@@ -12,6 +12,7 @@ namespace Test
 	{
 		string Name { get; }
 		bool CanRun(Type type);
+		void Warmup<T>(T[] msgs);
 		void Serialize<T>(Stream stream, T[] msgs);
 		void Deserialize<T>(Stream stream, T[] msgs);
 	}
@@ -30,6 +31,18 @@ namespace Test
 		public bool CanRun(Type type)
 		{
 			return true;
+		}
+
+		public void Warmup<T>(T[] msgs)
+		{
+			using (var stream = new MemoryStream())
+			{
+				Serialize(stream, msgs);
+
+				stream.Position = 0;
+
+				Deserialize(stream, msgs);
+			}
 		}
 
 		public void Serialize<T>(Stream stream, T[] msgs)
@@ -52,6 +65,18 @@ namespace Test
 		public bool CanRun(Type type)
 		{
 			return type.GetCustomAttributes(typeof(PB.ProtoContractAttribute), false).Any();
+		}
+
+		public void Warmup<T>(T[] msgs)
+		{
+			using (var stream = new MemoryStream())
+			{
+				Serialize(stream, msgs);
+
+				stream.Position = 0;
+
+				Deserialize(stream, msgs);
+			}
 		}
 
 		public void Serialize<T>(Stream stream, T[] msgs)

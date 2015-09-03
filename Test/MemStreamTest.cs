@@ -17,22 +17,6 @@ namespace Test
 			this.Specimen = specimen;
 		}
 
-		public void Warmup(T[] msgs)
-		{
-			using (var stream = new MemoryStream())
-			{
-				int n = msgs.Length > 10 ? 10 : msgs.Length;
-
-				var arr = msgs.Take(n).ToArray();
-
-				this.Specimen.Serialize(stream, arr);
-
-				stream.Position = 0;
-
-				this.Specimen.Deserialize(stream, arr);
-			}
-		}
-
 		public void Prepare()
 		{
 			m_stream = new MemoryStream();
