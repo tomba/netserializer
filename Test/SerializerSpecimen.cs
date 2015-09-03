@@ -12,8 +12,8 @@ namespace Test
 	{
 		string Name { get; }
 		bool CanRun(Type type);
-		void Serialize(Stream stream, MessageBase[] msgs);
-		void Deserialize(Stream stream, MessageBase[] msgs, int numMessages);
+		void Serialize<T>(Stream stream, T[] msgs);
+		void Deserialize<T>(Stream stream, T[] msgs, int numMessages);
 	}
 
 	class NetSerializerSpecimen : ISerializerSpecimen
@@ -32,16 +32,16 @@ namespace Test
 			return true;
 		}
 
-		public void Serialize(Stream stream, MessageBase[] msgs)
+		public void Serialize<T>(Stream stream, T[] msgs)
 		{
 			foreach (var msg in msgs)
 				m_serializer.Serialize(stream, msg);
 		}
 
-		public void Deserialize(Stream stream, MessageBase[] msgs, int numMessages)
+		public void Deserialize<T>(Stream stream, T[] msgs, int numMessages)
 		{
 			for (int i = 0; i < numMessages; ++i)
-				msgs[i] = (MessageBase)m_serializer.Deserialize(stream);
+				msgs[i] = (T)m_serializer.Deserialize(stream);
 		}
 	}
 
@@ -54,16 +54,16 @@ namespace Test
 			return type.GetCustomAttributes(typeof(PB.ProtoContractAttribute), false).Any();
 		}
 
-		public void Serialize(Stream stream, MessageBase[] msgs)
+		public void Serialize<T>(Stream stream, T[] msgs)
 		{
 			foreach (var msg in msgs)
 				PB.Serializer.SerializeWithLengthPrefix(stream, msg, PB.PrefixStyle.Base128);
 		}
 
-		public void Deserialize(Stream stream, MessageBase[] msgs, int numMessages)
+		public void Deserialize<T>(Stream stream, T[] msgs, int numMessages)
 		{
 			for (int i = 0; i < numMessages; ++i)
-				msgs[i] = PB.Serializer.DeserializeWithLengthPrefix<MessageBase>(stream, PB.PrefixStyle.Base128);
+				msgs[i] = PB.Serializer.DeserializeWithLengthPrefix<T>(stream, PB.PrefixStyle.Base128);
 		}
 	}
 }
