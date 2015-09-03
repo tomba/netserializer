@@ -21,6 +21,8 @@ namespace Test
 
 			Console.WriteLine("Serializer.Initialize() in {0} ms", sw.ElapsedMilliseconds);
 
+			//NS.Serializer.GenerateDebugAssembly(types, new NS.ITypeSerializer[] { new TriDimArrayCustomSerializer() });
+
 			return serializer;
 		}
 

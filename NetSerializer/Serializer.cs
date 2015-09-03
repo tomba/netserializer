@@ -36,8 +36,6 @@ namespace NetSerializer
 			new GenericSerializer(),
 		};
 
-		ITypeSerializer[] m_userTypeSerializers;
-
 		/// <summary>
 		/// Initialize NetSerializer
 		/// </summary>
@@ -57,18 +55,11 @@ namespace NetSerializer
 			if (userTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
 				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or  IStaticTypeSerializer");
 
-			m_userTypeSerializers = userTypeSerializers;
-
-			var typeDataMap = GenerateTypeData(rootTypes);
+			var typeDataMap = GenerateTypeData(rootTypes, userTypeSerializers);
 
 			GenerateDynamic(typeDataMap);
 
 			m_typeIDMap = typeDataMap.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.TypeID);
-
-#if GENERATE_DEBUGGING_ASSEMBLY
-			// Note: GenerateDebugAssembly overwrites some fields from typeDataMap
-			GenerateDebugAssembly(typeDataMap);
-#endif
 		}
 
 		public void Serialize(Stream stream, object data)
@@ -123,7 +114,7 @@ namespace NetSerializer
 			serializer.m_deserializerTrampolines[id](serializer, stream, out ob);
 		}
 
-		Dictionary<Type, TypeData> GenerateTypeData(IEnumerable<Type> rootTypes)
+		static Dictionary<Type, TypeData> GenerateTypeData(IEnumerable<Type> rootTypes, ITypeSerializer[] userTypeSerializers)
 		{
 			var map = new Dictionary<Type, TypeData>();
 			var stack = new Stack<Type>(PrimitivesSerializer.GetSupportedTypes().Concat(rootTypes));
@@ -146,7 +137,7 @@ namespace NetSerializer
 				if (type.ContainsGenericParameters)
 					throw new NotSupportedException(String.Format("Type {0} contains generic parameters", type.FullName));
 
-				var serializer = m_userTypeSerializers.FirstOrDefault(h => h.Handles(type));
+				var serializer = userTypeSerializers.FirstOrDefault(h => h.Handles(type));
 
 				if (serializer == null)
 					serializer = s_typeSerializers.FirstOrDefault(h => h.Handles(type));
@@ -245,6 +236,16 @@ namespace NetSerializer
 		}
 
 #if GENERATE_DEBUGGING_ASSEMBLY
+		public static void GenerateDebugAssembly(IEnumerable<Type> rootTypes, ITypeSerializer[] userTypeSerializers)
+		{
+			if (userTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
+				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or  IStaticTypeSerializer");
+
+			var typeDataMap = GenerateTypeData(rootTypes, userTypeSerializers);
+
+			GenerateDebugAssembly(typeDataMap);
+		}
+
 		static void GenerateDebugAssembly(Dictionary<Type, TypeData> map)
 		{
 			var ab = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("NetSerializerDebug"), AssemblyBuilderAccess.RunAndSave);
