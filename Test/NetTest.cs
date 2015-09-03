@@ -75,7 +75,7 @@ namespace Test
 			using (var bufStream = new BufferedStream(stream))
 			{
 				for (int l = 0; l < m_loops; ++l)
-					this.Specimen.Deserialize(bufStream, m_received, m_received.Length);
+					this.Specimen.Deserialize(bufStream, m_received);
 			}
 		}
 

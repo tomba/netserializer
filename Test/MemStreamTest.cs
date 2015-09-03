@@ -29,7 +29,7 @@ namespace Test
 
 				stream.Position = 0;
 
-				this.Specimen.Deserialize(stream, arr, n);
+				this.Specimen.Deserialize(stream, arr);
 			}
 		}
 
@@ -53,7 +53,7 @@ namespace Test
 		{
 			m_stream.Position = 0;
 
-			this.Specimen.Deserialize(m_stream, msgs, msgs.Length);
+			this.Specimen.Deserialize(m_stream, msgs);
 		}
 	}
 }

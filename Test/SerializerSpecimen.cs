@@ -13,7 +13,7 @@ namespace Test
 		string Name { get; }
 		bool CanRun(Type type);
 		void Serialize<T>(Stream stream, T[] msgs);
-		void Deserialize<T>(Stream stream, T[] msgs, int numMessages);
+		void Deserialize<T>(Stream stream, T[] msgs);
 	}
 
 	class NetSerializerSpecimen : ISerializerSpecimen
@@ -38,9 +38,9 @@ namespace Test
 				m_serializer.Serialize(stream, msg);
 		}
 
-		public void Deserialize<T>(Stream stream, T[] msgs, int numMessages)
+		public void Deserialize<T>(Stream stream, T[] msgs)
 		{
-			for (int i = 0; i < numMessages; ++i)
+			for (int i = 0; i < msgs.Length; ++i)
 				msgs[i] = (T)m_serializer.Deserialize(stream);
 		}
 	}
@@ -60,9 +60,9 @@ namespace Test
 				PB.Serializer.SerializeWithLengthPrefix(stream, msg, PB.PrefixStyle.Base128);
 		}
 
-		public void Deserialize<T>(Stream stream, T[] msgs, int numMessages)
+		public void Deserialize<T>(Stream stream, T[] msgs)
 		{
-			for (int i = 0; i < numMessages; ++i)
+			for (int i = 0; i < msgs.Length; ++i)
 				msgs[i] = PB.Serializer.DeserializeWithLengthPrefix<T>(stream, PB.PrefixStyle.Base128);
 		}
 	}
