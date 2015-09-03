@@ -1,5 +1,4 @@
-﻿using ProtoBuf;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -9,14 +8,14 @@ namespace Test
 {
 	class MessageTest<T> : ITest
 	{
-		public Type MessageType { get; private set; }
-		public int NumMessages { get; private set; }
-		public int Loops { get; private set; }
+		Type m_messageType;
+		int m_numMessages;
+		int m_loops;
 
 		Func<MyRandom, T> m_creator;
 		Action<T, T> m_comparer;
 
-		public T[] Messages { get; protected set; }
+		T[] m_messages;
 
 		public MessageTest(int numMessages, int loops)
 			: this(numMessages, loops, null, null)
@@ -25,9 +24,9 @@ namespace Test
 
 		public MessageTest(int numMessages, int loops, Func<MyRandom, T> creator, Action<T, T> comparer)
 		{
-			this.MessageType = typeof(T);
-			this.NumMessages = numMessages;
-			this.Loops = loops;
+			m_messageType = typeof(T);
+			m_numMessages = numMessages;
+			m_loops = loops;
 
 			if (creator == null)
 			{
@@ -49,41 +48,41 @@ namespace Test
 
 		public bool CanRun(ISerializerSpecimen specimen)
 		{
-			return specimen.CanRun(this.MessageType);
+			return specimen.CanRun(m_messageType);
 		}
 
 		public void Prepare()
 		{
 			if (Program.QuickRun)
 			{
-				this.NumMessages = Math.Min(10, this.NumMessages);
-				this.Loops = 1;
+				m_numMessages = Math.Min(10, m_numMessages);
+				m_loops = 1;
 			}
 
 			var r = new MyRandom(123);
 
-			var msgs = new T[this.NumMessages];
+			var msgs = new T[m_numMessages];
 			for (int i = 0; i < msgs.Length; ++i)
 				msgs[i] = m_creator(r);
-			this.Messages = msgs;
+			m_messages = msgs;
 
-			Console.WriteLine("== {0} {1} x {2} ==", this.NumMessages, this.MessageType.Name, this.Loops);
+			Console.WriteLine("== {0} {1} x {2} ==", m_numMessages, m_messageType.Name, m_loops);
 		}
 
 		public void Unprepare()
 		{
-			this.Messages = null;
+			m_messages = null;
 		}
 
 		public void Run(ISerializerSpecimen specimen)
 		{
 			MyRandom rand = new MyRandom(123);
 
-			var arr = this.Messages.Take(this.NumMessages > 10 ? 10 : 1).ToArray();
+			var arr = m_messages.Take(m_numMessages > 10 ? 10 : 1).ToArray();
 			specimen.Warmup(arr);
 
-			Test(new MemStreamTest<T>(specimen), this.Messages, this.Loops);
-			Test(new NetTest<T>(specimen), this.Messages, this.Loops);
+			Test(new MemStreamTest<T>(specimen), m_messages, m_loops);
+			Test(new NetTest<T>(specimen), m_messages, m_loops);
 		}
 
 		void Test(MemStreamTest<T> test, T[] msgs, int loops)
@@ -185,9 +184,6 @@ namespace Test
 
 		void CompareMessages(T[] msgs1, T[] msgs2)
 		{
-			if (m_comparer == null)
-				return;
-
 			if (msgs1.Length != msgs2.Length)
 				throw new Exception();
 
