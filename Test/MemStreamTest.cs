@@ -40,8 +40,6 @@ namespace Test
 
 		public long Serialize(T[] msgs)
 		{
-			int numMessages = msgs.Length;
-
 			m_stream.Position = 0;
 
 			this.Specimen.Serialize(m_stream, msgs);
