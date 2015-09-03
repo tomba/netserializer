@@ -6,7 +6,7 @@ using System.IO;
 
 namespace Test
 {
-	class MemStreamTest
+	class MemStreamTest<T>
 	{
 		MemoryStream m_stream;
 
@@ -17,7 +17,7 @@ namespace Test
 			this.Specimen = specimen;
 		}
 
-		public void Warmup(MessageBase[] msgs)
+		public void Warmup(T[] msgs)
 		{
 			using (var stream = new MemoryStream())
 			{
@@ -38,7 +38,7 @@ namespace Test
 			m_stream = new MemoryStream();
 		}
 
-		public long Serialize(MessageBase[] msgs)
+		public long Serialize(T[] msgs)
 		{
 			int numMessages = msgs.Length;
 
@@ -51,7 +51,7 @@ namespace Test
 			return m_stream.Position;
 		}
 
-		public void Deserialize(MessageBase[] msgs)
+		public void Deserialize(T[] msgs)
 		{
 			m_stream.Position = 0;
 

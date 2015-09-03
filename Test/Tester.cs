@@ -39,189 +39,44 @@ namespace Test
 				m_specimens.Add(new ProtobufSpecimen());
 		}
 
-		class TestSpec
+		readonly ITest[] m_tests = new ITest[]
 		{
-			public TestSpec(Type type, int num, int loops)
-			{
-				this.MessageType = type;
-				this.NumMessages = num;
-				this.Loops = loops;
-			}
-
-			public Type MessageType;
-			public int NumMessages;
-			public int Loops;
-		}
-
-		readonly TestSpec[] m_tests = new[]
-		{
-			new TestSpec(typeof(U8Message),  100, 100000),
-			new TestSpec(typeof(S16Message), 100, 100000),
-			new TestSpec(typeof(S32Message), 100, 100000),
-			new TestSpec(typeof(S64Message), 100, 100000),
-
-			new TestSpec(typeof(DecimalMessage), 100, 50000),
-			new TestSpec(typeof(NullableDecimalMessage), 100, 100000),
-
-			new TestSpec(typeof(PrimitivesMessage), 100, 10000),
-			new TestSpec(typeof(DictionaryMessage), 10, 1000),
-			new TestSpec(typeof(ComplexMessage), 100, 10000),
-			new TestSpec(typeof(StringMessage), 100, 20000),
-			new TestSpec(typeof(StructMessage), 100, 20000),
-			new TestSpec(typeof(BoxedPrimitivesMessage), 100, 20000),
-
-			new TestSpec(typeof(ByteArrayMessage), 10000, 1),
-			new TestSpec(typeof(IntArrayMessage), 1000, 1),
-
-			new TestSpec(typeof(TriDimArrayCustomSerializersMessage), 10, 100),
+			new MessageTest<U8Message>(100, 100000),
+			new MessageTest<S16Message>(100, 100000),
+			new MessageTest<S32Message>(100, 100000),
+			new MessageTest<S64Message>(100, 100000),
+			new MessageTest<DecimalMessage>(100, 50000),
+			new MessageTest<NullableDecimalMessage>(100, 100000),
+			new MessageTest<PrimitivesMessage>(100, 10000),
+			new MessageTest<DictionaryMessage>(10, 1000),
+			new MessageTest<ComplexMessage>(100, 10000),
+			new MessageTest<StringMessage>(100, 20000),
+			new MessageTest<StructMessage>(100, 20000),
+			new MessageTest<BoxedPrimitivesMessage>(100, 20000),
+			new MessageTest<ByteArrayMessage>(10000, 1),
+			new MessageTest<IntArrayMessage>(1000, 1),
+			new MessageTest<TriDimArrayCustomSerializersMessage>(10, 100),
 		};
 
 		public void Run()
 		{
 			foreach (var test in m_tests)
 			{
-				RunTests(test.MessageType, test.NumMessages, test.Loops);
+				test.Prepare();
+
+				foreach (var specimen in m_specimens)
+				{
+					if (test.CanRun(specimen) == false)
+						continue;
+
+					test.Run(specimen);
+				}
+
+				test.Unprepare();
 			}
 
 			//Console.WriteLine("Press enter to quit");
 			//Console.ReadLine();
-		}
-
-		void RunTests(Type msgType, int numMessages, int loops)
-		{
-			if (Program.QuickRun)
-			{
-				numMessages = Math.Min(10, numMessages);
-				loops = 1;
-			}
-
-			Console.WriteLine("== {0} {1} x {2} ==", numMessages, msgType.Name, loops);
-
-			MyRandom rand = new MyRandom(123);
-
-			var msgs = MessageBase.CreateMessages(rand, msgType, numMessages);
-
-			foreach (var specimen in m_specimens)
-			{
-				if (specimen.CanRun(msgType) == false)
-					continue;
-
-				Test(new MemStreamTest(specimen), msgs, loops);
-				Test(new NetTest(specimen), msgs, loops);
-			}
-		}
-
-		static void Test(MemStreamTest test, MessageBase[] msgs, int loops)
-		{
-			test.Warmup(msgs);
-
-			test.Prepare();
-
-			/* Serialize part */
-			{
-				Console.Out.Flush();
-
-				GC.Collect();
-				GC.WaitForPendingFinalizers();
-				GC.Collect();
-
-				var c0 = GC.CollectionCount(0);
-				var c1 = GC.CollectionCount(1);
-				var c2 = GC.CollectionCount(2);
-
-				var sw = Stopwatch.StartNew();
-
-				long size = 0;
-				for (int l = 0; l < loops; ++l)
-					size = test.Serialize(msgs);
-
-				sw.Stop();
-
-				c0 = GC.CollectionCount(0) - c0;
-				c1 = GC.CollectionCount(1) - c1;
-				c2 = GC.CollectionCount(2) - c2;
-
-				Console.WriteLine("{0,-13} | {1,-21} | {2,10} | {3,3} {4,3} {5,3} | {6,10} |",
-					test.Specimen.Name, "MemStream Serialize", sw.ElapsedMilliseconds, c0, c1, c2, size);
-			}
-
-			/* Deerialize part */
-
-			{
-				MessageBase[] received = new MessageBase[msgs.Length];
-
-				Console.Out.Flush();
-
-				GC.Collect();
-				GC.WaitForPendingFinalizers();
-				GC.Collect();
-
-				var c0 = GC.CollectionCount(0);
-				var c1 = GC.CollectionCount(1);
-				var c2 = GC.CollectionCount(2);
-
-				var sw = Stopwatch.StartNew();
-
-				for (int l = 0; l < loops; ++l)
-					test.Deserialize(received);
-
-				sw.Stop();
-
-				c0 = GC.CollectionCount(0) - c0;
-				c1 = GC.CollectionCount(1) - c1;
-				c2 = GC.CollectionCount(2) - c2;
-
-				Console.WriteLine("{0,-13} | {1,-21} | {2,10} | {3,3} {4,3} {5,3} | {6,10} |",
-					test.Specimen.Name, "MemStream Deserialize", sw.ElapsedMilliseconds, c0, c1, c2, "");
-
-				if (Program.EnableResultCheck)
-					CompareMessages(msgs, received);
-			}
-		}
-
-		static void Test(NetTest test, MessageBase[] msgs, int loops)
-		{
-			test.Prepare(msgs.Length);
-
-			Console.Out.Flush();
-
-			GC.Collect();
-			GC.WaitForPendingFinalizers();
-			GC.Collect();
-
-			var c0 = GC.CollectionCount(0);
-			var c1 = GC.CollectionCount(1);
-			var c2 = GC.CollectionCount(2);
-
-			var sw = Stopwatch.StartNew();
-
-			var received = test.Test(msgs, loops);
-
-			sw.Stop();
-
-			c0 = GC.CollectionCount(0) - c0;
-			c1 = GC.CollectionCount(1) - c1;
-			c2 = GC.CollectionCount(2) - c2;
-
-			Console.WriteLine("{0,-13} | {1,-21} | {2,10} | {3,3} {4,3} {5,3} | {6,10} |",
-				test.Specimen.Name, "NetTest", sw.ElapsedMilliseconds, c0, c1, c2, "");
-
-			if (Program.EnableResultCheck)
-				CompareMessages(msgs, received);
-		}
-
-		static void CompareMessages(MessageBase[] msgs1, MessageBase[] msgs2)
-		{
-			if (msgs1.Length != msgs2.Length)
-				throw new Exception();
-
-			for (int i = 0; i < msgs1.Length; ++i)
-			{
-				var msg1 = msgs1[i];
-				var msg2 = msgs2[i];
-
-				msg1.Compare(msg2);
-			}
 		}
 	}
 }

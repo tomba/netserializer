@@ -10,13 +10,13 @@ using System.IO;
 
 namespace Test
 {
-	class NetTest
+	class NetTest<T>
 	{
 		public ISerializerSpecimen Specimen { get; private set; }
 
 		int m_loops;
-		MessageBase[] m_sent;
-		MessageBase[] m_received;
+		T[] m_sent;
+		T[] m_received;
 
 		Thread m_server;
 		Thread m_client;
@@ -33,7 +33,7 @@ namespace Test
 
 		public void Prepare(int numMessages)
 		{
-			m_received = new MessageBase[numMessages];
+			m_received = new T[numMessages];
 
 			m_ev = new ManualResetEvent(false);
 
@@ -48,7 +48,7 @@ namespace Test
 			m_client.Start();
 		}
 
-		public MessageBase[] Test(MessageBase[] msgs, int loops)
+		public T[] Test(T[] msgs, int loops)
 		{
 			m_sent = msgs;
 			m_loops = loops;

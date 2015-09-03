@@ -24,27 +24,10 @@ namespace Test
 	[ProtoInclude(13, typeof(NullableDecimalMessage))]
 	abstract class MessageBase
 	{
-		public abstract void Compare(MessageBase msg);
-
 		protected static void A(bool b)
 		{
 			if (!b)
 				throw new Exception();
-		}
-
-		delegate MessageBase CreateDelegate(MyRandom r);
-
-		public static MessageBase[] CreateMessages(MyRandom rand, Type type, int numMessages)
-		{
-			var arr = new MessageBase[numMessages];
-
-			var method = type.GetMethod("Create", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
-			var create = (CreateDelegate)Delegate.CreateDelegate(typeof(CreateDelegate), method);
-
-			for (int i = 0; i < numMessages; ++i)
-				arr[i] = create(rand);
-
-			return arr;
 		}
 	}
 
@@ -69,10 +52,9 @@ namespace Test
 			return new U8Message(r);
 		}
 
-		public override void Compare(MessageBase msg)
+		public static void Compare(U8Message a, U8Message b)
 		{
-			var m = (U8Message)msg;
-			A(m_val == m.m_val);
+			A(a.m_val == b.m_val);
 		}
 	}
 
@@ -97,10 +79,9 @@ namespace Test
 			return new S16Message(r);
 		}
 
-		public override void Compare(MessageBase msg)
+		public static void Compare(S16Message a, S16Message b)
 		{
-			var m = (S16Message)msg;
-			A(m_val == m.m_val);
+			A(a.m_val == b.m_val);
 		}
 	}
 
@@ -125,10 +106,9 @@ namespace Test
 			return new S32Message(r);
 		}
 
-		public override void Compare(MessageBase msg)
+		public static void Compare(S32Message a, S32Message b)
 		{
-			var m = (S32Message)msg;
-			A(m_val == m.m_val);
+			A(a.m_val == b.m_val);
 		}
 	}
 
@@ -162,10 +142,9 @@ namespace Test
 			return new DecimalMessage(r);
 		}
 
-		public override void Compare(MessageBase msg)
+		public static void Compare(DecimalMessage a, DecimalMessage b)
 		{
-			var m = (DecimalMessage)msg;
-			A(m_val == m.m_val);
+			A(a.m_val == b.m_val);
 		}
 	}
 
@@ -202,10 +181,9 @@ namespace Test
 			return new NullableDecimalMessage(r);
 		}
 
-		public override void Compare(MessageBase msg)
+		public static void Compare(NullableDecimalMessage a, NullableDecimalMessage b)
 		{
-			var m = (NullableDecimalMessage)msg;
-			A(m_val == m.m_val);
+			A(a.m_val == b.m_val);
 		}
 	}
 
@@ -260,12 +238,10 @@ namespace Test
 			return new StructMessage(r);
 		}
 
-		public override void Compare(MessageBase msg)
+		public static void Compare(StructMessage a, StructMessage b)
 		{
-			var m = (StructMessage)msg;
-			A(m_struct1.Equals(m.m_struct1));
-
-			A(m_struct2.Equals(m.m_struct2));
+			A(a.m_struct1.Equals(b.m_struct1));
+			A(a.m_struct2.Equals(b.m_struct2));
 		}
 	}
 
@@ -290,10 +266,9 @@ namespace Test
 			return new S64Message(r);
 		}
 
-		public override void Compare(MessageBase msg)
+		public static void Compare(S64Message a, S64Message b)
 		{
-			var m = (S64Message)msg;
-			A(m_val == m.m_val);
+			A(a.m_val == b.m_val);
 		}
 	}
 
@@ -376,28 +351,26 @@ namespace Test
 			return new PrimitivesMessage(r);
 		}
 
-		public override void Compare(MessageBase msg)
+		public static void Compare(PrimitivesMessage a, PrimitivesMessage b)
 		{
-			var m = (PrimitivesMessage)msg;
+			A(a.m_bool == b.m_bool);
 
-			A(m_bool == m.m_bool);
+			A(a.m_byte == b.m_byte);
+			A(a.m_sbyte == b.m_sbyte);
+			A(a.m_char == b.m_char);
+			A(a.m_ushort == b.m_ushort);
+			A(a.m_short == b.m_short);
+			A(a.m_uint == b.m_uint);
+			A(a.m_int == b.m_int);
+			A(a.m_ulong == b.m_ulong);
+			A(a.m_long == b.m_long);
 
-			A(m_byte == m.m_byte);
-			A(m_sbyte == m.m_sbyte);
-			A(m_char == m.m_char);
-			A(m_ushort == m.m_ushort);
-			A(m_short == m.m_short);
-			A(m_uint == m.m_uint);
-			A(m_int == m.m_int);
-			A(m_ulong == m.m_ulong);
-			A(m_long == m.m_long);
+			A(a.m_single == b.m_single);
+			A(a.m_double == b.m_double);
 
-			A(m_single == m.m_single);
-			A(m_double == m.m_double);
+			A(a.m_enum == b.m_enum);
 
-			A(m_enum == m.m_enum);
-
-			A(m_date == m.m_date);
+			A(a.m_date == b.m_date);
 		}
 	}
 
@@ -433,17 +406,15 @@ namespace Test
 			return new BoxedPrimitivesMessage(r);
 		}
 
-		public override void Compare(MessageBase msg)
+		public static void Compare(BoxedPrimitivesMessage a, BoxedPrimitivesMessage b)
 		{
-			var m = (BoxedPrimitivesMessage)msg;
+			A((bool)a.m_bool == (bool)b.m_bool);
 
-			A((bool)m_bool == (bool)m.m_bool);
+			A((byte)a.m_byte == (byte)b.m_byte);
+			A((int)a.m_int == (int)b.m_int);
+			A((long)a.m_long == (long)b.m_long);
 
-			A((byte)m_byte == (byte)m.m_byte);
-			A((int)m_int == (int)m.m_int);
-			A((long)m_long == (long)m.m_long);
-
-			A((MyEnum)m_enum == (MyEnum)m.m_enum);
+			A((MyEnum)a.m_enum == (MyEnum)b.m_enum);
 		}
 	}
 
@@ -479,18 +450,16 @@ namespace Test
 			return new ByteArrayMessage(r);
 		}
 
-		public override void Compare(MessageBase msg)
+		public static void Compare(ByteArrayMessage a, ByteArrayMessage b)
 		{
-			var m = (ByteArrayMessage)msg;
-
-			if (m_byteArr == null)
+			if (a.m_byteArr == null)
 			{
-				A(m_byteArr == m.m_byteArr);
+				A(a.m_byteArr == b.m_byteArr);
 			}
 			else
 			{
-				for (int i = 0; i < m_byteArr.Length; ++i)
-					A(m_byteArr[i] == m.m_byteArr[i]);
+				for (int i = 0; i < a.m_byteArr.Length; ++i)
+					A(a.m_byteArr[i] == b.m_byteArr[i]);
 			}
 		}
 	}
@@ -527,18 +496,16 @@ namespace Test
 			return new IntArrayMessage(r);
 		}
 
-		public override void Compare(MessageBase msg)
+		public static void Compare(IntArrayMessage a, IntArrayMessage b)
 		{
-			var m = (IntArrayMessage)msg;
-
-			if (m_intArr == null)
+			if (a.m_intArr == null)
 			{
-				A(m_intArr == m.m_intArr);
+				A(a.m_intArr == b.m_intArr);
 			}
 			else
 			{
-				for (int i = 0; i < m_intArr.Length; ++i)
-					A(m_intArr[i] == m.m_intArr[i]);
+				for (int i = 0; i < a.m_intArr.Length; ++i)
+					A(a.m_intArr[i] == b.m_intArr[i]);
 			}
 		}
 	}
@@ -570,11 +537,9 @@ namespace Test
 			return new StringMessage(r);
 		}
 
-		public override void Compare(MessageBase msg)
+		public static void Compare(StringMessage a, StringMessage b)
 		{
-			var m = (StringMessage)msg;
-
-			A(m_string == m.m_string);
+			A(a.m_string == b.m_string);
 		}
 	}
 
@@ -709,26 +674,24 @@ namespace Test
 			return new DictionaryMessage(r);
 		}
 
-		public override void Compare(MessageBase msg)
+		public static void Compare(DictionaryMessage a, DictionaryMessage b)
 		{
-			var m = (DictionaryMessage)msg;
-
-			if (m_intMap == null)
-				A(m_intMap == m.m_intMap);
+			if (a.m_intMap == null)
+				A(a.m_intMap == b.m_intMap);
 			else
 			{
-				A(m_intMap.Count == m.m_intMap.Count);
-				foreach (var kvp in m_intMap)
-					A(kvp.Value == m.m_intMap[kvp.Key]);
+				A(a.m_intMap.Count == b.m_intMap.Count);
+				foreach (var kvp in a.m_intMap)
+					A(kvp.Value == b.m_intMap[kvp.Key]);
 			}
 
-			if (m_obMap == null)
-				A(m_obMap == m.m_obMap);
+			if (a.m_obMap == null)
+				A(a.m_obMap == b.m_obMap);
 			else
 			{
-				A(m_obMap.Count == m.m_obMap.Count);
-				foreach (var kvp in m_obMap)
-					kvp.Value.Compare(m.m_obMap[kvp.Key]);
+				A(a.m_obMap.Count == b.m_obMap.Count);
+				foreach (var kvp in a.m_obMap)
+					kvp.Value.Compare(b.m_obMap[kvp.Key]);
 			}
 		}
 	}
@@ -781,29 +744,27 @@ namespace Test
 			return new ComplexMessage(r);
 		}
 
-		public override void Compare(MessageBase msg)
+		public static void Compare(ComplexMessage a, ComplexMessage b)
 		{
-			var m = (ComplexMessage)msg;
-
-			if (m_msg == null)
-				A(m_msg == m.m_msg);
+			if (a.m_msg == null)
+				A(a.m_msg == b.m_msg);
 			else
-				m_msg.Compare(m.m_msg);
+				S16Message.Compare(a.m_msg, b.m_msg);
 
-			if (m_sealedClass == null)
-				A(m_sealedClass == m.m_sealedClass);
+			if (a.m_sealedClass == null)
+				A(a.m_sealedClass == b.m_sealedClass);
 			else
-				m_sealedClass.Compare(m.m_sealedClass);
+				a.m_sealedClass.Compare(b.m_sealedClass);
 
-			if (m_abstractMsg == null)
-				A(m_abstractMsg == m.m_abstractMsg);
+			if (a.m_abstractMsg == null)
+				A(a.m_abstractMsg == b.m_abstractMsg);
 			else
-				((SimpleClass)m_abstractMsg).Compare((SimpleClass)m.m_abstractMsg);
+				((SimpleClass)a.m_abstractMsg).Compare((SimpleClass)b.m_abstractMsg);
 
-			if (m_ifaceMsg == null)
-				A(m_ifaceMsg == m.m_ifaceMsg);
+			if (a.m_ifaceMsg == null)
+				A(a.m_ifaceMsg == b.m_ifaceMsg);
 			else
-				((SimpleClass2)m_ifaceMsg).Compare((SimpleClass2)m.m_ifaceMsg);
+				((SimpleClass2)a.m_ifaceMsg).Compare((SimpleClass2)b.m_ifaceMsg);
 		}
 	}
 
@@ -835,18 +796,16 @@ namespace Test
 			return new TriDimArrayCustomSerializersMessage(r);
 		}
 
-		public override void Compare(MessageBase msg)
+		public static void Compare(TriDimArrayCustomSerializersMessage a, TriDimArrayCustomSerializersMessage b)
 		{
-			var m = (TriDimArrayCustomSerializersMessage)msg;
-
-			int lz = m_int3Arr.GetLength(0);
-			int ly = m_int3Arr.GetLength(1);
-			int lx = m_int3Arr.GetLength(2);
+			int lz = a.m_int3Arr.GetLength(0);
+			int ly = a.m_int3Arr.GetLength(1);
+			int lx = a.m_int3Arr.GetLength(2);
 
 			for (int z = 0; z < lz; ++z)
 				for (int y = 0; y < ly; ++y)
 					for (int x = 0; x < lx; ++x)
-						A(m_int3Arr[z, y, x] == m.m_int3Arr[z, y, x]);
+						A(a.m_int3Arr[z, y, x] == b.m_int3Arr[z, y, x]);
 		}
 	}
 }

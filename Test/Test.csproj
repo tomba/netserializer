@@ -39,6 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CustomSerializers.cs" />
+    <Compile Include="ITest.cs" />
     <Compile Include="Mono.Options\Options.cs" />
     <Compile Include="MemStreamTest.cs" />
     <Compile Include="Messages.cs" />
@@ -48,6 +49,7 @@
     <Compile Include="MyRandom.cs" />
     <Compile Include="SerializerSpecimen.cs" />
     <Compile Include="Tester.cs" />
+    <Compile Include="MessageTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NetSerializer\NetSerializer.csproj">
