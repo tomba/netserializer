@@ -8,7 +8,6 @@ namespace Test
 {
 	class MessageTest<T> : ITest
 	{
-		Type m_messageType;
 		int m_numMessages;
 		int m_loops;
 
@@ -17,38 +16,17 @@ namespace Test
 
 		T[] m_messages;
 
-		public MessageTest(int numMessages, int loops)
-			: this(numMessages, loops, null, null)
-		{
-		}
-
 		public MessageTest(int numMessages, int loops, Func<MyRandom, T> creator, Action<T, T> comparer)
 		{
-			m_messageType = typeof(T);
 			m_numMessages = numMessages;
 			m_loops = loops;
-
-			if (creator == null)
-			{
-				var method = typeof(T).GetMethod("Create", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
-				creator = (Func<MyRandom, T>)Delegate.CreateDelegate(typeof(Func<MyRandom, T>), method);
-			}
-
 			m_creator = creator;
-
-			if (comparer == null)
-			{
-				var method = typeof(T).GetMethod("Compare", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
-				if (method != null)
-					comparer = (Action<T, T>)Delegate.CreateDelegate(typeof(Action<T, T>), method);
-			}
-
 			m_comparer = comparer;
 		}
 
 		public bool CanRun(ISerializerSpecimen specimen)
 		{
-			return specimen.CanRun(m_messageType);
+			return specimen.CanRun(typeof(T));
 		}
 
 		public void Prepare()
@@ -66,7 +44,7 @@ namespace Test
 				msgs[i] = m_creator(r);
 			m_messages = msgs;
 
-			Console.WriteLine("== {0} {1} x {2} ==", m_numMessages, m_messageType.Name, m_loops);
+			Console.WriteLine("== {0} {1} x {2} ==", m_numMessages, typeof(T).Name, m_loops);
 		}
 
 		public void Unprepare()

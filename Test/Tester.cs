@@ -41,29 +41,31 @@ namespace Test
 				m_specimens.Add(new ProtobufSpecimen());
 		}
 
-		readonly ITest[] m_tests = new ITest[]
+		static readonly ITestSpec[] s_testSpecs = new ITestSpec[]
 		{
-			new MessageTest<U8Message>(100, 100000),
-			new MessageTest<S16Message>(100, 100000),
-			new MessageTest<S32Message>(100, 100000),
-			new MessageTest<S64Message>(100, 100000),
-			new MessageTest<DecimalMessage>(100, 50000),
-			new MessageTest<NullableDecimalMessage>(100, 100000),
-			new MessageTest<PrimitivesMessage>(100, 10000),
-			new MessageTest<DictionaryMessage>(10, 1000),
-			new MessageTest<ComplexMessage>(100, 10000),
-			new MessageTest<StringMessage>(100, 20000),
-			new MessageTest<StructMessage>(100, 20000),
-			new MessageTest<BoxedPrimitivesMessage>(100, 20000),
-			new MessageTest<ByteArrayMessage>(10000, 1),
-			new MessageTest<IntArrayMessage>(1000, 1),
-			new MessageTest<TriDimArrayCustomSerializersMessage>(10, 100),
+			new MessageTestSpec<U8Message>(100, 100000),
+			new MessageTestSpec<S16Message>(100, 100000),
+			new MessageTestSpec<S32Message>(100, 100000),
+			new MessageTestSpec<S64Message>(100, 100000),
+			new MessageTestSpec<DecimalMessage>(100, 50000),
+			new MessageTestSpec<NullableDecimalMessage>(100, 100000),
+			new MessageTestSpec<PrimitivesMessage>(100, 10000),
+			new MessageTestSpec<DictionaryMessage>(10, 1000),
+			new MessageTestSpec<ComplexMessage>(100, 10000),
+			new MessageTestSpec<StringMessage>(100, 20000),
+			new MessageTestSpec<StructMessage>(100, 20000),
+			new MessageTestSpec<BoxedPrimitivesMessage>(100, 20000),
+			new MessageTestSpec<ByteArrayMessage>(10000, 1),
+			new MessageTestSpec<IntArrayMessage>(1000, 1),
+			new MessageTestSpec<TriDimArrayCustomSerializersMessage>(10, 100),
 		};
 
 		public void Run()
 		{
-			foreach (var test in m_tests)
+			foreach (var spec in s_testSpecs)
 			{
+				var test = spec.Create();
+
 				test.Prepare();
 
 				foreach (var specimen in m_specimens)
