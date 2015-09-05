@@ -19,8 +19,6 @@ namespace NetSerializer
 {
 	static class Helpers
 	{
-		public static readonly ConstructorInfo ExceptionCtorInfo = typeof(Exception).GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new Type[0], null);
-
 		public static IEnumerable<FieldInfo> GetFieldInfos(Type type)
 		{
 			Debug.Assert(type.IsSerializable);
