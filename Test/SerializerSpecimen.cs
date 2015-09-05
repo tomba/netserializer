@@ -64,6 +64,9 @@ namespace Test
 
 		public bool CanRun(Type type)
 		{
+			if (type.IsPrimitive || type == typeof(Guid))
+				return true;
+
 			return type.GetCustomAttributes(typeof(PB.ProtoContractAttribute), false).Any();
 		}
 
