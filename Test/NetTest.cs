@@ -10,7 +10,7 @@ using System.IO;
 
 namespace Test
 {
-	class NetTest<T>
+	class NetTest<T> : IDisposable
 	{
 		public ISerializerSpecimen Specimen { get; private set; }
 
@@ -29,6 +29,15 @@ namespace Test
 		public NetTest(ISerializerSpecimen specimen)
 		{
 			this.Specimen = specimen;
+		}
+
+		public void Dispose()
+		{
+			if (m_ev != null)
+			{
+				m_ev.Dispose();
+				m_ev = null;
+			}
 		}
 
 		public void Prepare(int numMessages)

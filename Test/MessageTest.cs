@@ -81,8 +81,11 @@ namespace Test
 			var arr = m_messages.Take(m_numMessages > 10 ? 10 : 1).ToArray();
 			specimen.Warmup(arr);
 
-			Test(new MemStreamTest<T>(specimen), m_messages, m_loops);
-			Test(new NetTest<T>(specimen), m_messages, m_loops);
+			using (var test = new MemStreamTest<T>(specimen))
+				Test(test, m_messages, m_loops);
+
+			using (var test = new NetTest<T>(specimen))
+				Test(test, m_messages, m_loops);
 		}
 
 		void Test(MemStreamTest<T> test, T[] msgs, int loops)

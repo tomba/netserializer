@@ -6,7 +6,7 @@ using System.IO;
 
 namespace Test
 {
-	class MemStreamTest<T>
+	class MemStreamTest<T> : IDisposable
 	{
 		MemoryStream m_stream;
 
@@ -15,6 +15,15 @@ namespace Test
 		public MemStreamTest(ISerializerSpecimen specimen)
 		{
 			this.Specimen = specimen;
+		}
+
+		public void Dispose()
+		{
+			if (m_stream != null)
+			{
+				m_stream.Dispose();
+				m_stream = null;
+			}
 		}
 
 		public void Prepare()
