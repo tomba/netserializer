@@ -39,9 +39,26 @@ namespace Test
 				m_specimens.Add(new ProtobufSpecimen());
 		}
 
+		static void A(bool b)
+		{
+			if (!b)
+				throw new Exception();
+		}
+
 		static readonly ITestSpec[] s_testSpecs = new ITestSpec[]
 		{
+			new MessageTestSpec<LargeStruct>(100, 30000),
+			new MessageTestSpec<LargeStruct>(100, 30000, true),
+
+			new MessageTestSpec<Guid>(100, 50000, false, r => Guid.NewGuid(), (a, b) => {  A(a == b); }),
+			new MessageTestSpec<Guid>(100, 50000, true, r => Guid.NewGuid(), (a, b) => {  A(a == b); }),
+
+			new MessageTestSpec<int>(100, 100000, false, r => (int)r.Next(), (a, b) => {  A(a == b); }),
+			new MessageTestSpec<int>(100, 100000, true, r => (int)r.Next(), (a, b) => {  A(a == b); }),
+
 			new MessageTestSpec<U8Message>(100, 100000),
+			new MessageTestSpec<U8Message>(100, 100000, true),
+
 			new MessageTestSpec<S16Message>(100, 100000),
 			new MessageTestSpec<S32Message>(100, 100000),
 			new MessageTestSpec<S64Message>(100, 100000),

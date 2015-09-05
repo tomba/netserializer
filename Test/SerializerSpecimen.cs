@@ -15,6 +15,8 @@ namespace Test
 		void Warmup<T>(T[] msgs);
 		void Serialize<T>(Stream stream, T[] msgs);
 		void Deserialize<T>(Stream stream, T[] msgs);
+		void SerializeDirect<T>(Stream stream, T[] msgs);
+		void DeserializeDirect<T>(Stream stream, T[] msgs);
 	}
 
 	class NetSerializerSpecimen : ISerializerSpecimen
@@ -56,6 +58,18 @@ namespace Test
 			for (int i = 0; i < msgs.Length; ++i)
 				msgs[i] = (T)m_serializer.Deserialize(stream);
 		}
+
+		public void SerializeDirect<T>(Stream stream, T[] msgs)
+		{
+			foreach (T msg in msgs)
+				m_serializer.SerializeDirect(stream, msg);
+		}
+
+		public void DeserializeDirect<T>(Stream stream, T[] msgs)
+		{
+			for (int i = 0; i < msgs.Length; ++i)
+				m_serializer.DeserializeDirect<T>(stream, out msgs[i]);
+		}
 	}
 
 	class ProtobufSpecimen : ISerializerSpecimen
@@ -89,6 +103,20 @@ namespace Test
 		}
 
 		public void Deserialize<T>(Stream stream, T[] msgs)
+		{
+			for (int i = 0; i < msgs.Length; ++i)
+				msgs[i] = PB.Serializer.DeserializeWithLengthPrefix<T>(stream, PB.PrefixStyle.Base128);
+		}
+
+		/* hum I guess direct serializing cannot be done with protobuf */
+
+		public void SerializeDirect<T>(Stream stream, T[] msgs)
+		{
+			foreach (T msg in msgs)
+				PB.Serializer.SerializeWithLengthPrefix(stream, msg, PB.PrefixStyle.Base128);
+		}
+
+		public void DeserializeDirect<T>(Stream stream, T[] msgs)
 		{
 			for (int i = 0; i < msgs.Length; ++i)
 				msgs[i] = PB.Serializer.DeserializeWithLengthPrefix<T>(stream, PB.PrefixStyle.Base128);

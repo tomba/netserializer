@@ -10,16 +10,18 @@ namespace Test
 	{
 		int m_numMessages;
 		int m_loops;
+		bool m_direct;
 
 		Func<MyRandom, T> m_creator;
 		Action<T, T> m_comparer;
 
 		T[] m_messages;
 
-		public MessageTest(int numMessages, int loops, Func<MyRandom, T> creator, Action<T, T> comparer)
+		public MessageTest(int numMessages, int loops, bool direct, Func<MyRandom, T> creator, Action<T, T> comparer)
 		{
 			m_numMessages = numMessages;
 			m_loops = loops;
+			m_direct = direct;
 			m_creator = creator;
 			m_comparer = comparer;
 		}
@@ -44,7 +46,7 @@ namespace Test
 				msgs[i] = m_creator(r);
 			m_messages = msgs;
 
-			Console.WriteLine("== {0} {1} x {2} ==", m_numMessages, typeof(T).Name, m_loops);
+			Console.WriteLine("== {0} {1} x {2}{3} ==", m_numMessages, typeof(T).Name, m_loops, m_direct ? " (direct)" : "");
 		}
 
 		public void Unprepare()
@@ -87,7 +89,7 @@ namespace Test
 
 				long size = 0;
 				for (int l = 0; l < loops; ++l)
-					size = test.Serialize(msgs);
+					size = test.Serialize(msgs, m_direct);
 
 				sw.Stop();
 
@@ -117,7 +119,7 @@ namespace Test
 				var sw = Stopwatch.StartNew();
 
 				for (int l = 0; l < loops; ++l)
-					test.Deserialize(received);
+					test.Deserialize(received, m_direct);
 
 				sw.Stop();
 
@@ -149,7 +151,7 @@ namespace Test
 
 			var sw = Stopwatch.StartNew();
 
-			var received = test.Test(msgs, loops);
+			var received = test.Test(msgs, loops, m_direct);
 
 			sw.Stop();
 

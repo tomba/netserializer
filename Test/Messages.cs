@@ -22,12 +22,54 @@ namespace Test
 	[ProtoInclude(11, typeof(StructMessage))]
 	[ProtoInclude(12, typeof(DecimalMessage))]
 	[ProtoInclude(13, typeof(NullableDecimalMessage))]
+	[ProtoInclude(14, typeof(LargeStruct))]
 	abstract class MessageBase
 	{
 		protected static void A(bool b)
 		{
 			if (!b)
 				throw new Exception();
+		}
+	}
+
+	[Serializable]
+	[ProtoContract]
+	struct LargeStruct
+	{
+		static void A(bool b)
+		{
+			if (!b)
+				throw new Exception();
+		}
+
+		[ProtoMember(1)]
+		ulong m_val1;
+		[ProtoMember(2)]
+		ulong m_val2;
+		[ProtoMember(3)]
+		ulong m_val3;
+		[ProtoMember(4)]
+		ulong m_val4;
+
+		public LargeStruct(MyRandom r)
+		{
+			m_val1 = r.Next();
+			m_val2 = r.Next();
+			m_val3 = r.Next();
+			m_val4 = r.Next();
+		}
+
+		public static LargeStruct Create(MyRandom r)
+		{
+			return new LargeStruct(r);
+		}
+
+		public static void Compare(LargeStruct a, LargeStruct b)
+		{
+			A(a.m_val1 == b.m_val1);
+			A(a.m_val2 == b.m_val2);
+			A(a.m_val3 == b.m_val3);
+			A(a.m_val4 == b.m_val4);
 		}
 	}
 

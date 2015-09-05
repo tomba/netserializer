@@ -17,6 +17,7 @@ namespace Test
 		int m_loops;
 		T[] m_sent;
 		T[] m_received;
+		bool m_direct;
 
 		Thread m_server;
 		Thread m_client;
@@ -57,10 +58,11 @@ namespace Test
 			m_client.Start();
 		}
 
-		public T[] Test(T[] msgs, int loops)
+		public T[] Test(T[] msgs, int loops, bool direct)
 		{
 			m_sent = msgs;
 			m_loops = loops;
+			m_direct = direct;
 
 			Thread.MemoryBarrier();
 
@@ -84,7 +86,12 @@ namespace Test
 			using (var bufStream = new BufferedStream(stream))
 			{
 				for (int l = 0; l < m_loops; ++l)
-					this.Specimen.Deserialize(bufStream, m_received);
+				{
+					if (m_direct)
+						this.Specimen.DeserializeDirect(bufStream, m_received);
+					else
+						this.Specimen.Deserialize(bufStream, m_received);
+				}
 			}
 		}
 
@@ -99,7 +106,12 @@ namespace Test
 			using (var bufStream = new BufferedStream(netStream))
 			{
 				for (int l = 0; l < m_loops; ++l)
-					this.Specimen.Serialize(bufStream, m_sent);
+				{
+					if (m_direct)
+						this.Specimen.SerializeDirect(bufStream, m_sent);
+					else
+						this.Specimen.Serialize(bufStream, m_sent);
+				}
 			}
 
 			c.Close();
