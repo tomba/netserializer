@@ -11,9 +11,7 @@ namespace Test
 	{
 		public static NS.Serializer CreateSerializer()
 		{
-			var types = typeof(MessageBase).Assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(MessageBase)))
-				.Concat(new Type[] { typeof(SimpleClass), typeof(SimpleClass2) })
-				.ToArray();
+			var types = GetKnownTypes().ToArray();
 
 			var sw = Stopwatch.StartNew();
 			var serializer = new NS.Serializer(types, new NS.ITypeSerializer[] { new TriDimArrayCustomSerializer() });
@@ -59,6 +57,12 @@ namespace Test
 			new MessageTestSpec<IntArrayMessage>(1000, 1),
 			new MessageTestSpec<TriDimArrayCustomSerializersMessage>(10, 100),
 		};
+
+		static IEnumerable<Type> GetKnownTypes()
+		{
+			return s_testSpecs.Select(s => s.Type)
+				.Concat(new[] { typeof(SimpleClass), typeof(SimpleClass2) });
+		}
 
 		public void Run()
 		{

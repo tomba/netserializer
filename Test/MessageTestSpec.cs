@@ -15,6 +15,8 @@ namespace Test
 			return new MessageTest<T>(m_numMessages, m_loops, m_creator, m_comparer);
 		}
 
+		public Type Type { get { return typeof(T); } }
+
 		public MessageTestSpec(int numMessages, int loops, Func<MyRandom, T> creator = null, Action<T, T> comparer = null)
 		{
 			m_numMessages = numMessages;
