@@ -45,6 +45,7 @@
     <Compile Include="TypeSerializers\DictionarySerializer.cs" />
     <Compile Include="TypeSerializers\GenericSerializer.cs" />
     <Compile Include="TypeSerializers\EnumSerializer.cs" />
+    <Compile Include="TypeDictionary.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="ITypeSerializer.cs" />
     <Compile Include="Serializer.cs" />
