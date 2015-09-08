@@ -40,7 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="TypeSerializers\ArraySerializer.cs" />
-    <Compile Include="CodeGenContext.cs" />
+    <Compile Include="TypeData.cs" />
     <Compile Include="TypeSerializers\NullableSerializer.cs" />
     <Compile Include="TypeSerializers\DictionarySerializer.cs" />
     <Compile Include="TypeSerializers\GenericSerializer.cs" />
