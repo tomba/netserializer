@@ -53,7 +53,7 @@ namespace NetSerializer
 			m_userTypeSerializers = userTypeSerializers;
 
 			m_runtimeTypeMap = new Dictionary<Type, TypeData>();
-			m_runtimeTypeIDMap = new Dictionary<ushort, TypeData>();
+			m_runtimeTypeIDMap = new Dictionary<uint, TypeData>();
 
 			InitializeTypeMaps(new[] { typeof(object) }.Concat(rootTypes));
 
@@ -68,7 +68,7 @@ namespace NetSerializer
 		{
 			Stack<Type> stack = new Stack<Type>(roots);
 
-			ushort typeID = 1;
+			uint typeID = 1;
 
 			while (stack.Count > 0)
 			{
@@ -103,7 +103,7 @@ namespace NetSerializer
 		readonly ITypeSerializer[] m_userTypeSerializers;
 
 		readonly Dictionary<Type, TypeData> m_runtimeTypeMap;
-		readonly Dictionary<ushort, TypeData> m_runtimeTypeIDMap;
+		readonly Dictionary<uint, TypeData> m_runtimeTypeIDMap;
 
 		readonly object m_modifyLock = new object();
 
@@ -156,7 +156,7 @@ namespace NetSerializer
 			del(this, stream, out value);
 		}
 
-		internal ushort GetTypeIdAndSerializer(Type type, out SerializeDelegate<object> del)
+		internal uint GetTypeIdAndSerializer(Type type, out SerializeDelegate<object> del)
 		{
 			var data = m_runtimeTypeMap[type];
 
@@ -173,7 +173,7 @@ namespace NetSerializer
 			}
 		}
 
-		internal DeserializeDelegate<object> GetDeserializeTrampolineFromId(ushort id)
+		internal DeserializeDelegate<object> GetDeserializeTrampolineFromId(uint id)
 		{
 			var data = m_runtimeTypeIDMap[id];
 
@@ -462,7 +462,7 @@ namespace NetSerializer
 			var tb = modb.DefineType("NetSerializer", TypeAttributes.Public);
 
 			m_runtimeTypeMap = new Dictionary<Type, TypeData>();
-			m_runtimeTypeIDMap = new Dictionary<ushort, TypeData>();
+			m_runtimeTypeIDMap = new Dictionary<uint, TypeData>();
 
 			InitializeTypeMaps(new[] { typeof(object) }.Concat(rootTypes));
 

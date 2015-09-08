@@ -40,7 +40,7 @@ namespace NetSerializer
 		{
 			if (ob == null)
 			{
-				Primitives.WritePrimitive(stream, (ushort)0);
+				Primitives.WritePrimitive(stream, (uint)0);
 				return;
 			}
 
@@ -48,7 +48,7 @@ namespace NetSerializer
 
 			SerializeDelegate<object> del;
 
-			ushort id = serializer.GetTypeIdAndSerializer(type, out del);
+			uint id = serializer.GetTypeIdAndSerializer(type, out del);
 
 			Primitives.WritePrimitive(stream, id);
 
@@ -57,7 +57,7 @@ namespace NetSerializer
 
 		public static void Deserialize(Serializer serializer, Stream stream, out object ob)
 		{
-			ushort id;
+			uint id;
 
 			Primitives.ReadPrimitive(stream, out id);
 

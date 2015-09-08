@@ -14,7 +14,7 @@ namespace NetSerializer
 {
 	sealed class TypeData
 	{
-		public TypeData(Type type, ushort typeID, ITypeSerializer typeSerializer)
+		public TypeData(Type type, uint typeID, ITypeSerializer typeSerializer)
 		{
 			this.Type = type;
 			this.TypeID = typeID;
@@ -22,7 +22,7 @@ namespace NetSerializer
 		}
 
 		public Type Type { get; private set; }
-		public ushort TypeID { get; private set; }
+		public uint TypeID { get; private set; }
 
 		public ITypeSerializer TypeSerializer { get; private set; }
 
