@@ -93,7 +93,8 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldarg_2);
 			il.Emit(type.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, type);
 
-			il.Emit(OpCodes.Tailcall);
+			// XXX tailcall causes slowdowns with large valuetypes
+			//il.Emit(OpCodes.Tailcall);
 			il.Emit(OpCodes.Call, data.WriterMethodInfo);
 
 			il.Emit(OpCodes.Ret);
@@ -129,7 +130,8 @@ namespace NetSerializer
 				il.Emit(OpCodes.Ldarg_1);
 				il.Emit(OpCodes.Ldarg_2);
 
-				il.Emit(OpCodes.Tailcall);
+				// XXX tailcall causes slowdowns with large valuetypes
+				//il.Emit(OpCodes.Tailcall);
 				il.Emit(OpCodes.Call, data.ReaderMethodInfo);
 			}
 
