@@ -391,7 +391,7 @@ namespace NetSerializer
 			byte[] m_byteBuffer;
 			char[] m_charBuffer;
 
-			public UTF8Encoding Encoding { get; private set; }
+			public UTF8Encoding Encoding { get; }
 			public Encoder Encoder { get { if (m_encoder == null) m_encoder = this.Encoding.GetEncoder(); return m_encoder; } }
 			public Decoder Decoder { get { if (m_decoder == null) m_decoder = this.Encoding.GetDecoder(); return m_decoder; } }
 
