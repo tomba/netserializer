@@ -38,7 +38,7 @@ namespace NetSerializer
 
 		public IEnumerable<Type> GetSubtypes(Type type)
 		{
-			yield break;
+			return new Type[0];
 		}
 
 		public MethodInfo GetStaticWriter(Type type)

@@ -36,7 +36,7 @@ namespace NetSerializer
 
 			var serializedType = typeof(KeyValuePair<,>).MakeGenericType(genArgs).MakeArrayType();
 
-			yield return serializedType;
+			return new[] { serializedType };
 		}
 
 		public MethodInfo GetStaticWriter(Type type)

@@ -27,7 +27,7 @@ namespace NetSerializer
 		{
 			var underlyingType = Enum.GetUnderlyingType(type);
 
-			yield return underlyingType;
+			return new[] { underlyingType };
 		}
 
 		public MethodInfo GetStaticWriter(Type type)

@@ -29,8 +29,7 @@ namespace NetSerializer
 		{
 			var genArgs = type.GetGenericArguments();
 
-			yield return typeof(bool);
-			yield return genArgs[0];
+			return new[] { typeof(bool), genArgs[0] };
 		}
 
 		public void GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il)

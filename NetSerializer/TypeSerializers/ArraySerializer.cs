@@ -30,8 +30,7 @@ namespace NetSerializer
 
 		public IEnumerable<Type> GetSubtypes(Type type)
 		{
-			yield return typeof(uint);
-			yield return type.GetElementType();
+			return new[] { typeof(uint), type.GetElementType() };
 		}
 
 		public void GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il)
