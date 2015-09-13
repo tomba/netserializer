@@ -52,23 +52,24 @@ namespace NetSerializer
 
 			m_userTypeSerializers = userTypeSerializers;
 
-			m_runtimeTypeMap = new Dictionary<Type, TypeData>();
-			m_runtimeTypeIDMap = new Dictionary<uint, TypeData>();
-
-			InitializeTypeMaps(new[] { typeof(object) }.Concat(rootTypes));
-
 			lock (m_modifyLock)
 			{
+				m_runtimeTypeMap = new TypeDictionary();
+				m_runtimeTypeIDList = new TypeIDList();
+
+				AddTypesInternal(new[] { typeof(object) }.Concat(rootTypes));
+
 				GenerateWriters(typeof(object));
 				GenerateReaders(typeof(object));
 			}
 		}
 
-		void InitializeTypeMaps(IEnumerable<Type> roots)
+		Dictionary<Type, uint> AddTypesInternal(IEnumerable<Type> roots)
 		{
-			Stack<Type> stack = new Stack<Type>(roots);
+			AssertLocked();
 
-			uint typeID = 1;
+			var stack = new Stack<Type>(roots);
+			var addedMap = new Dictionary<Type, uint>();
 
 			while (stack.Count > 0)
 			{
@@ -83,12 +84,18 @@ namespace NetSerializer
 				if (type.ContainsGenericParameters)
 					throw new NotSupportedException(String.Format("Type {0} contains generic parameters", type.FullName));
 
+				while (m_runtimeTypeIDList.ContainsTypeID(m_nextAvailableTypeID))
+					m_nextAvailableTypeID++;
+
+				uint typeID = m_nextAvailableTypeID++;
+
 				ITypeSerializer serializer = GetTypeSerializer(type);
 
 				var data = new TypeData(type, typeID, serializer);
 				m_runtimeTypeMap[type] = data;
-				m_runtimeTypeIDMap[typeID] = data;
-				typeID++;
+				m_runtimeTypeIDList[typeID] = data;
+
+				addedMap[type] = typeID;
 
 				foreach (var t in serializer.GetSubtypes(type))
 				{
@@ -96,16 +103,20 @@ namespace NetSerializer
 						stack.Push(t);
 				}
 			}
+
+			return addedMap;
 		}
 
 
 
 		readonly ITypeSerializer[] m_userTypeSerializers;
 
-		readonly Dictionary<Type, TypeData> m_runtimeTypeMap;
-		readonly Dictionary<uint, TypeData> m_runtimeTypeIDMap;
+		readonly TypeDictionary m_runtimeTypeMap;
+		readonly TypeIDList m_runtimeTypeIDList;
 
 		readonly object m_modifyLock = new object();
+
+		uint m_nextAvailableTypeID = 1;
 
 		[Conditional("DEBUG")]
 		void AssertLocked()
@@ -175,7 +186,7 @@ namespace NetSerializer
 
 		internal DeserializeDelegate<object> GetDeserializeTrampolineFromId(uint id)
 		{
-			var data = m_runtimeTypeIDMap[id];
+			var data = m_runtimeTypeIDList[id];
 
 			if (data.ReaderTrampolineDelegate != null)
 				return data.ReaderTrampolineDelegate;
@@ -461,17 +472,20 @@ namespace NetSerializer
 			var modb = ab.DefineDynamicModule("NetSerializerDebug.dll");
 			var tb = modb.DefineType("NetSerializer", TypeAttributes.Public);
 
-			m_runtimeTypeMap = new Dictionary<Type, TypeData>();
-			m_runtimeTypeIDMap = new Dictionary<uint, TypeData>();
+			m_runtimeTypeMap = new TypeDictionary();
+			m_runtimeTypeIDList = new TypeIDList();
 
-			InitializeTypeMaps(new[] { typeof(object) }.Concat(rootTypes));
+			lock (m_modifyLock)
+			{
+				var addedTypes = AddTypesInternal(new[] { typeof(object) }.Concat(rootTypes));
 
-			/* generate stubs */
-			foreach (var type in m_runtimeTypeMap.Keys)
-				GenerateDebugStubs(type, tb);
+				/* generate stubs */
+				foreach (var type in addedTypes.Keys)
+					GenerateDebugStubs(type, tb);
 
-			foreach (var type in m_runtimeTypeMap.Keys)
-				GenerateDebugBodies(type);
+				foreach (var type in addedTypes.Keys)
+					GenerateDebugBodies(type);
+			}
 
 			tb.CreateType();
 			ab.Save("NetSerializerDebug.dll");
