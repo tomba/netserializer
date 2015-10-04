@@ -107,7 +107,55 @@ namespace NetSerializer
 			return addedMap;
 		}
 
+		/// <summary>
+		/// Add rootTypes and all their subtypes, and return a mapping of all added types to typeIDs
+		/// </summary>
+		public Dictionary<Type, uint> AddTypes(IEnumerable<Type> rootTypes)
+		{
+			lock (m_modifyLock)
+			{
+				return AddTypesInternal(rootTypes);
+			}
+		}
 
+		/// <summary>
+		/// Add types obtained by a call to AddTypes in another Serializer instance
+		/// </summary>
+		public void AddTypes(Dictionary<Type, uint> rootTypes)
+		{
+			lock (m_modifyLock)
+			{
+				foreach (var kvp in rootTypes)
+				{
+					var type = kvp.Key;
+					uint typeID = kvp.Value;
+
+					if (type == null)
+						throw new ArgumentNullException();
+
+					if (typeID == 0)
+						throw new ArgumentException();
+
+					if (m_runtimeTypeMap.ContainsKey(type))
+						throw new ArgumentException();
+
+					if (m_runtimeTypeIDList.ContainsTypeID(typeID))
+						throw new ArgumentException();
+
+					if (type.IsAbstract || type.IsInterface)
+						throw new ArgumentException();
+
+					if (type.ContainsGenericParameters)
+						throw new NotSupportedException(String.Format("Type {0} contains generic parameters", type.FullName));
+
+					ITypeSerializer serializer = GetTypeSerializer(type);
+
+					var data = new TypeData(type, typeID, serializer);
+					m_runtimeTypeMap[type] = data;
+					m_runtimeTypeIDList[typeID] = data;
+				}
+			}
+		}
 
 		readonly ITypeSerializer[] m_userTypeSerializers;
 
