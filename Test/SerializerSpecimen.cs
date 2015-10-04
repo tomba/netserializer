@@ -11,7 +11,7 @@ namespace Test
 	interface ISerializerSpecimen
 	{
 		string Name { get; }
-		bool CanRun(Type type);
+		bool CanRun(Type type, bool direct);
 		void Warmup<T>(T[] msgs);
 		void Serialize<T>(Stream stream, T[] msgs);
 		void Deserialize<T>(Stream stream, T[] msgs);
@@ -30,7 +30,7 @@ namespace Test
 
 		public string Name { get { return "NetSerializer"; } }
 
-		public bool CanRun(Type type)
+		public bool CanRun(Type type, bool direct)
 		{
 			return true;
 		}
@@ -76,8 +76,11 @@ namespace Test
 	{
 		public string Name { get { return "protobuf-net"; } }
 
-		public bool CanRun(Type type)
+		public bool CanRun(Type type, bool direct)
 		{
+			if (direct)
+				return false;
+
 			if (type.IsPrimitive || type == typeof(Guid))
 				return true;
 

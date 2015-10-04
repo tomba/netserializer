@@ -28,7 +28,7 @@ namespace Test
 
 		public bool CanRun(ISerializerSpecimen specimen)
 		{
-			return specimen.CanRun(typeof(T));
+			return specimen.CanRun(typeof(T), m_direct);
 		}
 
 		public void Prepare()
