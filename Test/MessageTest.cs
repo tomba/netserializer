@@ -97,7 +97,7 @@ namespace Test
 				c1 = GC.CollectionCount(1) - c1;
 				c2 = GC.CollectionCount(2) - c2;
 
-				Console.WriteLine("{0,10} | {1,3} {2,3} {3,3} | {4,10} |", sw.ElapsedMilliseconds, c0, c1, c2, size);
+				Console.WriteLine("{0,10} | {1,4} {2,3} {3,3} | {4,10} |", sw.ElapsedMilliseconds, c0, c1, c2, size);
 			}
 
 			/* Deserialize part */
@@ -127,7 +127,7 @@ namespace Test
 				c1 = GC.CollectionCount(1) - c1;
 				c2 = GC.CollectionCount(2) - c2;
 
-				Console.WriteLine("{0,10} | {1,3} {2,3} {3,3} | {4,10} |", sw.ElapsedMilliseconds, c0, c1, c2, "");
+				Console.WriteLine("{0,10} | {1,4} {2,3} {3,3} | {4,10} |", sw.ElapsedMilliseconds, c0, c1, c2, "");
 
 				if (Program.EnableResultCheck)
 					CompareMessages(msgs, received);
@@ -159,7 +159,7 @@ namespace Test
 			c1 = GC.CollectionCount(1) - c1;
 			c2 = GC.CollectionCount(2) - c2;
 
-			Console.WriteLine("{0,10} | {1,3} {2,3} {3,3} | {4,10} |", sw.ElapsedMilliseconds, c0, c1, c2, "");
+			Console.WriteLine("{0,10} | {1,4} {2,3} {3,3} | {4,10} |", sw.ElapsedMilliseconds, c0, c1, c2, "");
 
 			if (Program.EnableResultCheck)
 				CompareMessages(msgs, received);
