@@ -56,8 +56,6 @@ namespace Test
 
 		public void Run(ISerializerSpecimen specimen)
 		{
-			MyRandom rand = new MyRandom(123);
-
 			var arr = m_messages.Take(m_numMessages > 10 ? 10 : 1).ToArray();
 			specimen.Warmup(arr);
 
