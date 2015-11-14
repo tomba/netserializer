@@ -16,8 +16,8 @@ using System.Diagnostics;
 
 namespace NetSerializer
 {
-	delegate void SerializeDelegate<T>(Serializer serializer, Stream stream, T ob);
-	delegate void DeserializeDelegate<T>(Serializer serializer, Stream stream, out T ob);
+	public delegate void SerializeDelegate<T>(Serializer serializer, Stream stream, T ob);
+	public delegate void DeserializeDelegate<T>(Serializer serializer, Stream stream, out T ob);
 
 	public class Serializer
 	{
@@ -215,7 +215,7 @@ namespace NetSerializer
 			del(this, stream, out value);
 		}
 
-		internal uint GetTypeIdAndSerializer(Type type, out SerializeDelegate<object> del)
+		public uint GetTypeIdAndSerializer(Type type, out SerializeDelegate<object> del)
 		{
 			var data = m_runtimeTypeMap[type];
 
@@ -232,7 +232,13 @@ namespace NetSerializer
 			}
 		}
 
-		internal DeserializeDelegate<object> GetDeserializeTrampolineFromId(uint id)
+		public Type GetTypeFromId(uint id)
+		{
+			var data = m_runtimeTypeIDList[id];
+			return data.Type; 
+		}
+
+		public DeserializeDelegate<object> GetDeserializeTrampolineFromId(uint id)
 		{
 			var data = m_runtimeTypeIDList[id];
 
