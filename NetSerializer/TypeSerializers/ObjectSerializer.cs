@@ -16,22 +16,22 @@ namespace NetSerializer
 {
 	class ObjectSerializer : IStaticTypeSerializer
 	{
-		public bool Handles(Type type)
+		public virtual bool Handles(Type type)
 		{
 			return type == typeof(object);
 		}
 
-		public IEnumerable<Type> GetSubtypes(Type type)
+		public virtual IEnumerable<Type> GetSubtypes(Type type)
 		{
 			return new Type[0];
 		}
 
-		public MethodInfo GetStaticWriter(Type type)
+		public virtual MethodInfo GetStaticWriter(Type type)
 		{
 			return typeof(ObjectSerializer).GetMethod("Serialize", BindingFlags.Static | BindingFlags.Public);
 		}
 
-		public MethodInfo GetStaticReader(Type type)
+		public virtual MethodInfo GetStaticReader(Type type)
 		{
 			return typeof(ObjectSerializer).GetMethod("Deserialize", BindingFlags.Static | BindingFlags.Public);
 		}

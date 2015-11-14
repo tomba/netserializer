@@ -15,7 +15,7 @@ namespace NetSerializer
 {
 	public class NullableSerializer : IDynamicTypeSerializer
 	{
-		public bool Handles(Type type)
+		public virtual bool Handles(Type type)
 		{
 			if (!type.IsGenericType)
 				return false;
@@ -25,14 +25,14 @@ namespace NetSerializer
 			return genTypeDef == typeof(Nullable<>);
 		}
 
-		public IEnumerable<Type> GetSubtypes(Type type)
+		public virtual IEnumerable<Type> GetSubtypes(Type type)
 		{
 			var genArgs = type.GetGenericArguments();
 
 			return new[] { typeof(bool), genArgs[0] };
 		}
 
-		public void GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il)
+		public virtual void GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il)
 		{
 			var valueType = type.GetGenericArguments()[0];
 
@@ -66,7 +66,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ret);
 		}
 
-		public void GenerateReaderMethod(Serializer serializer, Type type, ILGenerator il)
+		public virtual void GenerateReaderMethod(Serializer serializer, Type type, ILGenerator il)
 		{
 			var valueType = type.GetGenericArguments()[0];
 

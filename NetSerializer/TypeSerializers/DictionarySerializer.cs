@@ -18,7 +18,7 @@ namespace NetSerializer
 {
 	public class DictionarySerializer : IStaticTypeSerializer
 	{
-		public bool Handles(Type type)
+		public virtual bool Handles(Type type)
 		{
 			if (!type.IsGenericType)
 				return false;
@@ -28,7 +28,7 @@ namespace NetSerializer
 			return genTypeDef == typeof(Dictionary<,>);
 		}
 
-		public IEnumerable<Type> GetSubtypes(Type type)
+		public virtual IEnumerable<Type> GetSubtypes(Type type)
 		{
 			// Dictionary<K,V> is stored as KeyValuePair<K,V>[]
 
@@ -39,7 +39,7 @@ namespace NetSerializer
 			return new[] { serializedType };
 		}
 
-		public MethodInfo GetStaticWriter(Type type)
+		public virtual MethodInfo GetStaticWriter(Type type)
 		{
 			Debug.Assert(type.IsGenericType);
 
@@ -61,7 +61,7 @@ namespace NetSerializer
 			return writer;
 		}
 
-		public MethodInfo GetStaticReader(Type type)
+		public virtual MethodInfo GetStaticReader(Type type)
 		{
 			Debug.Assert(type.IsGenericType);
 

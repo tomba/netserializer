@@ -7,19 +7,15 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
+using System.Collections.Generic;   
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Text;
+using System.Reflection.Emit;  
 
 namespace NetSerializer
 {
 	public class GenericSerializer : IDynamicTypeSerializer
 	{
-		public bool Handles(Type type)
+		public virtual bool Handles(Type type)
 		{
 			if (!type.IsSerializable)
 				throw new NotSupportedException(String.Format("Type {0} is not marked as Serializable", type.FullName));
@@ -30,7 +26,7 @@ namespace NetSerializer
 			return true;
 		}
 
-		public IEnumerable<Type> GetSubtypes(Type type)
+		public virtual IEnumerable<Type> GetSubtypes(Type type)
 		{
 			var fields = Helpers.GetFieldInfos(type);
 
@@ -38,7 +34,7 @@ namespace NetSerializer
 				yield return field.FieldType;
 		}
 
-		public void GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il)
+		public virtual void GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il)
 		{
 			// arg0: Serializer, arg1: Stream, arg2: value
 
@@ -68,7 +64,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ret);
 		}
 
-		public void GenerateReaderMethod(Serializer serializer, Type type, ILGenerator il)
+		public virtual void GenerateReaderMethod(Serializer serializer, Type type, ILGenerator il)
 		{
 			// arg0: Serializer, arg1: stream, arg2: out value
 
