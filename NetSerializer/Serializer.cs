@@ -24,6 +24,7 @@ namespace NetSerializer
 		readonly static ITypeSerializer[] s_typeSerializers = new ITypeSerializer[] {
 			new ObjectSerializer(),
 			new PrimitivesSerializer(),
+			new VersionSerializer(),
 			new ArraySerializer(),
 			new EnumSerializer(),
 			new DictionarySerializer(),
