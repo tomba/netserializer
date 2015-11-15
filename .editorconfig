@@ -1,0 +1,7 @@
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines, tabs as indent
+[*]
+end_of_line = lf
+indent_style = tab
