@@ -1,0 +1,17 @@
+root = true
+
+[*]
+# end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.cs]
+indent_style = tab
+indent_size = 4
+
+[*.sln]
+indent_style = tab
+
+[*.{csproj,config}]
+indent_style = space
+indent_size = 2
