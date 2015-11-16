@@ -45,14 +45,14 @@ namespace NetSerializer
 			{
 				lock (m_writeLock)
 				{
-					Debug.Assert(m_array[idx] == null);
-
 					if (idx >= m_array.Length)
 					{
 						var newArray = new TypeData[NextPowOf2(idx + 1)];
 						Array.Copy(m_array, newArray, m_array.Length);
 						m_array = newArray;
 					}
+
+					Debug.Assert(m_array[idx] == null);
 
 					m_array[idx] = value;
 				}
