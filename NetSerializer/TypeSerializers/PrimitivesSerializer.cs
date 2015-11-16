@@ -15,7 +15,7 @@ using System.Text;
 
 namespace NetSerializer
 {
-	public class PrimitivesSerializer : IStaticTypeSerializer
+	sealed class PrimitivesSerializer : IStaticTypeSerializer
 	{
 		static Type[] s_primitives = new Type[] {
 				typeof(bool),

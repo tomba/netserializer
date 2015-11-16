@@ -17,7 +17,7 @@ using System.Text;
 
 namespace NetSerializer
 {
-	public class GenericSerializer : IDynamicTypeSerializer
+	sealed class GenericSerializer : IDynamicTypeSerializer
 	{
 		public bool Handles(Type type)
 		{

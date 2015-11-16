@@ -16,7 +16,7 @@ using System.Text;
 
 namespace NetSerializer
 {
-	public class EnumSerializer : IStaticTypeSerializer
+	sealed class EnumSerializer : IStaticTypeSerializer
 	{
 		public bool Handles(Type type)
 		{

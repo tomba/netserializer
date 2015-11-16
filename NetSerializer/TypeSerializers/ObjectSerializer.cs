@@ -14,7 +14,7 @@ using System.Reflection;
 
 namespace NetSerializer
 {
-	class ObjectSerializer : IStaticTypeSerializer
+	sealed class ObjectSerializer : IStaticTypeSerializer
 	{
 		public bool Handles(Type type)
 		{

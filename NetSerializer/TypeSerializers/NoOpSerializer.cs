@@ -18,7 +18,7 @@ namespace NetSerializer
 	/// A "no-op" TypeSerializer which can be used to make the NetSerializer ignore fields of certain type.
 	/// For example, Delegates cannot be serializer by default, and NoOpSerializer could be used to ignore all subclasses of Delegate
 	/// </summary>
-	public class NoOpSerializer : IStaticTypeSerializer
+	sealed class NoOpSerializer : IStaticTypeSerializer
 	{
 		Type[] m_types;
 		bool m_handleSubclasses;

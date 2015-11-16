@@ -16,7 +16,7 @@ using System.Text;
 
 namespace NetSerializer
 {
-	public class DictionarySerializer : IStaticTypeSerializer
+	sealed class DictionarySerializer : IStaticTypeSerializer
 	{
 		public bool Handles(Type type)
 		{

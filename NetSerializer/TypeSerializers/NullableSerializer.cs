@@ -13,7 +13,7 @@ using System.Reflection.Emit;
 
 namespace NetSerializer
 {
-	public class NullableSerializer : IDynamicTypeSerializer
+	sealed class NullableSerializer : IDynamicTypeSerializer
 	{
 		public bool Handles(Type type)
 		{
