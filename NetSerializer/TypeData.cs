@@ -21,10 +21,10 @@ namespace NetSerializer
 			this.TypeSerializer = typeSerializer;
 		}
 
-		public Type Type { get; }
-		public uint TypeID { get; }
+		public Type Type { get; private set; }
+		public uint TypeID { get; private set; }
 
-		public ITypeSerializer TypeSerializer { get; }
+		public ITypeSerializer TypeSerializer { get; private set; }
 
 		public MethodInfo WriterMethodInfo;
 		public MethodInfo ReaderMethodInfo;
