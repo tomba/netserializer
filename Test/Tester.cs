@@ -47,6 +47,8 @@ namespace Test
 
 		static readonly ITestSpec[] s_testSpecs = new ITestSpec[]
 		{
+			new MessageTestSpec<object>(1000, 1000, false, r => new object(), (a, b) => A(a == b)),
+
 			new MessageTestSpec<LargeStruct>(100, 30000),
 			new MessageTestSpec<LargeStruct>(100, 30000, true),
 
@@ -66,6 +68,7 @@ namespace Test
 			new MessageTestSpec<NullableDecimalMessage>(100, 100000),
 			new MessageTestSpec<PrimitivesMessage>(100, 10000),
 			new MessageTestSpec<DictionaryMessage>(10, 1000),
+
 			new MessageTestSpec<ComplexMessage>(100, 10000),
 			new MessageTestSpec<StringMessage>(100, 20000),
 			new MessageTestSpec<StructMessage>(100, 20000),

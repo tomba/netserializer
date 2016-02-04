@@ -61,6 +61,8 @@ namespace NetSerializer
 
 				GenerateWriters(typeof(object));
 				GenerateReaders(typeof(object));
+
+				this.ObjectTypeId = m_runtimeTypeMap[typeof(object)].TypeID;
 			}
 		}
 
@@ -165,6 +167,8 @@ namespace NetSerializer
 		readonly object m_modifyLock = new object();
 
 		uint m_nextAvailableTypeID = 1;
+
+		internal readonly uint ObjectTypeId;
 
 		[Conditional("DEBUG")]
 		void AssertLocked()
