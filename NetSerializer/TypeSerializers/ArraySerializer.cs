@@ -17,7 +17,7 @@ namespace NetSerializer
 {
 	sealed class ArraySerializer : IDynamicTypeSerializer
 	{
-		public bool Handles(Type type)
+		public virtual bool Handles(Type type)
 		{
 			if (!type.IsArray)
 				return false;
@@ -28,12 +28,12 @@ namespace NetSerializer
 			return true;
 		}
 
-		public IEnumerable<Type> GetSubtypes(Type type)
+		public virtual IEnumerable<Type> GetSubtypes(Type type)
 		{
 			return new[] { typeof(uint), type.GetElementType() };
 		}
 
-		public void GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il)
+		public virtual void GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il)
 		{
 			var elemType = type.GetElementType();
 
@@ -105,7 +105,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ret);
 		}
 
-		public void GenerateReaderMethod(Serializer serializer, Type type, ILGenerator il)
+		public virtual void GenerateReaderMethod(Serializer serializer, Type type, ILGenerator il)
 		{
 			var elemType = type.GetElementType();
 

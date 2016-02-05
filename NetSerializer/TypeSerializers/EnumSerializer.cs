@@ -18,19 +18,19 @@ namespace NetSerializer
 {
 	sealed class EnumSerializer : IStaticTypeSerializer
 	{
-		public bool Handles(Type type)
+		public virtual bool Handles(Type type)
 		{
 			return type.IsEnum;
 		}
 
-		public IEnumerable<Type> GetSubtypes(Type type)
+		public virtual IEnumerable<Type> GetSubtypes(Type type)
 		{
 			var underlyingType = Enum.GetUnderlyingType(type);
 
 			return new[] { underlyingType };
 		}
 
-		public MethodInfo GetStaticWriter(Type type)
+		public virtual MethodInfo GetStaticWriter(Type type)
 		{
 			Debug.Assert(type.IsEnum);
 
@@ -39,7 +39,7 @@ namespace NetSerializer
 			return Primitives.GetWritePrimitive(underlyingType);
 		}
 
-		public MethodInfo GetStaticReader(Type type)
+		public virtual MethodInfo GetStaticReader(Type type)
 		{
 			Debug.Assert(type.IsEnum);
 

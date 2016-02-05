@@ -29,7 +29,7 @@ namespace NetSerializer
 			m_handleSubclasses = handleSubclasses;
 		}
 
-		public bool Handles(Type type)
+		public virtual bool Handles(Type type)
 		{
 			if (m_handleSubclasses)
 				return m_types.Any(t => type.IsSubclassOf(t));
@@ -37,17 +37,17 @@ namespace NetSerializer
 				return m_types.Contains(type);
 		}
 
-		public IEnumerable<Type> GetSubtypes(Type type)
+		public virtual IEnumerable<Type> GetSubtypes(Type type)
 		{
 			return new Type[0];
 		}
 
-		public MethodInfo GetStaticWriter(Type type)
+		public virtual MethodInfo GetStaticWriter(Type type)
 		{
 			return this.GetType().GetMethod("Serialize", BindingFlags.Static | BindingFlags.Public);
 		}
 
-		public MethodInfo GetStaticReader(Type type)
+		public virtual MethodInfo GetStaticReader(Type type)
 		{
 			return this.GetType().GetMethod("Deserialize", BindingFlags.Static | BindingFlags.Public);
 		}
