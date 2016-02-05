@@ -54,6 +54,7 @@
     <Compile Include="TypeSerializers\NoOpSerializer.cs" />
     <Compile Include="TypeSerializers\ObjectSerializer.cs" />
     <Compile Include="TypeSerializers\PrimitivesSerializer.cs" />
+    <Compile Include="TypeSerializers\VersionSerializer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
