@@ -109,6 +109,41 @@ namespace NetSerializer
 			return addedMap;
 		}
 
+		void AddTypesInternal(Dictionary<Type, uint> typeMap)
+		{
+			AssertLocked();
+
+			foreach (var kvp in typeMap)
+			{
+				var type = kvp.Key;
+				uint typeID = kvp.Value;
+
+				if (type == null)
+					throw new ArgumentException("Null type in dictionary");
+
+				if (typeID == 0)
+					throw new ArgumentException("TypeID 0 is reserved");
+
+				if (m_runtimeTypeMap.ContainsKey(type))
+					throw new ArgumentException(String.Format("Type {0} already added", type.FullName));
+
+				if (m_runtimeTypeIDList.ContainsTypeID(typeID))
+					throw new ArgumentException(String.Format("Type with typeID {0} already added", typeID));
+
+				if (type.IsAbstract || type.IsInterface)
+					throw new ArgumentException(String.Format("Type {0} is abstract or interface", type.FullName));
+
+				if (type.ContainsGenericParameters)
+					throw new NotSupportedException(String.Format("Type {0} contains generic parameters", type.FullName));
+
+				ITypeSerializer serializer = GetTypeSerializer(type);
+
+				var data = new TypeData(type, typeID, serializer);
+				m_runtimeTypeMap[type] = data;
+				m_runtimeTypeIDList[typeID] = data;
+			}
+		}
+
 		/// <summary>
 		/// Add rootTypes and all their subtypes, and return a mapping of all added types to typeIDs
 		/// </summary>
@@ -123,40 +158,10 @@ namespace NetSerializer
 		/// <summary>
 		/// Add types obtained by a call to AddTypes in another Serializer instance
 		/// </summary>
-		public void AddTypes(Dictionary<Type, uint> rootTypes)
+		public void AddTypes(Dictionary<Type, uint> typeMap)
 		{
 			lock (m_modifyLock)
-			{
-				foreach (var kvp in rootTypes)
-				{
-					var type = kvp.Key;
-					uint typeID = kvp.Value;
-
-					if (type == null)
-						throw new ArgumentException("Null type in dictionary");
-
-					if (typeID == 0)
-						throw new ArgumentException("TypeID 0 is reserved");
-
-					if (m_runtimeTypeMap.ContainsKey(type))
-						throw new ArgumentException(String.Format("Type {0} already added", type.FullName));
-
-					if (m_runtimeTypeIDList.ContainsTypeID(typeID))
-						throw new ArgumentException(String.Format("Type with typeID {0} already added", typeID));
-
-					if (type.IsAbstract || type.IsInterface)
-						throw new ArgumentException(String.Format("Type {0} is abstract or interface", type.FullName));
-
-					if (type.ContainsGenericParameters)
-						throw new NotSupportedException(String.Format("Type {0} contains generic parameters", type.FullName));
-
-					ITypeSerializer serializer = GetTypeSerializer(type);
-
-					var data = new TypeData(type, typeID, serializer);
-					m_runtimeTypeMap[type] = data;
-					m_runtimeTypeIDList[typeID] = data;
-				}
-			}
+				AddTypesInternal(typeMap);
 		}
 
 		readonly ITypeSerializer[] m_userTypeSerializers;
