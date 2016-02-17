@@ -133,19 +133,19 @@ namespace NetSerializer
 					uint typeID = kvp.Value;
 
 					if (type == null)
-						throw new ArgumentNullException();
+						throw new ArgumentException("Null type in dictionary");
 
 					if (typeID == 0)
-						throw new ArgumentException();
+						throw new ArgumentException("TypeID 0 is reserved");
 
 					if (m_runtimeTypeMap.ContainsKey(type))
-						throw new ArgumentException();
+						throw new ArgumentException(String.Format("Type {0} already added", type.FullName));
 
 					if (m_runtimeTypeIDList.ContainsTypeID(typeID))
-						throw new ArgumentException();
+						throw new ArgumentException(String.Format("Type with typeID {0} already added", typeID));
 
 					if (type.IsAbstract || type.IsInterface)
-						throw new ArgumentException();
+						throw new ArgumentException(String.Format("Type {0} is abstract or interface", type.FullName));
 
 					if (type.ContainsGenericParameters)
 						throw new NotSupportedException(String.Format("Type {0} contains generic parameters", type.FullName));
