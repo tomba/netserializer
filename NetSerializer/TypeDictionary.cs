@@ -85,7 +85,7 @@ namespace NetSerializer
 
 				Pair[] arr = Volatile.Read(ref buckets[idx]);
 				if (arr == null)
-					throw new KeyNotFoundException();
+					throw new KeyNotFoundException(String.Format("Type not found {0}", key));
 
 				for (int i = 0; i < arr.Length; ++i)
 				{
@@ -93,7 +93,7 @@ namespace NetSerializer
 						return arr[i].Value;
 				}
 
-				throw new KeyNotFoundException();
+				throw new KeyNotFoundException(String.Format("Type not found {0}", key));
 			}
 
 			set
