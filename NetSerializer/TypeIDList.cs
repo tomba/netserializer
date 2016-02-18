@@ -45,6 +45,8 @@ namespace NetSerializer
 			{
 				lock (m_writeLock)
 				{
+					Debug.Assert(value.TypeID == idx);
+
 					if (idx >= m_array.Length)
 					{
 						var newArray = new TypeData[NextPowOf2(idx + 1)];
