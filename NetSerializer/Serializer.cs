@@ -57,12 +57,15 @@ namespace NetSerializer
 				m_runtimeTypeMap = new TypeDictionary();
 				m_runtimeTypeIDList = new TypeIDList();
 
-				AddTypesInternal(new[] { typeof(object) }.Concat(rootTypes));
+				AddTypesInternal(new Dictionary<Type, uint>()
+				{
+					{ typeof(object), Serializer.ObjectTypeId }
+				});
+
+				AddTypesInternal(rootTypes);
 
 				GenerateWriters(typeof(object));
 				GenerateReaders(typeof(object));
-
-				this.ObjectTypeId = m_runtimeTypeMap[typeof(object)].TypeID;
 			}
 		}
 
@@ -218,7 +221,7 @@ namespace NetSerializer
 
 		uint m_nextAvailableTypeID = 1;
 
-		internal readonly uint ObjectTypeId;
+		internal const uint ObjectTypeId = 1;
 
 		[Conditional("DEBUG")]
 		void AssertLocked()
