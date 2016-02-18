@@ -164,6 +164,35 @@ namespace NetSerializer
 				AddTypesInternal(typeMap);
 		}
 
+		/// <summary>
+		/// Get SHA256 of the serializer type data. The SHA includes TypeIDs and Type's full names.
+		/// The SHA can be used as a relatively good check to verify that two serializers
+		/// (e.g. client and server) have the same type data.
+		/// </summary>
+		public string GetSHA256()
+		{
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			{
+				lock (m_modifyLock)
+				{
+					foreach (var item in m_runtimeTypeIDList.ToSortedList())
+					{
+						writer.Write(item.Key);
+						writer.Write(item.Value.FullName);
+					}
+				}
+
+				var sha256 = System.Security.Cryptography.SHA256.Create();
+				var bytes = sha256.ComputeHash(stream);
+
+				var sb = new System.Text.StringBuilder();
+				foreach (byte b in bytes)
+					sb.Append(b.ToString("x2"));
+				return sb.ToString();
+			}
+		}
+
 		readonly ITypeSerializer[] m_userTypeSerializers;
 
 		readonly TypeDictionary m_runtimeTypeMap;
