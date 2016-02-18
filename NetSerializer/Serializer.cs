@@ -69,6 +69,44 @@ namespace NetSerializer
 			}
 		}
 
+		/// <summary>
+		/// Initialize NetSerializer
+		/// </summary>
+		/// <param name="typeMap">Type -> typeID map</param>
+		public Serializer(Dictionary<Type, uint> typeMap)
+			: this(typeMap, new ITypeSerializer[0])
+		{
+		}
+
+		/// <summary>
+		/// Initialize NetSerializer
+		/// </summary>
+		/// <param name="typeMap">Type -> typeID map</param>
+		/// <param name="userTypeSerializers">Array of custom serializers</param>
+		public Serializer(Dictionary<Type, uint> typeMap, ITypeSerializer[] userTypeSerializers)
+		{
+			if (userTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
+				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or IStaticTypeSerializer");
+
+			m_userTypeSerializers = userTypeSerializers;
+
+			lock (m_modifyLock)
+			{
+				m_runtimeTypeMap = new TypeDictionary();
+				m_runtimeTypeIDList = new TypeIDList();
+
+				AddTypesInternal(new Dictionary<Type, uint>()
+				{
+					{ typeof(object), Serializer.ObjectTypeId }
+				});
+
+				AddTypesInternal(typeMap);
+
+				GenerateWriters(typeof(object));
+				GenerateReaders(typeof(object));
+			}
+		}
+
 		Dictionary<Type, uint> AddTypesInternal(IEnumerable<Type> roots)
 		{
 			AssertLocked();
