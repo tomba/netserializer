@@ -152,6 +152,30 @@ namespace NetSerializer
 			return (int)h;
 		}
 
+		public Dictionary<Type, uint> ToDictionary()
+		{
+			var map = new Dictionary<Type, uint>(m_numItems);
+
+			foreach (var list in m_buckets)
+			{
+				if (list == null)
+					continue;
+
+				foreach (var pair in list)
+				{
+					if (pair.Key == null)
+						continue;
+
+					var td = pair.Value;
+
+					map[td.Type] = td.TypeID;
+				}
+			}
+
+			return map;
+		}
+
+
 		[Conditional("DEBUG")]
 		public void DebugDump()
 		{
