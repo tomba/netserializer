@@ -125,7 +125,12 @@ namespace NetSerializer
 					throw new ArgumentException("TypeID 0 is reserved");
 
 				if (m_runtimeTypeMap.ContainsKey(type))
-					throw new ArgumentException(String.Format("Type {0} already added", type.FullName));
+				{
+					if (m_runtimeTypeMap[type].TypeID != typeID)
+						throw new ArgumentException(String.Format("Type {0} already added with different TypeID", type.FullName));
+
+					continue;
+				}
 
 				if (m_runtimeTypeIDList.ContainsTypeID(typeID))
 					throw new ArgumentException(String.Format("Type with typeID {0} already added", typeID));
