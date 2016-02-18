@@ -145,6 +145,17 @@ namespace NetSerializer
 		}
 
 		/// <summary>
+		/// Get a Dictionary<> containing a mapping of all the serializer's Types to TypeIDs
+		/// </summary>
+		public Dictionary<Type, uint> GetTypeMap()
+		{
+			lock (m_modifyLock)
+			{
+				return m_runtimeTypeMap.ToDictionary();
+			}
+		}
+
+		/// <summary>
 		/// Add rootTypes and all their subtypes, and return a mapping of all added types to typeIDs
 		/// </summary>
 		public Dictionary<Type, uint> AddTypes(IEnumerable<Type> rootTypes)
