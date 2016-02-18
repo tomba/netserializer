@@ -72,5 +72,25 @@ namespace NetSerializer
 			v++;
 			return v;
 		}
+
+		public SortedList<uint, Type> ToSortedList()
+		{
+			var list = new SortedList<uint, Type>();
+
+			lock (m_writeLock)
+			{
+				for (uint i = 0; i < m_array.Length; ++i)
+				{
+					var td = m_array[i];
+
+					if (td == null)
+						continue;
+
+					list.Add(i, td.Type);
+				}
+			}
+
+			return list;
+		}
 	}
 }
