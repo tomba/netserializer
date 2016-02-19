@@ -38,9 +38,65 @@ namespace NetSerializer
 				yield return field.FieldType;
 		}
 
+		static IEnumerable<MethodInfo> GetMethodsWithAttributes(Type type, Type attrType)
+		{
+			var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+
+			var methods = type.GetMethods(flags)
+				.Where(m => m.GetCustomAttributes(attrType, false).Any());
+
+			if (type.BaseType == null)
+			{
+				return methods;
+			}
+			else
+			{
+				var baseMethods = GetMethodsWithAttributes(type.BaseType, attrType);
+				return baseMethods.Concat(methods);
+			}
+		}
+
+		static void EmitCallToSerializingCallback(Type type, ILGenerator il, MethodInfo method)
+		{
+			if (type.IsValueType)
+				throw new NotImplementedException("Serialization callbacks not supported for Value types");
+
+			if (type.IsValueType)
+				il.Emit(OpCodes.Ldarga_S, 2);
+			else
+				il.Emit(OpCodes.Ldarg_2);
+
+			var ctxLocal = il.DeclareLocal(typeof(System.Runtime.Serialization.StreamingContext));
+			il.Emit(OpCodes.Ldloca_S, ctxLocal);
+			il.Emit(OpCodes.Initobj, typeof(System.Runtime.Serialization.StreamingContext));
+			il.Emit(OpCodes.Ldloc_S, ctxLocal);
+
+			il.Emit(OpCodes.Call, method);
+		}
+
+		static void EmitCallToDeserializingCallback(Type type, ILGenerator il, MethodInfo method)
+		{
+			if (type.IsValueType)
+				throw new NotImplementedException("Serialization callbacks not supported for Value types");
+
+			il.Emit(OpCodes.Ldarg_2);
+			if (type.IsClass)
+				il.Emit(OpCodes.Ldind_Ref);
+
+			var ctxLocal = il.DeclareLocal(typeof(System.Runtime.Serialization.StreamingContext));
+			il.Emit(OpCodes.Ldloca_S, ctxLocal);
+			il.Emit(OpCodes.Initobj, typeof(System.Runtime.Serialization.StreamingContext));
+			il.Emit(OpCodes.Ldloc_S, ctxLocal);
+
+			il.Emit(OpCodes.Call, method);
+		}
+
 		public void GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il)
 		{
 			// arg0: Serializer, arg1: Stream, arg2: value
+
+			foreach (var m in GetMethodsWithAttributes(type, typeof(System.Runtime.Serialization.OnSerializingAttribute)))
+				EmitCallToSerializingCallback(type, il, m);
 
 			var fields = Helpers.GetFieldInfos(type);
 
@@ -65,6 +121,9 @@ namespace NetSerializer
 				il.Emit(OpCodes.Call, data.WriterMethodInfo);
 			}
 
+			foreach (var m in GetMethodsWithAttributes(type, typeof(System.Runtime.Serialization.OnSerializedAttribute)))
+				EmitCallToSerializingCallback(type, il, m);
+
 			il.Emit(OpCodes.Ret);
 		}
 
@@ -87,6 +146,9 @@ namespace NetSerializer
 				il.Emit(OpCodes.Stind_Ref);
 			}
 
+			foreach (var m in GetMethodsWithAttributes(type, typeof(System.Runtime.Serialization.OnDeserializingAttribute)))
+				EmitCallToDeserializingCallback(type, il, m);
+
 			var fields = Helpers.GetFieldInfos(type);
 
 			foreach (var field in fields)
@@ -106,6 +168,9 @@ namespace NetSerializer
 
 				il.Emit(OpCodes.Call, data.ReaderMethodInfo);
 			}
+
+			foreach (var m in GetMethodsWithAttributes(type, typeof(System.Runtime.Serialization.OnDeserializedAttribute)))
+				EmitCallToDeserializingCallback(type, il, m);
 
 			if (typeof(System.Runtime.Serialization.IDeserializationCallback).IsAssignableFrom(type))
 			{
