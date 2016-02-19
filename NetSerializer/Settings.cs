@@ -17,5 +17,15 @@ namespace NetSerializer
 		/// Array of custom TypeSerializers
 		/// </summary>
 		public ITypeSerializer[] CustomTypeSerializers = new ITypeSerializer[0];
+
+		/// <summary>
+		/// Support IDeserializationCallback
+		/// </summary>
+		public bool SupportIDeserializationCallback = false;
+
+		/// <summary>
+		/// Support OnSerializing, OnSerialized, OnDeserializing, OnDeserialized attributes
+		/// </summary>
+		public bool SupportSerializationCallbacks = false;
 	}
 }

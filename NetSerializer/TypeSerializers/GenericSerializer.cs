@@ -95,8 +95,11 @@ namespace NetSerializer
 		{
 			// arg0: Serializer, arg1: Stream, arg2: value
 
-			foreach (var m in GetMethodsWithAttributes(type, typeof(System.Runtime.Serialization.OnSerializingAttribute)))
-				EmitCallToSerializingCallback(type, il, m);
+			if (serializer.Settings.SupportSerializationCallbacks)
+			{
+				foreach (var m in GetMethodsWithAttributes(type, typeof(System.Runtime.Serialization.OnSerializingAttribute)))
+					EmitCallToSerializingCallback(type, il, m);
+			}
 
 			var fields = Helpers.GetFieldInfos(type);
 
@@ -121,8 +124,11 @@ namespace NetSerializer
 				il.Emit(OpCodes.Call, data.WriterMethodInfo);
 			}
 
-			foreach (var m in GetMethodsWithAttributes(type, typeof(System.Runtime.Serialization.OnSerializedAttribute)))
-				EmitCallToSerializingCallback(type, il, m);
+			if (serializer.Settings.SupportSerializationCallbacks)
+			{
+				foreach (var m in GetMethodsWithAttributes(type, typeof(System.Runtime.Serialization.OnSerializedAttribute)))
+					EmitCallToSerializingCallback(type, il, m);
+			}
 
 			il.Emit(OpCodes.Ret);
 		}
@@ -146,8 +152,11 @@ namespace NetSerializer
 				il.Emit(OpCodes.Stind_Ref);
 			}
 
-			foreach (var m in GetMethodsWithAttributes(type, typeof(System.Runtime.Serialization.OnDeserializingAttribute)))
-				EmitCallToDeserializingCallback(type, il, m);
+			if (serializer.Settings.SupportSerializationCallbacks)
+			{
+				foreach (var m in GetMethodsWithAttributes(type, typeof(System.Runtime.Serialization.OnDeserializingAttribute)))
+					EmitCallToDeserializingCallback(type, il, m);
+			}
 
 			var fields = Helpers.GetFieldInfos(type);
 
@@ -169,19 +178,25 @@ namespace NetSerializer
 				il.Emit(OpCodes.Call, data.ReaderMethodInfo);
 			}
 
-			foreach (var m in GetMethodsWithAttributes(type, typeof(System.Runtime.Serialization.OnDeserializedAttribute)))
-				EmitCallToDeserializingCallback(type, il, m);
-
-			if (typeof(System.Runtime.Serialization.IDeserializationCallback).IsAssignableFrom(type))
+			if (serializer.Settings.SupportSerializationCallbacks)
 			{
-				var miOnDeserialization = typeof(System.Runtime.Serialization.IDeserializationCallback).GetMethod("OnDeserialization",
-										BindingFlags.Instance | BindingFlags.Public,
-										null, new[] { typeof(Object) }, null);
+				foreach (var m in GetMethodsWithAttributes(type, typeof(System.Runtime.Serialization.OnDeserializedAttribute)))
+					EmitCallToDeserializingCallback(type, il, m);
+			}
 
-				il.Emit(OpCodes.Ldarg_2);
-				il.Emit(OpCodes.Ldnull);
-				il.Emit(OpCodes.Constrained, type);
-				il.Emit(OpCodes.Callvirt, miOnDeserialization);
+			if (serializer.Settings.SupportIDeserializationCallback)
+			{
+				if (typeof(System.Runtime.Serialization.IDeserializationCallback).IsAssignableFrom(type))
+				{
+					var miOnDeserialization = typeof(System.Runtime.Serialization.IDeserializationCallback).GetMethod("OnDeserialization",
+											BindingFlags.Instance | BindingFlags.Public,
+											null, new[] { typeof(Object) }, null);
+
+					il.Emit(OpCodes.Ldarg_2);
+					il.Emit(OpCodes.Ldnull);
+					il.Emit(OpCodes.Constrained, type);
+					il.Emit(OpCodes.Callvirt, miOnDeserialization);
+				}
 			}
 
 			il.Emit(OpCodes.Ret);
