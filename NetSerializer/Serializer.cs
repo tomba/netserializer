@@ -36,7 +36,7 @@ namespace NetSerializer
 		/// </summary>
 		/// <param name="rootTypes">Types to be (de)serialized</param>
 		public Serializer(IEnumerable<Type> rootTypes)
-			: this(rootTypes, new ITypeSerializer[0])
+			: this(rootTypes, new Settings())
 		{
 		}
 
@@ -44,13 +44,13 @@ namespace NetSerializer
 		/// Initialize NetSerializer
 		/// </summary>
 		/// <param name="rootTypes">Types to be (de)serialized</param>
-		/// <param name="userTypeSerializers">Array of custom serializers</param>
-		public Serializer(IEnumerable<Type> rootTypes, ITypeSerializer[] userTypeSerializers)
+		/// <param name="settings">Settings</param>
+		public Serializer(IEnumerable<Type> rootTypes, Settings settings)
 		{
-			if (userTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
-				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or IStaticTypeSerializer");
+			this.Settings = settings;
 
-			m_userTypeSerializers = userTypeSerializers;
+			if (this.Settings.CustomTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
+				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or IStaticTypeSerializer");
 
 			lock (m_modifyLock)
 			{
@@ -74,7 +74,7 @@ namespace NetSerializer
 		/// </summary>
 		/// <param name="typeMap">Type -> typeID map</param>
 		public Serializer(Dictionary<Type, uint> typeMap)
-			: this(typeMap, new ITypeSerializer[0])
+			: this(typeMap, new Settings())
 		{
 		}
 
@@ -82,13 +82,13 @@ namespace NetSerializer
 		/// Initialize NetSerializer
 		/// </summary>
 		/// <param name="typeMap">Type -> typeID map</param>
-		/// <param name="userTypeSerializers">Array of custom serializers</param>
-		public Serializer(Dictionary<Type, uint> typeMap, ITypeSerializer[] userTypeSerializers)
+		/// <param name="settings">Settings</param>
+		public Serializer(Dictionary<Type, uint> typeMap, Settings settings)
 		{
-			if (userTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
-				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or IStaticTypeSerializer");
+			this.Settings = settings;
 
-			m_userTypeSerializers = userTypeSerializers;
+			if (this.Settings.CustomTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
+				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or IStaticTypeSerializer");
 
 			lock (m_modifyLock)
 			{
@@ -250,8 +250,6 @@ namespace NetSerializer
 			}
 		}
 
-		readonly ITypeSerializer[] m_userTypeSerializers;
-
 		readonly TypeDictionary m_runtimeTypeMap;
 		readonly TypeIDList m_runtimeTypeIDList;
 
@@ -260,6 +258,8 @@ namespace NetSerializer
 		uint m_nextAvailableTypeID = 1;
 
 		internal const uint ObjectTypeId = 1;
+
+		internal readonly Settings Settings = new Settings();
 
 		[Conditional("DEBUG")]
 		void AssertLocked()
@@ -342,7 +342,7 @@ namespace NetSerializer
 
 		ITypeSerializer GetTypeSerializer(Type type)
 		{
-			var serializer = m_userTypeSerializers.FirstOrDefault(h => h.Handles(type));
+			var serializer = this.Settings.CustomTypeSerializers.FirstOrDefault(h => h.Handles(type));
 
 			if (serializer == null)
 				serializer = s_typeSerializers.FirstOrDefault(h => h.Handles(type));
@@ -599,17 +599,17 @@ namespace NetSerializer
 
 #if GENERATE_DEBUGGING_ASSEMBLY
 
-		public static void GenerateDebugAssembly(IEnumerable<Type> rootTypes, ITypeSerializer[] userTypeSerializers)
+		public static void GenerateDebugAssembly(IEnumerable<Type> rootTypes, Settings settings)
 		{
-			new Serializer(rootTypes, userTypeSerializers, true);
+			new Serializer(rootTypes, settings, true);
 		}
 
-		Serializer(IEnumerable<Type> rootTypes, ITypeSerializer[] userTypeSerializers, bool debugAssembly)
+		Serializer(IEnumerable<Type> rootTypes, Settings settings, bool debugAssembly)
 		{
-			if (userTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
-				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or  IStaticTypeSerializer");
+			this.Settings = settings;
 
-			m_userTypeSerializers = userTypeSerializers;
+			if (this.Settings.CustomTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
+				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or  IStaticTypeSerializer");
 
 			var ab = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("NetSerializerDebug"), AssemblyBuilderAccess.RunAndSave);
 			var modb = ab.DefineDynamicModule("NetSerializerDebug.dll");

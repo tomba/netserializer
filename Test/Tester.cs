@@ -14,7 +14,14 @@ namespace Test
 			var types = GetKnownTypes().ToArray();
 
 			var sw = Stopwatch.StartNew();
-			var serializer = new NS.Serializer(types, new NS.ITypeSerializer[] { new TriDimArrayCustomSerializer() });
+
+			var settings = new NS.Settings()
+			{
+				CustomTypeSerializers = new NS.ITypeSerializer[] { new TriDimArrayCustomSerializer() },
+			};
+
+			var serializer = new NS.Serializer(types, settings);
+
 			sw.Stop();
 
 			Console.WriteLine("Serializer.Initialize() in {0} ms", sw.ElapsedMilliseconds);
