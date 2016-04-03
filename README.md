@@ -29,7 +29,7 @@ server which have verified version compatibility when the connection is made.
 
 ## Donations
 
-Bitcoin: 13YgwAye9Uz85xzjZXV4Son9uA6Kwy1ZaA
+Bitcoin: 13YgwAye9Uz85xzjZXV4Son9uA6Kwy1ZAa
 
 ## Supported Types
 
