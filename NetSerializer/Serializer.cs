@@ -36,7 +36,7 @@ namespace NetSerializer
 		/// </summary>
 		/// <param name="rootTypes">Types to be (de)serialized</param>
 		public Serializer(IEnumerable<Type> rootTypes)
-			: this(rootTypes, new ITypeSerializer[0])
+			: this(rootTypes, new Settings())
 		{
 		}
 
@@ -44,25 +44,66 @@ namespace NetSerializer
 		/// Initialize NetSerializer
 		/// </summary>
 		/// <param name="rootTypes">Types to be (de)serialized</param>
-		/// <param name="userTypeSerializers">Array of custom serializers</param>
-		public Serializer(IEnumerable<Type> rootTypes, ITypeSerializer[] userTypeSerializers)
+		/// <param name="settings">Settings</param>
+		public Serializer(IEnumerable<Type> rootTypes, Settings settings)
 		{
-			if (userTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
-				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or IStaticTypeSerializer");
+			this.Settings = settings;
 
-			m_userTypeSerializers = userTypeSerializers;
+			if (this.Settings.CustomTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
+				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or IStaticTypeSerializer");
 
 			lock (m_modifyLock)
 			{
 				m_runtimeTypeMap = new TypeDictionary();
 				m_runtimeTypeIDList = new TypeIDList();
 
-				AddTypesInternal(new[] { typeof(object) }.Concat(rootTypes));
+				AddTypesInternal(new Dictionary<Type, uint>()
+				{
+					{ typeof(object), Serializer.ObjectTypeId }
+				});
+
+				AddTypesInternal(rootTypes);
 
 				GenerateWriters(typeof(object));
 				GenerateReaders(typeof(object));
+			}
+		}
 
-				this.ObjectTypeId = m_runtimeTypeMap[typeof(object)].TypeID;
+		/// <summary>
+		/// Initialize NetSerializer
+		/// </summary>
+		/// <param name="typeMap">Type -> typeID map</param>
+		public Serializer(Dictionary<Type, uint> typeMap)
+			: this(typeMap, new Settings())
+		{
+		}
+
+		/// <summary>
+		/// Initialize NetSerializer
+		/// </summary>
+		/// <param name="typeMap">Type -> typeID map</param>
+		/// <param name="settings">Settings</param>
+		public Serializer(Dictionary<Type, uint> typeMap, Settings settings)
+		{
+			this.Settings = settings;
+
+			if (this.Settings.CustomTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
+				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or IStaticTypeSerializer");
+
+			lock (m_modifyLock)
+			{
+				m_runtimeTypeMap = new TypeDictionary();
+				m_runtimeTypeIDList = new TypeIDList();
+
+				AddTypesInternal(new Dictionary<Type, uint>()
+				{
+					{ typeof(object), Serializer.ObjectTypeId }
+				});
+
+				AddTypesInternal(typeMap);
+
+				GenerateWriters(typeof(object));
+				GenerateReaders(typeof(object));
 			}
 		}
 
@@ -109,6 +150,57 @@ namespace NetSerializer
 			return addedMap;
 		}
 
+		void AddTypesInternal(Dictionary<Type, uint> typeMap)
+		{
+			AssertLocked();
+
+			foreach (var kvp in typeMap)
+			{
+				var type = kvp.Key;
+				uint typeID = kvp.Value;
+
+				if (type == null)
+					throw new ArgumentException("Null type in dictionary");
+
+				if (typeID == 0)
+					throw new ArgumentException("TypeID 0 is reserved");
+
+				if (m_runtimeTypeMap.ContainsKey(type))
+				{
+					if (m_runtimeTypeMap[type].TypeID != typeID)
+						throw new ArgumentException(String.Format("Type {0} already added with different TypeID", type.FullName));
+
+					continue;
+				}
+
+				if (m_runtimeTypeIDList.ContainsTypeID(typeID))
+					throw new ArgumentException(String.Format("Type with typeID {0} already added", typeID));
+
+				if (type.IsAbstract || type.IsInterface)
+					throw new ArgumentException(String.Format("Type {0} is abstract or interface", type.FullName));
+
+				if (type.ContainsGenericParameters)
+					throw new NotSupportedException(String.Format("Type {0} contains generic parameters", type.FullName));
+
+				ITypeSerializer serializer = GetTypeSerializer(type);
+
+				var data = new TypeData(type, typeID, serializer);
+				m_runtimeTypeMap[type] = data;
+				m_runtimeTypeIDList[typeID] = data;
+			}
+		}
+
+		/// <summary>
+		/// Get a Dictionary<> containing a mapping of all the serializer's Types to TypeIDs
+		/// </summary>
+		public Dictionary<Type, uint> GetTypeMap()
+		{
+			lock (m_modifyLock)
+			{
+				return m_runtimeTypeMap.ToDictionary();
+			}
+		}
+
 		/// <summary>
 		/// Add rootTypes and all their subtypes, and return a mapping of all added types to typeIDs
 		/// </summary>
@@ -123,43 +215,40 @@ namespace NetSerializer
 		/// <summary>
 		/// Add types obtained by a call to AddTypes in another Serializer instance
 		/// </summary>
-		public void AddTypes(Dictionary<Type, uint> rootTypes)
+		public void AddTypes(Dictionary<Type, uint> typeMap)
 		{
 			lock (m_modifyLock)
-			{
-				foreach (var kvp in rootTypes)
-				{
-					var type = kvp.Key;
-					uint typeID = kvp.Value;
-
-					if (type == null)
-						throw new ArgumentNullException();
-
-					if (typeID == 0)
-						throw new ArgumentException();
-
-					if (m_runtimeTypeMap.ContainsKey(type))
-						throw new ArgumentException();
-
-					if (m_runtimeTypeIDList.ContainsTypeID(typeID))
-						throw new ArgumentException();
-
-					if (type.IsAbstract || type.IsInterface)
-						throw new ArgumentException();
-
-					if (type.ContainsGenericParameters)
-						throw new NotSupportedException(String.Format("Type {0} contains generic parameters", type.FullName));
-
-					ITypeSerializer serializer = GetTypeSerializer(type);
-
-					var data = new TypeData(type, typeID, serializer);
-					m_runtimeTypeMap[type] = data;
-					m_runtimeTypeIDList[typeID] = data;
-				}
-			}
+				AddTypesInternal(typeMap);
 		}
 
-		readonly ITypeSerializer[] m_userTypeSerializers;
+		/// <summary>
+		/// Get SHA256 of the serializer type data. The SHA includes TypeIDs and Type's full names.
+		/// The SHA can be used as a relatively good check to verify that two serializers
+		/// (e.g. client and server) have the same type data.
+		/// </summary>
+		public string GetSHA256()
+		{
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			{
+				lock (m_modifyLock)
+				{
+					foreach (var item in m_runtimeTypeIDList.ToSortedList())
+					{
+						writer.Write(item.Key);
+						writer.Write(item.Value.FullName);
+					}
+				}
+
+				var sha256 = System.Security.Cryptography.SHA256.Create();
+				var bytes = sha256.ComputeHash(stream);
+
+				var sb = new System.Text.StringBuilder();
+				foreach (byte b in bytes)
+					sb.Append(b.ToString("x2"));
+				return sb.ToString();
+			}
+		}
 
 		readonly TypeDictionary m_runtimeTypeMap;
 		readonly TypeIDList m_runtimeTypeIDList;
@@ -168,7 +257,9 @@ namespace NetSerializer
 
 		uint m_nextAvailableTypeID = 1;
 
-		internal readonly uint ObjectTypeId;
+		internal const uint ObjectTypeId = 1;
+
+		internal readonly Settings Settings = new Settings();
 
 		[Conditional("DEBUG")]
 		void AssertLocked()
@@ -251,7 +342,7 @@ namespace NetSerializer
 
 		ITypeSerializer GetTypeSerializer(Type type)
 		{
-			var serializer = m_userTypeSerializers.FirstOrDefault(h => h.Handles(type));
+			var serializer = this.Settings.CustomTypeSerializers.FirstOrDefault(h => h.Handles(type));
 
 			if (serializer == null)
 				serializer = s_typeSerializers.FirstOrDefault(h => h.Handles(type));
@@ -508,17 +599,17 @@ namespace NetSerializer
 
 #if GENERATE_DEBUGGING_ASSEMBLY
 
-		public static void GenerateDebugAssembly(IEnumerable<Type> rootTypes, ITypeSerializer[] userTypeSerializers)
+		public static void GenerateDebugAssembly(IEnumerable<Type> rootTypes, Settings settings)
 		{
-			new Serializer(rootTypes, userTypeSerializers, true);
+			new Serializer(rootTypes, settings, true);
 		}
 
-		Serializer(IEnumerable<Type> rootTypes, ITypeSerializer[] userTypeSerializers, bool debugAssembly)
+		Serializer(IEnumerable<Type> rootTypes, Settings settings, bool debugAssembly)
 		{
-			if (userTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
-				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or  IStaticTypeSerializer");
+			this.Settings = settings;
 
-			m_userTypeSerializers = userTypeSerializers;
+			if (this.Settings.CustomTypeSerializers.All(s => s is IDynamicTypeSerializer || s is IStaticTypeSerializer) == false)
+				throw new ArgumentException("TypeSerializers have to implement IDynamicTypeSerializer or  IStaticTypeSerializer");
 
 			var ab = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("NetSerializerDebug"), AssemblyBuilderAccess.RunAndSave);
 			var modb = ab.DefineDynamicModule("NetSerializerDebug.dll");

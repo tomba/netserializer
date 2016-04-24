@@ -52,7 +52,7 @@ namespace NetSerializer
 
 			Primitives.WritePrimitive(stream, id);
 
-			if (id == serializer.ObjectTypeId)
+			if (id == Serializer.ObjectTypeId)
 				return;
 
 			del(serializer, stream, ob);
@@ -70,7 +70,7 @@ namespace NetSerializer
 				return;
 			}
 
-			if (id == serializer.ObjectTypeId)
+			if (id == Serializer.ObjectTypeId)
 			{
 				ob = new object();
 				return;

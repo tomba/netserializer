@@ -85,7 +85,7 @@ namespace NetSerializer
 
 				Pair[] arr = Volatile.Read(ref buckets[idx]);
 				if (arr == null)
-					throw new KeyNotFoundException();
+					throw new KeyNotFoundException(String.Format("Type not found {0}", key));
 
 				for (int i = 0; i < arr.Length; ++i)
 				{
@@ -93,7 +93,7 @@ namespace NetSerializer
 						return arr[i].Value;
 				}
 
-				throw new KeyNotFoundException();
+				throw new KeyNotFoundException(String.Format("Type not found {0}", key));
 			}
 
 			set
@@ -151,6 +151,30 @@ namespace NetSerializer
 			h %= (uint)bucketsLen;
 			return (int)h;
 		}
+
+		public Dictionary<Type, uint> ToDictionary()
+		{
+			var map = new Dictionary<Type, uint>(m_numItems);
+
+			foreach (var list in m_buckets)
+			{
+				if (list == null)
+					continue;
+
+				foreach (var pair in list)
+				{
+					if (pair.Key == null)
+						continue;
+
+					var td = pair.Value;
+
+					map[td.Type] = td.TypeID;
+				}
+			}
+
+			return map;
+		}
+
 
 		[Conditional("DEBUG")]
 		public void DebugDump()
