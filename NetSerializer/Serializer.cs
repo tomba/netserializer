@@ -284,6 +284,10 @@ namespace NetSerializer
 			ObjectSerializer.Deserialize(this, stream, out ob);
 		}
 
+		/// <summary>
+		/// Serialize object graph without writing the type-id of the root type. This can be useful e.g. when
+		/// serializing a known value type, as this will avoid boxing.
+		/// </summary>
 		public void SerializeDirect<T>(Stream stream, T value)
 		{
 			var del = (SerializeDelegate<T>)m_runtimeTypeMap[typeof(T)].WriterDirectDelegate;
@@ -297,6 +301,10 @@ namespace NetSerializer
 			del(this, stream, value);
 		}
 
+		/// <summary>
+		/// Deserialize object graph serialized with SerializeDirect(). Type T must match the type used when
+		/// serializing.
+		/// </summary>
 		public void DeserializeDirect<T>(Stream stream, out T value)
 		{
 			var del = (DeserializeDelegate<T>)m_runtimeTypeMap[typeof(T)].ReaderDirectDelegate;
