@@ -33,6 +33,10 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Mono.Options, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Options.4.4.0.0\lib\net4-client\Mono.Options.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="protobuf-net, Version=2.0.0.668, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
       <HintPath>..\packages\protobuf-net.2.0.0.668\lib\net40\protobuf-net.dll</HintPath>
       <Private>True</Private>
@@ -45,7 +49,6 @@
     <Compile Include="ITest.cs" />
     <Compile Include="ITestSpec.cs" />
     <Compile Include="MessageTestSpec.cs" />
-    <Compile Include="Mono.Options\Options.cs" />
     <Compile Include="MemStreamTest.cs" />
     <Compile Include="Messages.cs" />
     <Compile Include="NetTest.cs" />
