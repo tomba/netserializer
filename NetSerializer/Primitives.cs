@@ -395,21 +395,23 @@ namespace NetSerializer
 			public Encoder Encoder { get { if (m_encoder == null) m_encoder = this.Encoding.GetEncoder(); return m_encoder; } }
 			public Decoder Decoder { get { if (m_decoder == null) m_decoder = this.Encoding.GetDecoder(); return m_decoder; } }
 
-			public byte[] ByteBuffer { get { if (m_byteBuffer == null) m_byteBuffer = new byte[BYTEBUFFERLEN]; return m_byteBuffer; } }
+			public byte[] ReadBuffer { get { if (m_byteBuffer == null) m_byteBuffer = new byte[BYTEBUFFERLEN]; return m_byteBuffer; } }
+			public byte[] WriteBuffer { get { if (m_byteBuffer == null) m_byteBuffer = new byte[BYTEBUFFERLEN]; return m_byteBuffer; } }
 			public char[] CharBuffer { get { if (m_charBuffer == null) m_charBuffer = new char[CHARBUFFERLEN]; return m_charBuffer; } }
 		}
 
 		[ThreadStatic]
 		static StringHelper s_stringHelper;
 
-		public unsafe static void WritePrimitive(Stream stream, string value)
+		private static bool? _unsafeEncoderFailed;
+		public static unsafe void WritePrimitive(Stream stream, string value)
 		{
 			if (value == null)
 			{
 				WritePrimitive(stream, (uint)0);
 				return;
 			}
-			else if (value.Length == 0)
+			if (value.Length == 0)
 			{
 				WritePrimitive(stream, (uint)1);
 				return;
@@ -420,7 +422,7 @@ namespace NetSerializer
 				s_stringHelper = helper = new StringHelper();
 
 			var encoder = helper.Encoder;
-			var buf = helper.ByteBuffer;
+			var buf = helper.WriteBuffer;
 
 			int totalChars = value.Length;
 			int totalBytes;
@@ -439,15 +441,61 @@ namespace NetSerializer
 				int charsConverted;
 				int bytesConverted;
 
-				fixed (char* src = value)
-				fixed (byte* dst = buf)
+				if (_unsafeEncoderFailed.HasValue && _unsafeEncoderFailed.Value)
 				{
-					encoder.Convert(src + p, totalChars - p, dst, buf.Length, true,
+					encoder.Convert(value.ToCharArray(p, totalChars - p), 0, totalChars - p, buf, 0, buf.Length, true,
 						out charsConverted, out bytesConverted, out completed);
+				}
+				else
+				{
+					fixed (char* src = value)
+					fixed (byte* dst = buf)
+					{
+						encoder.Convert(src + p, totalChars - p, dst, buf.Length, true,
+							out charsConverted, out bytesConverted, out completed);
+					}
+				}
+
+				//The unsafe Encoder.Convert() void fails on some system (leaves the array empty)
+				if (_unsafeEncoderFailed == null)
+				{
+					var alsoSomethingElseThanZero = false;
+					for (int i = 0; i < bytesConverted; i++)
+					{
+						if (buf[i] != 0)
+						{
+							alsoSomethingElseThanZero = true;
+							break;
+						}
+					}
+
+					var onlyContainsUnicodeZeros = true;
+					if (!alsoSomethingElseThanZero)
+					{
+						for (int i = 0; i < totalChars; i++)
+						{
+							if (value[i] != '\u0000')
+							{
+								onlyContainsUnicodeZeros = false;
+								break;
+							}
+						}
+
+						if (onlyContainsUnicodeZeros)
+						{
+							stream.Write(new byte[totalChars * 2], 0, totalChars * 2);
+							return;
+						}
+
+						_unsafeEncoderFailed = true;
+						completed = false;
+						continue;
+					}
+
+					_unsafeEncoderFailed = false;
 				}
 
 				stream.Write(buf, 0, bytesConverted);
-
 				p += charsConverted;
 			}
 		}
@@ -478,7 +526,7 @@ namespace NetSerializer
 				s_stringHelper = helper = new StringHelper();
 
 			var decoder = helper.Decoder;
-			var buf = helper.ByteBuffer;
+			var buf = helper.ReadBuffer;
 			char[] chars;
 			if (totalChars <= StringHelper.CHARBUFFERLEN)
 				chars = helper.CharBuffer;
