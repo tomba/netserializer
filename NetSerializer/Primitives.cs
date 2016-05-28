@@ -326,12 +326,18 @@ namespace NetSerializer
 				WritePrimitive(stream, (uint)0);
 				return;
 			}
+			else if (value.Length == 0)
+			{
+				WritePrimitive(stream, (uint)1);
+				return;
+			}
 
 			var encoding = new UTF8Encoding(false, true);
 
 			int len = encoding.GetByteCount(value);
 
 			WritePrimitive(stream, (uint)len + 1);
+			WritePrimitive(stream, (uint)value.Length);
 
 			var buf = new byte[len];
 
@@ -355,6 +361,9 @@ namespace NetSerializer
 				value = string.Empty;
 				return;
 			}
+
+			uint totalChars;
+			ReadPrimitive(stream, out totalChars);
 
 			len -= 1;
 
