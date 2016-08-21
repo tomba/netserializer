@@ -44,6 +44,14 @@ namespace Test
 
 			if (Program.RunProtoBufTests)
 				m_specimens.Add(new ProtobufSpecimen());
+
+			var types = GetKnownTypes()
+				.Distinct() // Wire requires distinct known types
+				.ToArray();
+
+			var ws = new Wire.Serializer(new Wire.SerializerOptions(knownTypes: types));
+			m_specimens.Add(new WireSpecimen(ws));
+
 		}
 
 		static void A(bool b)
@@ -84,7 +92,7 @@ namespace Test
 			new MessageTestSpec<BoxedPrimitivesMessage>(100, 20000),
 			new MessageTestSpec<ByteArrayMessage>(10000, 1),
 			new MessageTestSpec<IntArrayMessage>(1000, 1),
-			new MessageTestSpec<TriDimArrayCustomSerializersMessage>(10, 100),
+			//new MessageTestSpec<TriDimArrayCustomSerializersMessage>(10, 100),
 		};
 
 		static IEnumerable<Type> GetKnownTypes()

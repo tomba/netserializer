@@ -125,4 +125,63 @@ namespace Test
 				msgs[i] = PB.Serializer.DeserializeWithLengthPrefix<T>(stream, PB.PrefixStyle.Base128);
 		}
 	}
+
+	class WireSpecimen : ISerializerSpecimen
+	{
+		Wire.Serializer m_serializer;
+
+		public WireSpecimen(Wire.Serializer serializer)
+		{
+			m_serializer = serializer;
+		}
+
+		public string Name { get { return "Wire"; } }
+
+		public bool CanRun(Type type, bool direct)
+		{
+			// direct serialization not supported
+			if (direct)
+				return false;
+
+			return true;
+		}
+
+		public void Warmup<T>(T[] msgs)
+		{
+			using (var stream = new MemoryStream())
+			{
+				Serialize(stream, msgs);
+
+				stream.Position = 0;
+
+				Deserialize(stream, msgs);
+			}
+		}
+
+		public void Serialize<T>(Stream stream, T[] msgs)
+		{
+			foreach (var msg in msgs)
+				m_serializer.Serialize(msg, stream);
+		}
+
+		public void Deserialize<T>(Stream stream, T[] msgs)
+		{
+			for (int i = 0; i < msgs.Length; ++i)
+				msgs[i] = (T)m_serializer.Deserialize(stream);
+		}
+
+		public void SerializeDirect<T>(Stream stream, T[] msgs)
+		{
+			// direct serialization not supported
+			//foreach (T msg in msgs)
+				//m_serializer.Serialize(msg, stream);
+		}
+
+		public void DeserializeDirect<T>(Stream stream, T[] msgs)
+		{
+			// direct serialization not supported
+			//for (int i = 0; i < msgs.Length; ++i)
+			//m_serializer.DeserializeDirect<T>(out msgs[i], stream);
+		}
+	}
 }
