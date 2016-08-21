@@ -54,6 +54,8 @@ namespace Test
 
 		static readonly ITestSpec[] s_testSpecs = new ITestSpec[]
 		{
+			new MessageTestSpec<TypicalMessage>(100, 30000),
+
 			new MessageTestSpec<object>(1000, 1000, false, r => new object(), (a, b) => A(a.GetType() == b.GetType())),
 
 			new MessageTestSpec<LargeStruct>(100, 30000),

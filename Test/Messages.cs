@@ -23,6 +23,7 @@ namespace Test
 	[ProtoInclude(12, typeof(DecimalMessage))]
 	[ProtoInclude(13, typeof(NullableDecimalMessage))]
 	[ProtoInclude(14, typeof(LargeStruct))]
+	[ProtoInclude(15, typeof(TypicalMessage))]
 	abstract class MessageBase
 	{
 		protected static void A(bool b)
@@ -848,6 +849,48 @@ namespace Test
 				for (int y = 0; y < ly; ++y)
 					for (int x = 0; x < lx; ++x)
 						A(a.m_int3Arr[z, y, x] == b.m_int3Arr[z, y, x]);
+		}
+	}
+
+	[ProtoContract]
+	[Serializable]
+	sealed class TypicalMessage : MessageBase
+	{
+		public TypicalMessage()
+		{
+		}
+
+		public TypicalMessage(MyRandom r)
+		{
+			StringProp = "hello";
+			GuidProp = Guid.NewGuid();
+			IntProp = 123;
+			DateProp = DateTime.UtcNow;
+		}
+
+		[ProtoMember(1)]
+		public string StringProp { get; set; }
+
+		[ProtoMember(2)]
+		public int IntProp { get; set; }
+
+		[ProtoMember(3)]
+		public Guid GuidProp { get; set; }
+
+		[ProtoMember(4)]
+		public DateTime DateProp { get; set; }
+
+		public static TypicalMessage Create(MyRandom r)
+		{
+			return new TypicalMessage(r);
+		}
+
+		public static void Compare(TypicalMessage a, TypicalMessage b)
+		{
+			A(a.StringProp == b.StringProp);
+			A(a.IntProp == b.IntProp);
+			A(a.GuidProp == b.GuidProp);
+			A(a.DateProp == b.DateProp);
 		}
 	}
 }
