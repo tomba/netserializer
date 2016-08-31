@@ -190,12 +190,16 @@ namespace NetSerializer
 			{
 				if (typeof(System.Runtime.Serialization.IDeserializationCallback).IsAssignableFrom(type))
 				{
-					var miOnDeserialization = typeof(System.Runtime.Serialization.IDeserializationCallback)
-                        .GetTypeInfo().GetMethod("OnDeserialization",
-											BindingFlags.Instance | BindingFlags.Public,
-											null, new[] { typeof(Object) }, null);
+                    // .NET Core does not support all GetMethod() overloads
+                    var miOnDeserialization = typeof(System.Runtime.Serialization.IDeserializationCallback)
+                        .GetTypeInfo().GetMethod("OnDeserialization", new[] { typeof(Object) });
 
-					il.Emit(OpCodes.Ldarg_2);
+                    //var miOnDeserialization = typeof(System.Runtime.Serialization.IDeserializationCallback)
+                    //    .GetTypeInfo().GetMethod("OnDeserialization",
+                    //                        BindingFlags.Instance | BindingFlags.Public,
+                    //                        null, new[] { typeof(Object) }, null);
+
+                    il.Emit(OpCodes.Ldarg_2);
 					il.Emit(OpCodes.Ldnull);
 					il.Emit(OpCodes.Constrained, type);
 					il.Emit(OpCodes.Callvirt, miOnDeserialization);

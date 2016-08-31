@@ -45,9 +45,10 @@ namespace NetSerializer
 				new Type[] { typeof(Serializer), typeof(Stream), type },
 				typeof(Serializer), true);
 
-			dm.DefineParameter(1, ParameterAttributes.None, "serializer");
-			dm.DefineParameter(2, ParameterAttributes.None, "stream");
-			dm.DefineParameter(3, ParameterAttributes.None, "value");
+            // .NET Core does not support 'DefineParameter'
+			//dm.DefineParameter(1, ParameterAttributes.None, "serializer");
+			//dm.DefineParameter(2, ParameterAttributes.None, "stream");
+			//dm.DefineParameter(3, ParameterAttributes.None, "value");
 
 			return dm;
 		}
@@ -57,9 +58,11 @@ namespace NetSerializer
 			var dm = new DynamicMethod("Deserialize", null,
 				new Type[] { typeof(Serializer), typeof(Stream), type.MakeByRefType() },
 				typeof(Serializer), true);
-			dm.DefineParameter(1, ParameterAttributes.None, "serializer");
-			dm.DefineParameter(2, ParameterAttributes.None, "stream");
-			dm.DefineParameter(3, ParameterAttributes.Out, "value");
+
+            // .NET Core does not support 'DefineParameter'
+            //dm.DefineParameter(1, ParameterAttributes.None, "serializer");
+			//dm.DefineParameter(2, ParameterAttributes.None, "stream");
+			//dm.DefineParameter(3, ParameterAttributes.Out, "value");
 
 			return dm;
 		}

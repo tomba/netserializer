@@ -19,19 +19,27 @@ namespace NetSerializer
 	{
 		public static MethodInfo GetWritePrimitive(Type type)
 		{
-			return typeof(Primitives).GetTypeInfo().GetMethod("WritePrimitive",
-				BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
-				new Type[] { typeof(Stream), type }, null);
+            // .NET Core does not support all GetMethod() overloads
+            return typeof(Primitives).GetTypeInfo().GetMethod(
+                "WritePrimitive", new Type[] { typeof(Stream), type });
+
+            //return typeof(Primitives).GetTypeInfo().GetMethod("WritePrimitive",
+		    //  BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
+			//  new Type[] { typeof(Stream), type }, null);
 		}
 
 		public static MethodInfo GetReaderPrimitive(Type type)
 		{
-			return typeof(Primitives).GetTypeInfo().GetMethod("ReadPrimitive",
-				BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
-				new Type[] { typeof(Stream), type.MakeByRefType() }, null);
-		}
+            // .NET Core does not support all GetMethod() overloads
+            return typeof(Primitives).GetTypeInfo().GetMethod(
+                "ReadPrimitive", new Type[] { typeof(Stream), type.MakeByRefType() });
 
-		static uint EncodeZigZag32(int n)
+            //return typeof(Primitives).GetTypeInfo().GetMethod("ReadPrimitive",
+            //	BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
+            //	new Type[] { typeof(Stream), type.MakeByRefType() }, null);
+        }
+
+        static uint EncodeZigZag32(int n)
 		{
 			return (uint)((n << 1) ^ (n >> 31));
 		}
