@@ -19,9 +19,9 @@ namespace NetSerializer
 		public ITypeSerializer[] CustomTypeSerializers = new ITypeSerializer[0];
 
         // .NET Core does not provide ISerializableAttribute nor serialization callbacks
-#if !DNXCORE50
-	    public bool SupportISerializableAttribute = true;
+        public bool SupportISerializableAttribute = true;
 
+#if !DNXCORE50
         /// <summary>
         /// Support IDeserializationCallback
         /// </summary>
