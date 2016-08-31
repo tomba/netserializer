@@ -63,7 +63,7 @@ namespace NetSerializer
 
 		public MethodInfo GetStaticReader(Type type)
 		{
-			Debug.Assert(type.IsGenericType);
+			Debug.Assert(type.GetTypeInfo().IsGenericType);
 
 			if (!type.GetTypeInfo().IsGenericType)
 				throw new Exception();
