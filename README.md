@@ -12,7 +12,7 @@ The main pros of NetSerializer are:
 - No dynamic type lookup for primitive types, structs or sealed classes, so
   deserialization is faster
 - No extra attributes needed (like DataContract/Member), just add the standard
-  [Serializable]
+  [Serializable] or even no attribute at all.
 - Thread safe without locks
 - The data is written to the stream and read from the stream directly, without
   the need for temporary buffers
