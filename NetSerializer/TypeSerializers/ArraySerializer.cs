@@ -17,7 +17,7 @@ namespace NetSerializer
 {
 	sealed class ArraySerializer : IDynamicTypeSerializer
 	{
-		public bool Handles(Type type)
+		public bool Handles(Serializer serializer, Type type)
 		{
 			if (!type.IsArray)
 				return false;

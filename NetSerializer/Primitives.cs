@@ -19,19 +19,27 @@ namespace NetSerializer
 	{
 		public static MethodInfo GetWritePrimitive(Type type)
 		{
-			return typeof(Primitives).GetMethod("WritePrimitive",
-				BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
-				new Type[] { typeof(Stream), type }, null);
+            // .NET Core does not support all GetMethod() overloads
+            return typeof(Primitives).GetTypeInfo().GetMethod(
+                "WritePrimitive", new Type[] { typeof(Stream), type });
+
+            //return typeof(Primitives).GetTypeInfo().GetMethod("WritePrimitive",
+		    //  BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
+			//  new Type[] { typeof(Stream), type }, null);
 		}
 
 		public static MethodInfo GetReaderPrimitive(Type type)
 		{
-			return typeof(Primitives).GetMethod("ReadPrimitive",
-				BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
-				new Type[] { typeof(Stream), type.MakeByRefType() }, null);
-		}
+            // .NET Core does not support all GetMethod() overloads
+            return typeof(Primitives).GetTypeInfo().GetMethod(
+                "ReadPrimitive", new Type[] { typeof(Stream), type.MakeByRefType() });
 
-		static uint EncodeZigZag32(int n)
+            //return typeof(Primitives).GetTypeInfo().GetMethod("ReadPrimitive",
+            //	BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
+            //	new Type[] { typeof(Stream), type.MakeByRefType() }, null);
+        }
+
+        static uint EncodeZigZag32(int n)
 		{
 			return (uint)((n << 1) ^ (n >> 31));
 		}
@@ -434,10 +442,15 @@ namespace NetSerializer
 			int totalChars = value.Length;
 			int totalBytes;
 
-			fixed (char* ptr = value)
+#if DNXCORE50
+            // TODO: .NET Core 1.1 does not yet support the pointer overload of 'Encoder.GetByteCount()'
+            totalBytes = encoder.GetByteCount(value.ToCharArray(), 0, totalChars, true);
+#else
+            fixed (char* ptr = value)
 				totalBytes = encoder.GetByteCount(ptr, totalChars, true);
+#endif
 
-			WritePrimitive(stream, (uint)totalBytes + 1);
+            WritePrimitive(stream, (uint)totalBytes + 1);
 			WritePrimitive(stream, (uint)totalChars);
 
 			int p = 0;
@@ -448,14 +461,20 @@ namespace NetSerializer
 				int charsConverted;
 				int bytesConverted;
 
-				fixed (char* src = value)
+#if DNXCORE50
+                // TODO: .NET Core 1.1 does not yet support the pointer overload of 'Encoder.Convert()'
+                encoder.Convert(value.ToCharArray(), 0, totalChars - p, buf, 0, buf.Length, true,
+					out charsConverted, out bytesConverted, out completed);
+#else
+                fixed (char* src = value)
 				fixed (byte* dst = buf)
 				{
 					encoder.Convert(src + p, totalChars - p, dst, buf.Length, true,
 						out charsConverted, out bytesConverted, out completed);
 				}
+#endif
 
-				stream.Write(buf, 0, bytesConverted);
+                stream.Write(buf, 0, bytesConverted);
 
 				p += charsConverted;
 			}
@@ -530,7 +549,7 @@ namespace NetSerializer
 		}
 #endif
 
-		public static void WritePrimitive(Stream stream, byte[] value)
+        public static void WritePrimitive(Stream stream, byte[] value)
 		{
 			if (value == null)
 			{

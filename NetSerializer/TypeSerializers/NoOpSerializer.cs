@@ -29,10 +29,10 @@ namespace NetSerializer
 			m_handleSubclasses = handleSubclasses;
 		}
 
-		public bool Handles(Type type)
+		public bool Handles(Serializer serializer, Type type)
 		{
 			if (m_handleSubclasses)
-				return m_types.Any(t => type.IsSubclassOf(t));
+				return m_types.Any(t => type.GetTypeInfo().IsSubclassOf(t));
 			else
 				return m_types.Contains(type);
 		}

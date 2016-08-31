@@ -31,7 +31,7 @@ namespace NetSerializer
 				typeof(Decimal),
 			};
 
-		public bool Handles(Type type)
+		public bool Handles(Serializer serializer, Type type)
 		{
 			return s_primitives.Contains(type);
 		}

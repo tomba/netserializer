@@ -121,10 +121,10 @@ namespace NetSerializer
 				if (m_runtimeTypeMap.ContainsKey(type))
 					continue;
 
-				if (type.IsAbstract || type.IsInterface)
+				if (type.GetTypeInfo().IsAbstract || type.GetTypeInfo().IsInterface)
 					continue;
 
-				if (type.ContainsGenericParameters)
+				if (type.GetTypeInfo().ContainsGenericParameters)
 					throw new NotSupportedException(String.Format("Type {0} contains generic parameters", type.FullName));
 
 				while (m_runtimeTypeIDList.ContainsTypeID(m_nextAvailableTypeID))
@@ -176,10 +176,10 @@ namespace NetSerializer
 				if (m_runtimeTypeIDList.ContainsTypeID(typeID))
 					throw new ArgumentException(String.Format("Type with typeID {0} already added", typeID));
 
-				if (type.IsAbstract || type.IsInterface)
+				if (type.GetTypeInfo().IsAbstract || type.GetTypeInfo().IsInterface)
 					throw new ArgumentException(String.Format("Type {0} is abstract or interface", type.FullName));
 
-				if (type.ContainsGenericParameters)
+				if (type.GetTypeInfo().ContainsGenericParameters)
 					throw new NotSupportedException(String.Format("Type {0} contains generic parameters", type.FullName));
 
 				ITypeSerializer serializer = GetTypeSerializer(type);
@@ -350,10 +350,10 @@ namespace NetSerializer
 
 		ITypeSerializer GetTypeSerializer(Type type)
 		{
-			var serializer = this.Settings.CustomTypeSerializers.FirstOrDefault(h => h.Handles(type));
+			var serializer = this.Settings.CustomTypeSerializers.FirstOrDefault(h => h.Handles(this,type));
 
 			if (serializer == null)
-				serializer = s_typeSerializers.FirstOrDefault(h => h.Handles(type));
+				serializer = s_typeSerializers.FirstOrDefault(h => h.Handles(this,type));
 
 			if (serializer == null)
 				throw new NotSupportedException(String.Format("No serializer for {0}", type.FullName));
@@ -393,10 +393,10 @@ namespace NetSerializer
 			{
 				var type = stack.Pop();
 
-				if (type.IsAbstract || type.IsInterface)
+				if (type.GetTypeInfo().IsAbstract || type.GetTypeInfo().IsInterface)
 					continue;
 
-				if (type.ContainsGenericParameters)
+				if (type.GetTypeInfo().ContainsGenericParameters)
 					throw new NotSupportedException(String.Format("Type {0} contains generic parameters", type.FullName));
 
 				ITypeSerializer serializer = m_runtimeTypeMap[type].TypeSerializer;
@@ -603,8 +603,6 @@ namespace NetSerializer
 			return data.ReaderDirectDelegate;
 		}
 
-
-
 #if GENERATE_DEBUGGING_ASSEMBLY
 
 		public static void GenerateDebugAssembly(IEnumerable<Type> rootTypes, Settings settings)
@@ -703,5 +701,5 @@ namespace NetSerializer
 			dynSer.GenerateReaderMethod(this, type, reader.GetILGenerator());
 		}
 #endif
-	}
+    }
 }

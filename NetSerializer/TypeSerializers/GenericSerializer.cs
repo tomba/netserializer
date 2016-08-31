@@ -19,15 +19,21 @@ namespace NetSerializer
 {
 	sealed class GenericSerializer : IDynamicTypeSerializer
 	{
-		public bool Handles(Type type)
+		public bool Handles(Serializer serializer, Type type)
 		{
-			if (!type.IsSerializable)
-				throw new NotSupportedException(String.Format("Type {0} is not marked as Serializable", type.FullName));
+            // .NET Core does not include the SerializableAttribute
+#if !DNXCORE50
+		    if (serializer.Settings.SupportISerializableAttribute)
+		    {
+		        if (!type.IsSerializable)
+		            throw new NotSupportedException(String.Format("Type {0} is not marked as Serializable", type.FullName));
 
-			if (typeof(System.Runtime.Serialization.ISerializable).IsAssignableFrom(type))
-				throw new NotSupportedException(String.Format("Cannot serialize {0}: ISerializable not supported", type.FullName));
-
-			return true;
+		        if (typeof(System.Runtime.Serialization.ISerializable).IsAssignableFrom(type))
+		            throw new NotSupportedException(String.Format("Cannot serialize {0}: ISerializable not supported",
+		                type.FullName));
+		    }
+#endif
+            return true;
 		}
 
 		public IEnumerable<Type> GetSubtypes(Type type)
@@ -45,23 +51,24 @@ namespace NetSerializer
 			var methods = type.GetMethods(flags)
 				.Where(m => m.GetCustomAttributes(attrType, false).Any());
 
-			if (type.BaseType == null)
+			if (type.GetTypeInfo().BaseType == null)
 			{
 				return methods;
 			}
 			else
 			{
-				var baseMethods = GetMethodsWithAttributes(type.BaseType, attrType);
+				var baseMethods = GetMethodsWithAttributes(type.GetTypeInfo().BaseType, attrType);
 				return baseMethods.Concat(methods);
 			}
 		}
 
-		static void EmitCallToSerializingCallback(Type type, ILGenerator il, MethodInfo method)
+#if !DNXCORE50
+        static void EmitCallToSerializingCallback(Type type, ILGenerator il, MethodInfo method)
 		{
-			if (type.IsValueType)
+			if (type.GetTypeInfo().IsValueType)
 				throw new NotImplementedException("Serialization callbacks not supported for Value types");
 
-			if (type.IsValueType)
+			if (type.GetTypeInfo().IsValueType)
 				il.Emit(OpCodes.Ldarga_S, 2);
 			else
 				il.Emit(OpCodes.Ldarg_2);
@@ -76,11 +83,11 @@ namespace NetSerializer
 
 		static void EmitCallToDeserializingCallback(Type type, ILGenerator il, MethodInfo method)
 		{
-			if (type.IsValueType)
+			if (type.GetTypeInfo().IsValueType)
 				throw new NotImplementedException("Serialization callbacks not supported for Value types");
 
 			il.Emit(OpCodes.Ldarg_2);
-			if (type.IsClass)
+			if (type.GetTypeInfo().IsClass)
 				il.Emit(OpCodes.Ldind_Ref);
 
 			var ctxLocal = il.DeclareLocal(typeof(System.Runtime.Serialization.StreamingContext));
@@ -90,18 +97,22 @@ namespace NetSerializer
 
 			il.Emit(OpCodes.Call, method);
 		}
+#endif
 
-		public void GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il)
+        public void GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il)
 		{
-			// arg0: Serializer, arg1: Stream, arg2: value
+            // arg0: Serializer, arg1: Stream, arg2: value
 
-			if (serializer.Settings.SupportSerializationCallbacks)
+            // .NET Core does not provide the serialization callbacks
+#if !DNXCORE50
+            if (serializer.Settings.SupportSerializationCallbacks)
 			{
 				foreach (var m in GetMethodsWithAttributes(type, typeof(System.Runtime.Serialization.OnSerializingAttribute)))
 					EmitCallToSerializingCallback(type, il, m);
 			}
+#endif
 
-			var fields = Helpers.GetFieldInfos(type);
+            var fields = Helpers.GetFieldInfos(type);
 
 			foreach (var field in fields)
 			{
@@ -115,7 +126,7 @@ namespace NetSerializer
 					il.Emit(OpCodes.Ldarg_0);
 
 				il.Emit(OpCodes.Ldarg_1);
-				if (type.IsValueType)
+				if (type.GetTypeInfo().IsValueType)
 					il.Emit(OpCodes.Ldarga_S, 2);
 				else
 					il.Emit(OpCodes.Ldarg_2);
@@ -124,11 +135,13 @@ namespace NetSerializer
 				il.Emit(OpCodes.Call, data.WriterMethodInfo);
 			}
 
-			if (serializer.Settings.SupportSerializationCallbacks)
+#if !DNXCORE50
+            if (serializer.Settings.SupportSerializationCallbacks)
 			{
 				foreach (var m in GetMethodsWithAttributes(type, typeof(System.Runtime.Serialization.OnSerializedAttribute)))
 					EmitCallToSerializingCallback(type, il, m);
 			}
+#endif
 
 			il.Emit(OpCodes.Ret);
 		}
@@ -137,14 +150,18 @@ namespace NetSerializer
 		{
 			// arg0: Serializer, arg1: stream, arg2: out value
 
-			if (type.IsClass)
+			if (type.GetTypeInfo().IsClass)
 			{
 				// instantiate empty class
 				il.Emit(OpCodes.Ldarg_2);
 
 				var gtfh = typeof(Type).GetMethod("GetTypeFromHandle", BindingFlags.Public | BindingFlags.Static);
-				var guo = typeof(System.Runtime.Serialization.FormatterServices).GetMethod("GetUninitializedObject", BindingFlags.Public | BindingFlags.Static);
-				il.Emit(OpCodes.Ldtoken, type);
+#if !DNXCORE50
+                var guo = typeof(System.Runtime.Serialization.FormatterServices).GetMethod("GetUninitializedObject", BindingFlags.Public | BindingFlags.Static);
+#else
+                var guo = typeof(System.Runtime.CompilerServices.RuntimeHelpers).GetMethod("GetUninitializedObject", BindingFlags.Public | BindingFlags.Static);
+#endif
+                il.Emit(OpCodes.Ldtoken, type);
 				il.Emit(OpCodes.Call, gtfh);
 				il.Emit(OpCodes.Call, guo);
 				il.Emit(OpCodes.Castclass, type);
@@ -152,11 +169,13 @@ namespace NetSerializer
 				il.Emit(OpCodes.Stind_Ref);
 			}
 
-			if (serializer.Settings.SupportSerializationCallbacks)
+#if !DNXCORE50
+            if (serializer.Settings.SupportSerializationCallbacks)
 			{
 				foreach (var m in GetMethodsWithAttributes(type, typeof(System.Runtime.Serialization.OnDeserializingAttribute)))
 					EmitCallToDeserializingCallback(type, il, m);
 			}
+#endif
 
 			var fields = Helpers.GetFieldInfos(type);
 
@@ -171,14 +190,15 @@ namespace NetSerializer
 
 				il.Emit(OpCodes.Ldarg_1);
 				il.Emit(OpCodes.Ldarg_2);
-				if (type.IsClass)
+				if (type.GetTypeInfo().IsClass)
 					il.Emit(OpCodes.Ldind_Ref);
 				il.Emit(OpCodes.Ldflda, field);
 
 				il.Emit(OpCodes.Call, data.ReaderMethodInfo);
 			}
 
-			if (serializer.Settings.SupportSerializationCallbacks)
+#if !DNXCORE50
+            if (serializer.Settings.SupportSerializationCallbacks)
 			{
 				foreach (var m in GetMethodsWithAttributes(type, typeof(System.Runtime.Serialization.OnDeserializedAttribute)))
 					EmitCallToDeserializingCallback(type, il, m);
@@ -188,16 +208,22 @@ namespace NetSerializer
 			{
 				if (typeof(System.Runtime.Serialization.IDeserializationCallback).IsAssignableFrom(type))
 				{
-					var miOnDeserialization = typeof(System.Runtime.Serialization.IDeserializationCallback).GetMethod("OnDeserialization",
-											BindingFlags.Instance | BindingFlags.Public,
-											null, new[] { typeof(Object) }, null);
+                    // .NET Core does not support all GetMethod() overloads
+                    var miOnDeserialization = typeof(System.Runtime.Serialization.IDeserializationCallback)
+                        .GetTypeInfo().GetMethod("OnDeserialization", new[] { typeof(Object) });
 
-					il.Emit(OpCodes.Ldarg_2);
+                    //var miOnDeserialization = typeof(System.Runtime.Serialization.IDeserializationCallback)
+                    //    .GetTypeInfo().GetMethod("OnDeserialization",
+                    //                        BindingFlags.Instance | BindingFlags.Public,
+                    //                        null, new[] { typeof(Object) }, null);
+
+                    il.Emit(OpCodes.Ldarg_2);
 					il.Emit(OpCodes.Ldnull);
 					il.Emit(OpCodes.Constrained, type);
 					il.Emit(OpCodes.Callvirt, miOnDeserialization);
 				}
 			}
+#endif
 
 			il.Emit(OpCodes.Ret);
 		}

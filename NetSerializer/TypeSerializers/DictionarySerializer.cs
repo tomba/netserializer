@@ -18,9 +18,9 @@ namespace NetSerializer
 {
 	sealed class DictionarySerializer : IStaticTypeSerializer
 	{
-		public bool Handles(Type type)
+		public bool Handles(Serializer serializer, Type type)
 		{
-			if (!type.IsGenericType)
+			if (!type.GetTypeInfo().IsGenericType)
 				return false;
 
 			var genTypeDef = type.GetGenericTypeDefinition();
@@ -41,9 +41,9 @@ namespace NetSerializer
 
 		public MethodInfo GetStaticWriter(Type type)
 		{
-			Debug.Assert(type.IsGenericType);
+			Debug.Assert(type.GetTypeInfo().IsGenericType);
 
-			if (!type.IsGenericType)
+			if (!type.GetTypeInfo().IsGenericType)
 				throw new Exception();
 
 			var genTypeDef = type.GetGenericTypeDefinition();
@@ -63,9 +63,9 @@ namespace NetSerializer
 
 		public MethodInfo GetStaticReader(Type type)
 		{
-			Debug.Assert(type.IsGenericType);
+			Debug.Assert(type.GetTypeInfo().IsGenericType);
 
-			if (!type.IsGenericType)
+			if (!type.GetTypeInfo().IsGenericType)
 				throw new Exception();
 
 			var genTypeDef = type.GetGenericTypeDefinition();
@@ -100,7 +100,7 @@ namespace NetSerializer
 
 				var paramType = p[2].ParameterType;
 
-				if (paramType.IsGenericType == false)
+				if (paramType.GetTypeInfo().IsGenericType == false)
 					continue;
 
 				var genParamType = paramType.GetGenericTypeDefinition();
@@ -134,7 +134,7 @@ namespace NetSerializer
 
 				paramType = paramType.GetElementType();
 
-				if (paramType.IsGenericType == false)
+				if (paramType.GetTypeInfo().IsGenericType == false)
 					continue;
 
 				var genParamType = paramType.GetGenericTypeDefinition();

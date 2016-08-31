@@ -35,37 +35,37 @@ namespace NetSerializer
 		public DeserializeDelegate<object> ReaderTrampolineDelegate;
 		public Delegate ReaderDirectDelegate;
 
-		public bool WriterNeedsInstance
-		{
-			get
-			{
+        public bool WriterNeedsInstance
+        {
+            get
+            {
 #if GENERATE_DEBUGGING_ASSEMBLY
-				if (this.WriterMethodInfo is MethodBuilder)
-					return this.WriterNeedsInstanceDebug;
+                if (this.WriterMethodInfo is MethodBuilder)
+                    return this.WriterNeedsInstanceDebug;
 #endif
-				return this.WriterMethodInfo.GetParameters().Length == 3;
-			}
-		}
+                return this.WriterMethodInfo.GetParameters().Length == 3;
+            }
+        }
 
-		public bool ReaderNeedsInstance
-		{
-			get
-			{
+        public bool ReaderNeedsInstance
+        {
+            get
+            {
 #if GENERATE_DEBUGGING_ASSEMBLY
-				if (this.ReaderMethodInfo is MethodBuilder)
-					return this.ReaderNeedsInstanceDebug;
+                if (this.ReaderMethodInfo is MethodBuilder)
+                    return this.ReaderNeedsInstanceDebug;
 #endif
-				return this.ReaderMethodInfo.GetParameters().Length == 3;
-			}
-		}
+                return this.ReaderMethodInfo.GetParameters().Length == 3;
+            }
+        }
 
 #if GENERATE_DEBUGGING_ASSEMBLY
-		// MethodBuilder doesn't support GetParameters(), so we need to track this separately
-		public bool WriterNeedsInstanceDebug;
-		public bool ReaderNeedsInstanceDebug;
+        // MethodBuilder doesn't support GetParameters(), so we need to track this separately
+        public bool WriterNeedsInstanceDebug;
+        public bool ReaderNeedsInstanceDebug;
 #endif
 
-		public bool CanCallDirect
+        public bool CanCallDirect
 		{
 			get
 			{
@@ -77,10 +77,10 @@ namespace NetSerializer
 
 				var type = this.Type;
 
-				if (type.IsValueType || type.IsArray)
+				if (type.GetTypeInfo().IsValueType || type.IsArray)
 					return true;
 
-				if (type.IsSealed && (this.TypeSerializer is IStaticTypeSerializer))
+				if (type.GetTypeInfo().IsSealed && (this.TypeSerializer is IStaticTypeSerializer))
 					return true;
 
 				return false;
