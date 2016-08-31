@@ -18,7 +18,7 @@ namespace NetSerializer
 		/// <summary>
 		/// Returns if this TypeSerializer handles the given type
 		/// </summary>
-		bool Handles(Type type);
+		bool Handles(Serializer serializer, Type type);
 
 		/// <summary>
 		/// Return types that are needed to serialize the given type

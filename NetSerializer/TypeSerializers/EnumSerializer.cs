@@ -18,7 +18,7 @@ namespace NetSerializer
 {
 	sealed class EnumSerializer : IStaticTypeSerializer
 	{
-		public bool Handles(Type type)
+		public bool Handles(Serializer serializer, Type type)
 		{
 			return type.GetTypeInfo().IsEnum;
 		}

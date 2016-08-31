@@ -18,7 +18,7 @@ namespace NetSerializer
 {
 	sealed class DictionarySerializer : IStaticTypeSerializer
 	{
-		public bool Handles(Type type)
+		public bool Handles(Serializer serializer, Type type)
 		{
 			if (!type.GetTypeInfo().IsGenericType)
 				return false;

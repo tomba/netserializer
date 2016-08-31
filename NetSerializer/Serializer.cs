@@ -350,10 +350,10 @@ namespace NetSerializer
 
 		ITypeSerializer GetTypeSerializer(Type type)
 		{
-			var serializer = this.Settings.CustomTypeSerializers.FirstOrDefault(h => h.Handles(type));
+			var serializer = this.Settings.CustomTypeSerializers.FirstOrDefault(h => h.Handles(this,type));
 
 			if (serializer == null)
-				serializer = s_typeSerializers.FirstOrDefault(h => h.Handles(type));
+				serializer = s_typeSerializers.FirstOrDefault(h => h.Handles(this,type));
 
 			if (serializer == null)
 				throw new NotSupportedException(String.Format("No serializer for {0}", type.FullName));

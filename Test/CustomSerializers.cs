@@ -10,7 +10,7 @@ namespace Test
 {
 	class TriDimArrayCustomSerializer : IStaticTypeSerializer
 	{
-		public bool Handles(Type type)
+		public bool Handles(Serializer serializer, Type type)
 		{
 			return type == typeof(int[,,]);
 		}

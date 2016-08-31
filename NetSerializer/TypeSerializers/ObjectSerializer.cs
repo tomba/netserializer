@@ -16,7 +16,7 @@ namespace NetSerializer
 {
 	sealed class ObjectSerializer : IStaticTypeSerializer
 	{
-		public bool Handles(Type type)
+		public bool Handles(Serializer serializer, Type type)
 		{
 			return type == typeof(object);
 		}
