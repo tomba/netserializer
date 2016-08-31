@@ -35,23 +35,37 @@ namespace NetSerializer
 		public DeserializeDelegate<object> ReaderTrampolineDelegate;
 		public Delegate ReaderDirectDelegate;
 
-		public bool WriterNeedsInstance
-		{
-			get
-			{
-				return this.WriterMethodInfo.GetParameters().Length == 3;
-			}
-		}
+        public bool WriterNeedsInstance
+        {
+            get
+            {
+#if GENERATE_DEBUGGING_ASSEMBLY
+                if (this.WriterMethodInfo is MethodBuilder)
+                    return this.WriterNeedsInstanceDebug;
+#endif
+                return this.WriterMethodInfo.GetParameters().Length == 3;
+            }
+        }
 
-		public bool ReaderNeedsInstance
-		{
-			get
-			{
-				return this.ReaderMethodInfo.GetParameters().Length == 3;
-			}
-		}
+        public bool ReaderNeedsInstance
+        {
+            get
+            {
+#if GENERATE_DEBUGGING_ASSEMBLY
+                if (this.ReaderMethodInfo is MethodBuilder)
+                    return this.ReaderNeedsInstanceDebug;
+#endif
+                return this.ReaderMethodInfo.GetParameters().Length == 3;
+            }
+        }
 
-		public bool CanCallDirect
+#if GENERATE_DEBUGGING_ASSEMBLY
+        // MethodBuilder doesn't support GetParameters(), so we need to track this separately
+        public bool WriterNeedsInstanceDebug;
+        public bool ReaderNeedsInstanceDebug;
+#endif
+
+        public bool CanCallDirect
 		{
 			get
 			{

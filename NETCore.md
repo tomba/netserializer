@@ -26,6 +26,5 @@ the fast overloads.
 
 ## Debugging Assembly and `AppDomain`
 
-The `AppDomain` are no more in .NET Core (for now), and the debugging
-was introducing quite a layer of complexity. It has been opted to
-remove the feature entirely from the library.
+The `AppDomain` are no more in .NET Core (for now), so the compile flag
+`GENERATE_DEBUGGING_ASSEMBLY` does not work in .NET Core.
