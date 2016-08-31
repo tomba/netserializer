@@ -21,19 +21,20 @@ namespace NetSerializer
 	{
 		public static IEnumerable<FieldInfo> GetFieldInfos(Type type)
 		{
-			Debug.Assert(type.IsSerializable);
+            // .NET Core does not include the SerialiableAttribute
+            //Debug.Assert(type.IsSerializable);
 
-			var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
 				.Where(fi => (fi.Attributes & FieldAttributes.NotSerialized) == 0)
 				.OrderBy(f => f.Name, StringComparer.Ordinal);
 
-			if (type.BaseType == null)
+			if (type.GetTypeInfo().BaseType == null)
 			{
 				return fields;
 			}
 			else
 			{
-				var baseFields = GetFieldInfos(type.BaseType);
+				var baseFields = GetFieldInfos(type.GetTypeInfo().BaseType);
 				return baseFields.Concat(fields);
 			}
 		}
@@ -63,28 +64,6 @@ namespace NetSerializer
 			return dm;
 		}
 
-#if GENERATE_DEBUGGING_ASSEMBLY
-		public static MethodBuilder GenerateStaticSerializerStub(TypeBuilder tb, Type type)
-		{
-			var mb = tb.DefineMethod("Serialize", MethodAttributes.Public | MethodAttributes.Static, null,
-				new Type[] { typeof(Serializer), typeof(Stream), type });
-			mb.DefineParameter(1, ParameterAttributes.None, "serializer");
-			mb.DefineParameter(2, ParameterAttributes.None, "stream");
-			mb.DefineParameter(3, ParameterAttributes.None, "value");
-			return mb;
-		}
-
-		public static MethodBuilder GenerateStaticDeserializerStub(TypeBuilder tb, Type type)
-		{
-			var mb = tb.DefineMethod("Deserialize", MethodAttributes.Public | MethodAttributes.Static, null,
-				new Type[] { typeof(Serializer), typeof(Stream), type.MakeByRefType() });
-			mb.DefineParameter(1, ParameterAttributes.None, "serializer");
-			mb.DefineParameter(2, ParameterAttributes.None, "stream");
-			mb.DefineParameter(3, ParameterAttributes.Out, "value");
-			return mb;
-		}
-#endif
-
 		/// <summary>
 		/// Create delegate that calls writer either directly, or via a trampoline
 		/// </summary>
@@ -106,10 +85,10 @@ namespace NetSerializer
 			{
 				var dynamicWriter = data.WriterMethodInfo as DynamicMethod;
 
-				if (dynamicWriter != null)
-					return dynamicWriter.CreateDelegate(delegateType);
-				else
-					return Delegate.CreateDelegate(delegateType, data.WriterMethodInfo);
+			    if (dynamicWriter != null)
+			        return dynamicWriter.CreateDelegate(delegateType);
+			    else
+			        return data.WriterMethodInfo.CreateDelegate(delegateType);
 			}
 
 			// Create a trampoline
@@ -123,7 +102,7 @@ namespace NetSerializer
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Ldarg_2);
 			if (needTypeConv)
-				il.Emit(writerType.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, writerType);
+				il.Emit(writerType.GetTypeInfo().IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, writerType);
 
 			// XXX tailcall causes slowdowns with large valuetypes
 			//il.Emit(OpCodes.Tailcall);
@@ -155,10 +134,10 @@ namespace NetSerializer
 			{
 				var dynamicReader = data.ReaderMethodInfo as DynamicMethod;
 
-				if (dynamicReader != null)
-					return dynamicReader.CreateDelegate(delegateType);
-				else
-					return Delegate.CreateDelegate(delegateType, data.ReaderMethodInfo);
+			    if (dynamicReader != null)
+			        return dynamicReader.CreateDelegate(delegateType);
+			    else
+			        return data.ReaderMethodInfo.CreateDelegate(delegateType);
 			}
 
 			// Create a trampoline
@@ -169,7 +148,7 @@ namespace NetSerializer
 			if (needsInstanceParameter)
 				il.Emit(OpCodes.Ldarg_0);
 
-			if (needTypeConv && readerType.IsValueType)
+			if (needTypeConv && readerType.GetTypeInfo().IsValueType)
 			{
 				var local = il.DeclareLocal(readerType);
 

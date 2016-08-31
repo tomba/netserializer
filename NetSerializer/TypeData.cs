@@ -39,10 +39,6 @@ namespace NetSerializer
 		{
 			get
 			{
-#if GENERATE_DEBUGGING_ASSEMBLY
-				if (this.WriterMethodInfo is MethodBuilder)
-					return this.WriterNeedsInstanceDebug;
-#endif
 				return this.WriterMethodInfo.GetParameters().Length == 3;
 			}
 		}
@@ -51,19 +47,9 @@ namespace NetSerializer
 		{
 			get
 			{
-#if GENERATE_DEBUGGING_ASSEMBLY
-				if (this.ReaderMethodInfo is MethodBuilder)
-					return this.ReaderNeedsInstanceDebug;
-#endif
 				return this.ReaderMethodInfo.GetParameters().Length == 3;
 			}
 		}
-
-#if GENERATE_DEBUGGING_ASSEMBLY
-		// MethodBuilder doesn't support GetParameters(), so we need to track this separately
-		public bool WriterNeedsInstanceDebug;
-		public bool ReaderNeedsInstanceDebug;
-#endif
 
 		public bool CanCallDirect
 		{
@@ -77,10 +63,10 @@ namespace NetSerializer
 
 				var type = this.Type;
 
-				if (type.IsValueType || type.IsArray)
+				if (type.GetTypeInfo().IsValueType || type.IsArray)
 					return true;
 
-				if (type.IsSealed && (this.TypeSerializer is IStaticTypeSerializer))
+				if (type.GetTypeInfo().IsSealed && (this.TypeSerializer is IStaticTypeSerializer))
 					return true;
 
 				return false;

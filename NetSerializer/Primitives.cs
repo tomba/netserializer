@@ -19,14 +19,14 @@ namespace NetSerializer
 	{
 		public static MethodInfo GetWritePrimitive(Type type)
 		{
-			return typeof(Primitives).GetMethod("WritePrimitive",
+			return typeof(Primitives).GetTypeInfo().GetMethod("WritePrimitive",
 				BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
 				new Type[] { typeof(Stream), type }, null);
 		}
 
 		public static MethodInfo GetReaderPrimitive(Type type)
 		{
-			return typeof(Primitives).GetMethod("ReadPrimitive",
+			return typeof(Primitives).GetTypeInfo().GetMethod("ReadPrimitive",
 				BindingFlags.Static | BindingFlags.Public | BindingFlags.ExactBinding, null,
 				new Type[] { typeof(Stream), type.MakeByRefType() }, null);
 		}

@@ -21,11 +21,13 @@ namespace NetSerializer
 	{
 		public bool Handles(Type type)
 		{
-			if (!type.IsSerializable)
-				throw new NotSupportedException(String.Format("Type {0} is not marked as Serializable", type.FullName));
+            // .NET Core does not include the SerialiableAttribute
 
-			if (typeof(System.Runtime.Serialization.ISerializable).IsAssignableFrom(type))
-				throw new NotSupportedException(String.Format("Cannot serialize {0}: ISerializable not supported", type.FullName));
+			//if (!type.IsSerializable)
+			//	throw new NotSupportedException(String.Format("Type {0} is not marked as Serializable", type.FullName));
+
+			//if (typeof(System.Runtime.Serialization.ISerializable).IsAssignableFrom(type))
+			//	throw new NotSupportedException(String.Format("Cannot serialize {0}: ISerializable not supported", type.FullName));
 
 			return true;
 		}
@@ -45,23 +47,23 @@ namespace NetSerializer
 			var methods = type.GetMethods(flags)
 				.Where(m => m.GetCustomAttributes(attrType, false).Any());
 
-			if (type.BaseType == null)
+			if (type.GetTypeInfo().BaseType == null)
 			{
 				return methods;
 			}
 			else
 			{
-				var baseMethods = GetMethodsWithAttributes(type.BaseType, attrType);
+				var baseMethods = GetMethodsWithAttributes(type.GetTypeInfo().BaseType, attrType);
 				return baseMethods.Concat(methods);
 			}
 		}
 
 		static void EmitCallToSerializingCallback(Type type, ILGenerator il, MethodInfo method)
 		{
-			if (type.IsValueType)
+			if (type.GetTypeInfo().IsValueType)
 				throw new NotImplementedException("Serialization callbacks not supported for Value types");
 
-			if (type.IsValueType)
+			if (type.GetTypeInfo().IsValueType)
 				il.Emit(OpCodes.Ldarga_S, 2);
 			else
 				il.Emit(OpCodes.Ldarg_2);
@@ -76,11 +78,11 @@ namespace NetSerializer
 
 		static void EmitCallToDeserializingCallback(Type type, ILGenerator il, MethodInfo method)
 		{
-			if (type.IsValueType)
+			if (type.GetTypeInfo().IsValueType)
 				throw new NotImplementedException("Serialization callbacks not supported for Value types");
 
 			il.Emit(OpCodes.Ldarg_2);
-			if (type.IsClass)
+			if (type.GetTypeInfo().IsClass)
 				il.Emit(OpCodes.Ldind_Ref);
 
 			var ctxLocal = il.DeclareLocal(typeof(System.Runtime.Serialization.StreamingContext));
@@ -115,7 +117,7 @@ namespace NetSerializer
 					il.Emit(OpCodes.Ldarg_0);
 
 				il.Emit(OpCodes.Ldarg_1);
-				if (type.IsValueType)
+				if (type.GetTypeInfo().IsValueType)
 					il.Emit(OpCodes.Ldarga_S, 2);
 				else
 					il.Emit(OpCodes.Ldarg_2);
@@ -137,7 +139,7 @@ namespace NetSerializer
 		{
 			// arg0: Serializer, arg1: stream, arg2: out value
 
-			if (type.IsClass)
+			if (type.GetTypeInfo().IsClass)
 			{
 				// instantiate empty class
 				il.Emit(OpCodes.Ldarg_2);
@@ -171,7 +173,7 @@ namespace NetSerializer
 
 				il.Emit(OpCodes.Ldarg_1);
 				il.Emit(OpCodes.Ldarg_2);
-				if (type.IsClass)
+				if (type.GetTypeInfo().IsClass)
 					il.Emit(OpCodes.Ldind_Ref);
 				il.Emit(OpCodes.Ldflda, field);
 
@@ -188,7 +190,8 @@ namespace NetSerializer
 			{
 				if (typeof(System.Runtime.Serialization.IDeserializationCallback).IsAssignableFrom(type))
 				{
-					var miOnDeserialization = typeof(System.Runtime.Serialization.IDeserializationCallback).GetMethod("OnDeserialization",
+					var miOnDeserialization = typeof(System.Runtime.Serialization.IDeserializationCallback)
+                        .GetTypeInfo().GetMethod("OnDeserialization",
 											BindingFlags.Instance | BindingFlags.Public,
 											null, new[] { typeof(Object) }, null);
 

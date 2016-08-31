@@ -17,7 +17,7 @@ namespace NetSerializer
 	{
 		public bool Handles(Type type)
 		{
-			if (!type.IsGenericType)
+			if (!type.GetTypeInfo().IsGenericType)
 				return false;
 
 			var genTypeDef = type.GetGenericTypeDefinition();
