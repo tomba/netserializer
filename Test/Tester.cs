@@ -9,6 +9,14 @@ namespace Test
 {
 	class Tester
 	{
+		private static HashSet<Type> m_serializedTypes = new HashSet<Type>();
+		
+		private static HashSet<uint> m_deserializedTypeIds = new HashSet<uint>();
+		
+		public static IEnumerable<Type> SerializedTypes => m_serializedTypes;
+		
+		public static IEnumerable<uint> DeserializedTypeIds => m_deserializedTypeIds;
+		
 		public static NS.Serializer CreateSerializer()
 		{
 			var types = GetKnownTypes().ToArray();
@@ -18,6 +26,8 @@ namespace Test
 			var settings = new NS.Settings()
 			{
 				CustomTypeSerializers = new NS.ITypeSerializer[] { new TriDimArrayCustomSerializer() },
+				BeforeSerializingObjectOfType = type => m_serializedTypes.Add(type),
+				BeforeDeserializingObjectWithTypeId = id => m_deserializedTypeIds.Add(id)
 			};
 
 			var serializer = new NS.Serializer(types, settings);
