@@ -46,6 +46,8 @@ namespace NetSerializer
 
 			var type = ob.GetType();
 
+			serializer.Settings.BeforeSerializingObjectOfType?.Invoke(type);
+
 			SerializeDelegate<object> del;
 
 			uint id = serializer.GetTypeIdAndSerializer(type, out del);
@@ -75,6 +77,8 @@ namespace NetSerializer
 				ob = new object();
 				return;
 			}
+			
+			serializer.Settings.BeforeDeserializingObjectWithTypeId?.Invoke(id);
 
 			var del = serializer.GetDeserializeTrampolineFromId(id);
 			del(serializer, stream, out ob);
