@@ -14,6 +14,16 @@ namespace NetSerializer
 	public class Settings
 	{
 		/// <summary>
+		/// Gets called when an object is going to be deserialized.
+		/// </summary>
+		public Action<uint> BeforeDeserializingObjectWithTypeId;
+        
+		/// <summary>
+		/// Gets called when an object is going to be serialized.
+		/// </summary>
+		public Action<Type> BeforeSerializingObjectOfType;
+		
+		/// <summary>
 		/// Array of custom TypeSerializers
 		/// </summary>
 		public ITypeSerializer[] CustomTypeSerializers = new ITypeSerializer[0];
