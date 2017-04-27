@@ -41,6 +41,22 @@ namespace Test
 
 			foreach (var thread in threads)
 				thread.Join();
+			
+			Console.WriteLine();
+			Console.WriteLine("Serialized objects of types:");
+			foreach (var type in Tester.SerializedTypes.OrderBy(x => x.FullName))
+			{
+				Console.WriteLine(type.FullName);
+			}
+
+			Console.WriteLine();
+			Console.WriteLine("Deserialized objects with type ids:");
+			foreach (var id in Tester.DeserializedTypeIds.OrderBy(x => x))
+			{
+				Console.WriteLine(id);
+			}
+
+			Console.ReadKey();
 		}
 
 		static bool ParseArgs(string[] args)
