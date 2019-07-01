@@ -44,9 +44,14 @@ namespace NetSerializer
 				new Type[] { typeof(Serializer), typeof(Stream), type },
 				typeof(Serializer), true);
 
-			dm.DefineParameter(1, ParameterAttributes.None, "serializer");
-			dm.DefineParameter(2, ParameterAttributes.None, "stream");
-			dm.DefineParameter(3, ParameterAttributes.None, "value");
+			// TODO: Update when .NET Core 3.0 released
+			// DynamicMethod.DefineParameter is not exposed in .NET Standard 2.0
+			// Issue is tagged for the .Net Core 3.0 milestone
+			// https://github.com/dotnet/corefx/issues/29715
+
+			// dm.DefineParameter(1, ParameterAttributes.None, "serializer");
+			// dm.DefineParameter(2, ParameterAttributes.None, "stream");
+			// dm.DefineParameter(3, ParameterAttributes.None, "value");
 
 			return dm;
 		}
@@ -56,9 +61,15 @@ namespace NetSerializer
 			var dm = new DynamicMethod("Deserialize", null,
 				new Type[] { typeof(Serializer), typeof(Stream), type.MakeByRefType() },
 				typeof(Serializer), true);
-			dm.DefineParameter(1, ParameterAttributes.None, "serializer");
-			dm.DefineParameter(2, ParameterAttributes.None, "stream");
-			dm.DefineParameter(3, ParameterAttributes.Out, "value");
+
+			// TODO: Update when .NET Core 3.0 released
+			// DynamicMethod.DefineParameter is not exposed in .NET Standard 2.0
+			// Issue is tagged for the .Net Core 3.0 milestone
+			// https://github.com/dotnet/corefx/issues/29715
+
+			// dm.DefineParameter(1, ParameterAttributes.None, "serializer");
+			// dm.DefineParameter(2, ParameterAttributes.None, "stream");
+			// dm.DefineParameter(3, ParameterAttributes.Out, "value");
 
 			return dm;
 		}
