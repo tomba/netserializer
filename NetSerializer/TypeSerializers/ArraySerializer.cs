@@ -8,10 +8,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
 
 namespace NetSerializer
 {
@@ -23,7 +20,7 @@ namespace NetSerializer
 				return false;
 
 			if (type.GetArrayRank() != 1)
-				throw new NotSupportedException(String.Format("Multi-dim arrays not supported: {0}", type.FullName));
+				throw new NotSupportedException($"Multi-dim arrays not supported: {type.FullName}");
 
 			return true;
 		}

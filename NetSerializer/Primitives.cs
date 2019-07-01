@@ -7,11 +7,9 @@
  */
 
 using System;
-using System.Linq;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Collections.Generic;
 
 namespace NetSerializer
 {
@@ -209,31 +207,7 @@ namespace NetSerializer
 			value = DecodeZigZag64(ReadVarint64(stream));
 		}
 
-#if !NO_UNSAFE
-		public static unsafe void WritePrimitive(Stream stream, float value)
-		{
-			uint v = *(uint*)(&value);
-			WriteVarint32(stream, v);
-		}
-
-		public static unsafe void ReadPrimitive(Stream stream, out float value)
-		{
-			uint v = ReadVarint32(stream);
-			value = *(float*)(&v);
-		}
-
-		public static unsafe void WritePrimitive(Stream stream, double value)
-		{
-			ulong v = *(ulong*)(&value);
-			WriteVarint64(stream, v);
-		}
-
-		public static unsafe void ReadPrimitive(Stream stream, out double value)
-		{
-			ulong v = ReadVarint64(stream);
-			value = *(double*)(&v);
-		}
-#else
+#if NO_UNSAFE
 		public static void WritePrimitive(Stream stream, float value)
 		{
 			WritePrimitive(stream, (double)value);
@@ -256,6 +230,30 @@ namespace NetSerializer
 		{
 			ulong v = ReadVarint64(stream);
 			value = BitConverter.Int64BitsToDouble((long)v);
+		}
+#else
+		public static unsafe void WritePrimitive(Stream stream, float value)
+		{
+			uint v = *(uint*)(&value);
+			WriteVarint32(stream, v);
+		}
+
+		public static unsafe void ReadPrimitive(Stream stream, out float value)
+		{
+			uint v = ReadVarint32(stream);
+			value = *(float*)(&v);
+		}
+
+		public static unsafe void WritePrimitive(Stream stream, double value)
+		{
+			ulong v = *(ulong*)(&value);
+			WriteVarint64(stream, v);
+		}
+
+		public static unsafe void ReadPrimitive(Stream stream, out double value)
+		{
+			ulong v = ReadVarint64(stream);
+			value = *(double*)(&v);
 		}
 #endif
 

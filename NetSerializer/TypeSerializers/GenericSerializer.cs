@@ -8,12 +8,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
 
 namespace NetSerializer
 {
@@ -22,10 +19,10 @@ namespace NetSerializer
 		public bool Handles(Type type)
 		{
 			if (!type.IsSerializable)
-				throw new NotSupportedException(String.Format("Type {0} is not marked as Serializable", type.FullName));
+				throw new NotSupportedException($"Type {type.FullName} is not marked as Serializable");
 
 			if (typeof(System.Runtime.Serialization.ISerializable).IsAssignableFrom(type))
-				throw new NotSupportedException(String.Format("Cannot serialize {0}: ISerializable not supported", type.FullName));
+				throw new NotSupportedException($"Cannot serialize {type.FullName}: ISerializable not supported");
 
 			return true;
 		}

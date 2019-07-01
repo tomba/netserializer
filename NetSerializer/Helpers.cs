@@ -13,7 +13,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
 
 namespace NetSerializer
 {
@@ -73,28 +72,6 @@ namespace NetSerializer
 
 			return dm;
 		}
-
-#if GENERATE_DEBUGGING_ASSEMBLY
-		public static MethodBuilder GenerateStaticSerializerStub(TypeBuilder tb, Type type)
-		{
-			var mb = tb.DefineMethod("Serialize", MethodAttributes.Public | MethodAttributes.Static, null,
-				new Type[] { typeof(Serializer), typeof(Stream), type });
-			mb.DefineParameter(1, ParameterAttributes.None, "serializer");
-			mb.DefineParameter(2, ParameterAttributes.None, "stream");
-			mb.DefineParameter(3, ParameterAttributes.None, "value");
-			return mb;
-		}
-
-		public static MethodBuilder GenerateStaticDeserializerStub(TypeBuilder tb, Type type)
-		{
-			var mb = tb.DefineMethod("Deserialize", MethodAttributes.Public | MethodAttributes.Static, null,
-				new Type[] { typeof(Serializer), typeof(Stream), type.MakeByRefType() });
-			mb.DefineParameter(1, ParameterAttributes.None, "serializer");
-			mb.DefineParameter(2, ParameterAttributes.None, "stream");
-			mb.DefineParameter(3, ParameterAttributes.Out, "value");
-			return mb;
-		}
-#endif
 
 		/// <summary>
 		/// Create delegate that calls writer either directly, or via a trampoline

@@ -8,16 +8,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace NetSerializer
 {
 	sealed class PrimitivesSerializer : IStaticTypeSerializer
 	{
-		static Type[] s_primitives = new Type[] {
+		private static Type[] s_primitives = new Type[] {
 				typeof(bool),
 				typeof(byte), typeof(sbyte),
 				typeof(char),
@@ -28,7 +26,7 @@ namespace NetSerializer
 				typeof(string),
 				typeof(DateTime),
 				typeof(byte[]),
-				typeof(Decimal),
+				typeof(decimal),
 			};
 
 		public bool Handles(Type type)
