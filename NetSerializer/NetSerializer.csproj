@@ -9,6 +9,9 @@
     <FileVersion>4.1.0.0</FileVersion>
     <Copyright>Copyright © 2012-2016 Tomi Valkeinen</Copyright>
     <Description>A very fast and minimal serializer</Description>
+    <ApplicationIcon />
+    <OutputType>Library</OutputType>
+    <StartupObject />
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
