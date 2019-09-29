@@ -13,7 +13,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <DefineConstants Condition="'$(TargetFramework)' == 'net45'">GENERATE_DEBUGGING_ASSEMBLY</DefineConstants>
   </PropertyGroup>
 
