@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks Condition="'$(MSBuildRuntimeType)' != 'Mono'">netstandard2.1;net45</TargetFrameworks>
-    <TargetFramework Condition="'$(MSBuildRuntimeType)' == 'Mono'">net45</TargetFramework>
+    <TargetFrameworks>netstandard2.1;net45</TargetFrameworks>
     <Description>A very fast and minimal serializer</Description>
     <Company>Tomi Valkeinen</Company>
     <Copyright>Copyright © 2012-2016 Tomi Valkeinen</Copyright>

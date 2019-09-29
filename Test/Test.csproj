@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks Condition="'$(MSBuildRuntimeType)' != 'Mono'">netcoreapp3.0;net45</TargetFrameworks>
-    <TargetFramework Condition="'$(MSBuildRuntimeType)' == 'Mono'">net45</TargetFramework>
+    <TargetFrameworks>netcoreapp3.0;net45</TargetFrameworks>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
