@@ -3,7 +3,7 @@
     <TargetFrameworks>netstandard2.1;net45</TargetFrameworks>
     <Description>A very fast and minimal serializer</Description>
     <Company>Tomi Valkeinen</Company>
-    <Copyright>Copyright © 2012-2016 Tomi Valkeinen</Copyright>
+    <Copyright>Copyright © 2012-2019 Tomi Valkeinen</Copyright>
     <Version>4.1.0</Version>
     <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
     <Authors>$(Company)</Authors>
