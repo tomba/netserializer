@@ -1,22 +1,28 @@
 ﻿/*
  * Copyright 2015 Tomi Valkeinen
- * 
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
 using System;
-using System.Linq;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Collections.Generic;
+using System.Diagnostics;
+#if NETCOREAPP
+using System.Text.Unicode;
+using System.Buffers;
+#endif
 
 namespace NetSerializer
 {
 	public static class Primitives
 	{
+		private const int StringByteBufferLength = 256;
+		private const int StringCharBufferLength = 128;
+
 		public static MethodInfo GetWritePrimitive(Type type)
 		{
 			return typeof(Primitives).GetMethod("WritePrimitive",
@@ -318,7 +324,122 @@ namespace NetSerializer
 			value = new Decimal(arr);
 		}
 
-#if NO_UNSAFE
+#if NETCOREAPP
+		public static void WritePrimitive(Stream stream, string value)
+		{
+			if (value == null)
+			{
+				WritePrimitive(stream, (uint)0);
+				return;
+			}
+
+			if (value.Length == 0)
+			{
+				WritePrimitive(stream, (uint)1);
+				return;
+			}
+
+			Span<byte> buf = stackalloc byte[StringByteBufferLength];
+
+			var totalChars = value.Length;
+			var totalBytes = Encoding.UTF8.GetByteCount(value);
+
+			WritePrimitive(stream, (uint)totalBytes + 1);
+			WritePrimitive(stream, (uint)totalChars);
+
+			var totalRead = 0;
+			ReadOnlySpan<char> span = value;
+			for (;;)
+			{
+				var finalChunk = totalRead + totalChars >= totalChars;
+				Utf8.FromUtf16(span, buf, out var read, out var wrote, isFinalBlock: finalChunk);
+				stream.Write(buf.Slice(0, wrote));
+				totalRead += read;
+				if (read >= totalChars)
+				{
+					break;
+				}
+
+				span = span[read..];
+				totalChars -= read;
+			}
+		}
+
+		private static readonly SpanAction<char, (int, Stream)> _stringSpanRead = StringSpanRead;
+
+		public static void ReadPrimitive(Stream stream, out string value)
+		{
+			ReadPrimitive(stream, out uint totalBytes);
+
+			if (totalBytes == 0)
+			{
+				value = null;
+				return;
+			}
+
+			if (totalBytes == 1)
+			{
+				value = string.Empty;
+				return;
+			}
+
+			totalBytes -= 1;
+
+			ReadPrimitive(stream, out uint totalChars);
+
+			value = string.Create((int) totalChars, ((int) totalBytes, stream), _stringSpanRead);
+		}
+
+		private static void StringSpanRead(Span<char> span, (int totalBytes, Stream stream) tuple)
+		{
+			Span<byte> buf = stackalloc byte[StringByteBufferLength];
+
+			// ReSharper disable VariableHidesOuterVariable
+			var (totalBytes, stream) = tuple;
+			// ReSharper restore VariableHidesOuterVariable
+
+			var totalBytesRead = 0;
+			var totalCharsRead = 0;
+			var writeBufStart = 0;
+
+			while (totalBytesRead < totalBytes)
+			{
+				var bytesLeft = totalBytes - totalBytesRead;
+				var bytesReadLeft = Math.Min(buf.Length, bytesLeft);
+				var writeSlice = buf.Slice(writeBufStart, bytesReadLeft - writeBufStart);
+				var bytesInBuffer = stream.Read(writeSlice);
+				if (bytesInBuffer == 0) throw new EndOfStreamException();
+
+				var readFromStream = bytesInBuffer + writeBufStart;
+				var final = readFromStream == bytesLeft;
+				var status = Utf8.ToUtf16(buf[..readFromStream], span[totalCharsRead..], out var bytesRead, out var charsRead, isFinalBlock: final);
+
+				totalBytesRead += bytesRead;
+				totalCharsRead += charsRead;
+				writeBufStart = 0;
+
+				if (status == OperationStatus.DestinationTooSmall)
+				{
+					// Malformed data?
+					throw new InvalidDataException();
+				}
+
+				if (status == OperationStatus.NeedMoreData)
+				{
+					// We got cut short in the middle of a multi-byte UTF-8 sequence.
+					// So we need to move it to the bottom of the span, then read the next bit *past* that.
+					// This copy should be fine because we're only ever gonna be copying up to 4 bytes
+					// from the end of the buffer to the start.
+					// So no chance of overlap.
+					buf[bytesRead..].CopyTo(buf);
+					writeBufStart = bytesReadLeft - bytesRead;
+					continue;
+				}
+
+				Debug.Assert(status == OperationStatus.Done);
+			}
+		}
+#elif NO_UNSAFE
 		public static void WritePrimitive(Stream stream, string value)
 		{
 			if (value == null)
@@ -391,9 +512,6 @@ namespace NetSerializer
 				this.Encoding = new UTF8Encoding(false, true);
 			}
 
-			public const int BYTEBUFFERLEN = 256;
-			public const int CHARBUFFERLEN = 128;
-
 			Encoder m_encoder;
 			Decoder m_decoder;
 
@@ -404,8 +522,8 @@ namespace NetSerializer
 			public Encoder Encoder { get { if (m_encoder == null) m_encoder = this.Encoding.GetEncoder(); return m_encoder; } }
 			public Decoder Decoder { get { if (m_decoder == null) m_decoder = this.Encoding.GetDecoder(); return m_decoder; } }
 
-			public byte[] ByteBuffer { get { if (m_byteBuffer == null) m_byteBuffer = new byte[BYTEBUFFERLEN]; return m_byteBuffer; } }
-			public char[] CharBuffer { get { if (m_charBuffer == null) m_charBuffer = new char[CHARBUFFERLEN]; return m_charBuffer; } }
+			public byte[] ByteBuffer { get { if (m_byteBuffer == null) m_byteBuffer = new byte[StringByteBufferLength]; return m_byteBuffer; } }
+			public char[] CharBuffer { get { if (m_charBuffer == null) m_charBuffer = new char[StringCharBufferLength]; return m_charBuffer; } }
 		}
 
 		[ThreadStatic]
@@ -489,7 +607,7 @@ namespace NetSerializer
 			var decoder = helper.Decoder;
 			var buf = helper.ByteBuffer;
 			char[] chars;
-			if (totalChars <= StringHelper.CHARBUFFERLEN)
+			if (totalChars <= StringCharBufferLength)
 				chars = helper.CharBuffer;
 			else
 				chars = new char[totalChars];
