@@ -363,6 +363,7 @@ namespace NetSerializer
 			}
 		}
 
+		// We cache the delegate in a static here to avoid a delegate allocation on every call to ReadPrimitive.
 		private static readonly SpanAction<char, (int, Stream)> _stringSpanRead = StringSpanRead;
 
 		public static void ReadPrimitive(Stream stream, out string value)
