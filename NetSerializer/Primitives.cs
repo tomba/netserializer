@@ -356,9 +356,7 @@ namespace NetSerializer
 				stream.Write(buf.Slice(0, wrote));
 				totalRead += read;
 				if (read >= totalChars)
-				{
 					break;
-				}
 
 				span = span[read..];
 				totalChars -= read;
@@ -394,9 +392,7 @@ namespace NetSerializer
 		{
 			Span<byte> buf = stackalloc byte[StringByteBufferLength];
 
-			// ReSharper disable VariableHidesOuterVariable
 			var (totalBytes, stream) = tuple;
-			// ReSharper restore VariableHidesOuterVariable
 
 			var totalBytesRead = 0;
 			var totalCharsRead = 0;
@@ -408,7 +404,8 @@ namespace NetSerializer
 				var bytesReadLeft = Math.Min(buf.Length, bytesLeft);
 				var writeSlice = buf.Slice(writeBufStart, bytesReadLeft - writeBufStart);
 				var bytesInBuffer = stream.Read(writeSlice);
-				if (bytesInBuffer == 0) throw new EndOfStreamException();
+				if (bytesInBuffer == 0)
+					throw new EndOfStreamException();
 
 				var readFromStream = bytesInBuffer + writeBufStart;
 				var final = readFromStream == bytesLeft;
