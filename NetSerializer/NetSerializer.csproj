@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net45;netcoreapp3.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;net45;netcoreapp3.1</TargetFrameworks>
     <Description>A very fast and minimal serializer</Description>
     <Company>Tomi Valkeinen</Company>
     <Copyright>Copyright © 2012-2019 Tomi Valkeinen</Copyright>
