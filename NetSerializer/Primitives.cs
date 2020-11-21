@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Text;
 using System.Diagnostics;
 #if NETCOREAPP
+using System.Runtime.CompilerServices;
 using System.Text.Unicode;
 using System.Buffers.Binary;
 using System.Buffers;
@@ -240,6 +241,21 @@ namespace NetSerializer
 			ulong v = ReadUInt64(stream);
 			value = *(double*)(&v);
 		}
+
+#if NET5_0
+        public static void WritePrimitive(Stream stream, Half value)
+        {
+            ushort v = Unsafe.As<Half, ushort>(ref value);
+            WriteUInt16(stream, v);
+        }
+
+        public static void ReadPrimitive(Stream stream, out Half value)
+        {
+            var v = ReadUInt16(stream);
+            value = Unsafe.As<ushort, Half>(ref v);
+        }
+#endif
+
 #else
 		public static void WritePrimitive(Stream stream, float value)
 		{
@@ -264,6 +280,21 @@ namespace NetSerializer
 			ulong v = ReadUInt64(stream);
 			value = BitConverter.Int64BitsToDouble((long)v);
 		}
+
+#if NET5_0
+		public static void WritePrimitive(Stream stream, Half value)
+		{
+			WritePrimitive(stream, (double)value);
+		}
+
+		public static void ReadPrimitive(Stream stream, out Half value)
+		{
+			double v;
+			ReadPrimitive(stream, out v);
+			value = (Half)v;
+		}
+#endif
+
 #endif
 
 		private static void WriteUInt16(Stream stream, ushort value)

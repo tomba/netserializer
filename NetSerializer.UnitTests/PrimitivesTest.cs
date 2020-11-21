@@ -9,6 +9,33 @@ namespace NetSerializer.UnitTests
 	[Parallelizable(ParallelScope.All)]
 	public class PrimitivesTest
 	{
+#if NET5_0
+#if NO_UNSAFE
+        [Ignore("Float and half tests are inacurrate due to rounding when NO_UNSAFE is enabled.")]
+#endif
+        [Test]
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(123.4)]
+        [TestCase(0.01)]
+        [TestCase(double.PositiveInfinity)]
+        [TestCase(double.NegativeInfinity)]
+        [TestCase(double.NaN)]
+        public void TestHalf(double val)
+        {
+        	// Can't stick Half values in attributes so have to do this.
+        	var half = (Half) val;
+
+        	var stream = new MemoryStream();
+        	Primitives.WritePrimitive(stream, half);
+
+        	stream.Position = 0;
+
+        	Primitives.ReadPrimitive(new ByteStream(stream), out Half read);
+        	Assert.That(read, Is.EqualTo(half));
+        }
+#endif
+
 #if NO_UNSAFE
 		[Ignore("Float tests are inacurrate due to rounding when NO_UNSAFE is enabled.")]
 #endif
