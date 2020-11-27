@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright 2015 Tomi Valkeinen
- * 
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -29,6 +29,9 @@ namespace NetSerializer
 				typeof(DateTime),
 				typeof(byte[]),
 				typeof(Decimal),
+#if NET5_0
+				typeof(Half),
+#endif
 			};
 
 		public bool Handles(Type type)
