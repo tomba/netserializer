@@ -243,17 +243,17 @@ namespace NetSerializer
 		}
 
 #if NET5_0
-        public static void WritePrimitive(Stream stream, Half value)
-        {
-            ushort v = Unsafe.As<Half, ushort>(ref value);
-            WriteUInt16(stream, v);
-        }
+		public static void WritePrimitive(Stream stream, Half value)
+		{
+			ushort v = Unsafe.As<Half, ushort>(ref value);
+			WriteUInt16(stream, v);
+		}
 
-        public static void ReadPrimitive(Stream stream, out Half value)
-        {
-            var v = ReadUInt16(stream);
-            value = Unsafe.As<ushort, Half>(ref v);
-        }
+		public static void ReadPrimitive(Stream stream, out Half value)
+		{
+			var v = ReadUInt16(stream);
+			value = Unsafe.As<ushort, Half>(ref v);
+		}
 #endif
 
 #else
@@ -298,25 +298,25 @@ namespace NetSerializer
 #endif
 
 		private static void WriteUInt16(Stream stream, ushort value)
-	    {
-	        stream.WriteByte((byte) value);
-	        stream.WriteByte((byte) (value >> 8));
-	    }
+		{
+			stream.WriteByte((byte) value);
+			stream.WriteByte((byte) (value >> 8));
+		}
 
 		private static ushort ReadUInt16(Stream stream)
 		{
-            ushort a = 0;
+			ushort a = 0;
 
-            for (var i = 0; i < 16; i += 8)
-            {
-                var val = stream.ReadByte();
-                if (val == -1)
-                    throw new EndOfStreamException();
+			for (var i = 0; i < 16; i += 8)
+			{
+				var val = stream.ReadByte();
+				if (val == -1)
+					throw new EndOfStreamException();
 
-                a |= (ushort) (val << i);
-            }
+				a |= (ushort) (val << i);
+			}
 
-            return a;
+			return a;
 		}
 
 		// 32 and 64 bit variants use stackalloc when everything is available since it's faster.
@@ -358,21 +358,21 @@ namespace NetSerializer
 			return a;
 		}
 
-        private static ulong ReadUInt64(Stream stream)
-        {
-	        ulong a = 0;
+		private static ulong ReadUInt64(Stream stream)
+		{
+			ulong a = 0;
 
-            for (var i = 0; i < 64; i += 8)
-            {
-            	var val = stream.ReadByte();
-            	if (val < 0)
-            		throw new EndOfStreamException();
+			for (var i = 0; i < 64; i += 8)
+			{
+				var val = stream.ReadByte();
+				if (val < 0)
+					throw new EndOfStreamException();
 
-            	a |= (ulong)val << i;
-            }
+				a |= (ulong)val << i;
+			}
 
-            return a;
-        }
+			return a;
+		}
 #else
 		private static void WriteUInt32(Stream stream, uint value)
 		{
